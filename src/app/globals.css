@@ -185,8 +185,19 @@ h1, h2, h3, h4 {
 .rise {
   animation: rise 220ms ease-out both;
 }
+
+@keyframes marquee-left {
+  from { transform: translateX(0); }
+  to { transform: translateX(-100%); }
+}
+@keyframes marquee-right {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .rise { animation: none; }
+  [style*="marquee-"] { animation: none !important; }
 }
 
 /* Sublinhado que cresce da esquerda no hover dos links de navegação */

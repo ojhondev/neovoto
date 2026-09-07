@@ -1,15 +1,24 @@
 import Link from "next/link";
-import { ArrowRight, ArrowDown } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { SiteHeader } from "@/components/marketing/SiteHeader";
 import { SiteFooter } from "@/components/marketing/SiteFooter";
 import { Reveal } from "@/components/marketing/Reveal";
 import { PixelGlobe } from "@/components/marketing/PixelGlobe";
+import { ScrollGlobe } from "@/components/marketing/ScrollGlobe";
+import { PillarsShowcase, type Pillar } from "@/components/marketing/PillarsShowcase";
+import { Marquee } from "@/components/marketing/Marquee";
 import { InfluenceNetwork } from "@/components/viz/InfluenceNetwork";
 import { getDictionary } from "@/lib/i18n";
 import { TOOLS, toolPath } from "@/lib/tools";
 
 export default async function LandingPage() {
   const { t } = await getDictionary();
+
+  const pillars: Pillar[] = [
+    { ...t.landing.pillars[0], id: "pre", href: "/painel/matriz-ideologica", panel: "territorio", tint: "" },
+    { ...t.landing.pillars[1], id: "camp", href: "/painel/cenarios", panel: "cenario", tint: "" },
+    { ...t.landing.pillars[2], id: "gov", href: "/painel/mapa-de-propostas", panel: "propostas", tint: "" },
+  ];
 
   return (
     <>
@@ -22,7 +31,7 @@ export default async function LandingPage() {
 
       <main>
         {/* HERO */}
-        <section className="mx-auto max-w-[var(--page-max)] px-5 pt-16 pb-20 md:pt-24">
+        <section className="mx-auto max-w-[var(--page-max)] px-5 pt-16 pb-24 md:pt-24">
           <div className="grid items-center gap-12 lg:grid-cols-[1.05fr_0.95fr]">
             <div>
               <p className="t-eyebrow mb-5">{t.landing.heroKicker}</p>
@@ -34,7 +43,7 @@ export default async function LandingPage() {
               </h1>
               <p className="mt-6 max-w-xl text-body text-fossil">{t.landing.heroSub}</p>
               <div className="mt-8 flex flex-wrap gap-3">
-                <Link href="/#demo" className="btn btn-primary">
+                <Link href="/onboarding" className="btn btn-primary">
                   {t.landing.heroPrimary} <ArrowRight size={16} />
                 </Link>
                 <Link href="/#ferramentas" className="btn btn-ghost">
@@ -51,12 +60,28 @@ export default async function LandingPage() {
               </div>
             </Reveal>
           </div>
-          <div className="mt-16 flex justify-center">
-            <span className="font-ui inline-flex items-center gap-2 rounded-[8px] border border-ink px-3 py-1.5 text-body-sm">
-              {t.landing.scrollCue} <ArrowDown size={14} />
-            </span>
-          </div>
         </section>
+
+        {/* GLOBO — partículas se aglomeram e formam o planeta ao rolar */}
+        <ScrollGlobe
+          title={[t.landing.globeTitleA, t.landing.globeTitleB]}
+          subtitle={t.landing.globeSub}
+          scrollCue={t.landing.scrollCue}
+        />
+
+        {/* 3 PILARES */}
+        <PillarsShowcase
+          kicker={t.landing.pillarsKicker}
+          title={t.landing.pillarsTitle}
+          pillars={pillars}
+        />
+
+        {/* FAIXA CHARTREUSE */}
+        <Marquee
+          line={t.landing.marqueeLine}
+          rowA={[...t.landing.marqueeRowA]}
+          rowB={[...t.landing.marqueeRowB]}
+        />
 
         {/* TRUST */}
         <section className="border-y border-ash bg-paper">
@@ -103,7 +128,7 @@ export default async function LandingPage() {
           </div>
         </section>
 
-        {/* MANIFESTO — quebra com globo */}
+        {/* MANIFESTO */}
         <section id="metodo" className="relative overflow-hidden bg-chartreuse">
           <div className="pointer-events-none absolute -right-32 -top-24 opacity-70">
             <PixelGlobe size={520} />
@@ -131,12 +156,9 @@ export default async function LandingPage() {
         <section id="demo" className="mx-auto max-w-[var(--page-max)] px-5 py-24 text-center">
           <h2 className="t-display mx-auto max-w-3xl">{t.landing.ctaTitle}</h2>
           <p className="mx-auto mt-4 max-w-md text-body text-fossil">{t.landing.ctaBody}</p>
-          <a
-            href="mailto:contato@neovoto.com.br?subject=Demonstração NeoVoto"
-            className="btn btn-primary mt-8"
-          >
-            {t.common.requestDemo} <ArrowRight size={16} />
-          </a>
+          <Link href="/onboarding" className="btn btn-primary mt-8">
+            {t.landing.heroPrimary} <ArrowRight size={16} />
+          </Link>
         </section>
       </main>
 

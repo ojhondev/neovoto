@@ -1,47 +1,63 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Logo } from "@/components/brand/Logo";
-import { LocaleSwitcher } from "@/components/nav/LocaleSwitcher";
-import { MockBanner } from "@/components/app/MockBanner";
+import { AuthShell, GoogleButton } from "@/components/marketing/AuthShell";
 import { getDictionary } from "@/lib/i18n";
 
 export const metadata: Metadata = { title: "Criar conta" };
 
 export default async function SignUpPage() {
-  const { locale, t } = await getDictionary();
+  const { t } = await getDictionary();
   return (
-    <div className="flex min-h-dvh flex-col">
-      <header className="flex items-center justify-between px-5 py-5">
-        <Logo />
-        <LocaleSwitcher current={locale} />
-      </header>
-      <main className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center px-5 pb-24">
-        <h1 className="t-heading-lg">{t.auth.signUpTitle}</h1>
-        <MockBanner text={t.auth.authNotice} />
-        <form className="font-ui space-y-4">
-          <label className="block">
-            <span className="text-body-sm text-smoke">{t.auth.org}</span>
-            <input disabled className="mt-1 w-full rounded-[8px] border border-pebble bg-paper px-3 py-2 text-body-sm disabled:opacity-60" />
-          </label>
-          <label className="block">
-            <span className="text-body-sm text-smoke">{t.auth.email}</span>
-            <input type="email" disabled className="mt-1 w-full rounded-[8px] border border-pebble bg-paper px-3 py-2 text-body-sm disabled:opacity-60" />
-          </label>
-          <label className="block">
-            <span className="text-body-sm text-smoke">{t.auth.password}</span>
-            <input type="password" disabled className="mt-1 w-full rounded-[8px] border border-pebble bg-paper px-3 py-2 text-body-sm disabled:opacity-60" />
-          </label>
-          <button type="button" disabled className="btn btn-primary w-full justify-center opacity-60">
-            {t.auth.signUpCta}
-          </button>
-        </form>
-        <p className="font-ui mt-6 text-body-sm text-fossil">
-          {t.auth.hasAccount}{" "}
-          <Link href="/entrar" className="nav-link">
-            {t.auth.signInCta}
-          </Link>
-        </p>
-      </main>
-    </div>
+    <AuthShell panelHeadline={t.auth.panelHeadline} panelSources={t.auth.panelSources}>
+      <h1 className="t-heading-lg">{t.auth.signUpTitle}</h1>
+      <p className="mt-3 text-body-sm text-fossil">{t.auth.signUpSub}</p>
+
+      <form className="font-ui mt-8 space-y-4">
+        <label className="block">
+          <span className="text-body-sm text-smoke">{t.auth.workEmail} *</span>
+          <input
+            type="email"
+            disabled
+            className="mt-1.5 w-full rounded-[8px] border border-pebble bg-paper px-3 py-2.5 text-body-sm disabled:opacity-60"
+          />
+        </label>
+        <label className="block">
+          <span className="text-body-sm text-smoke">{t.auth.password} *</span>
+          <input
+            type="password"
+            disabled
+            className="mt-1.5 w-full rounded-[8px] border border-pebble bg-paper px-3 py-2.5 text-body-sm disabled:opacity-60"
+          />
+        </label>
+        <label className="flex items-start gap-2 text-body-sm text-smoke">
+          <input type="checkbox" defaultChecked disabled className="mt-0.5" />
+          {t.auth.marketingOptIn}
+        </label>
+        <button
+          type="button"
+          disabled
+          className="w-full rounded-[8px] bg-sand px-4 py-2.5 text-body-sm text-fossil"
+        >
+          {t.auth.signUpCta}
+        </button>
+      </form>
+
+      <div className="my-6 flex items-center gap-3">
+        <span className="hairline flex-1" />
+        <span className="font-ui text-caption text-pebble">{t.auth.or}</span>
+        <span className="hairline flex-1" />
+      </div>
+      <GoogleButton label={t.auth.google} />
+
+      <p className="font-ui mt-8 text-body-sm">
+        <Link href="/entrar" className="nav-link">
+          {t.auth.existingAccount}
+        </Link>
+      </p>
+      <p className="font-ui mt-3 text-caption text-pebble">{t.auth.terms}</p>
+      <Link href="/painel" className="font-ui nav-link mt-6 inline-block text-body-sm">
+        {t.auth.authNotice}
+      </Link>
+    </AuthShell>
   );
 }

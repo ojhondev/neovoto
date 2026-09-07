@@ -13,21 +13,24 @@ export default async function PainelLayout({
   const toolNames = buildToolNames(t);
 
   return (
-    <div className="flex min-h-dvh">
-      <div className="hidden lg:block">
-        <Sidebar
-          labels={{ dashboard: t.common.dashboard, tools: t.nav.tools }}
-          toolNames={toolNames}
-        />
-      </div>
+    <div className="flex min-h-svh">
+      <Sidebar
+        labels={{
+          dashboard: t.common.dashboard,
+          tools: t.nav.tools,
+          candidate: locale === "pt" ? "Candidato" : "Candidate",
+          collapse: locale === "pt" ? "Recolher" : "Collapse",
+        }}
+        toolNames={toolNames}
+      />
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-ash bg-bone/85 px-5 backdrop-blur">
+        <header className="sticky top-0 z-20 flex h-14 items-center justify-between border-b border-ash bg-bone/85 pl-16 pr-5 backdrop-blur lg:pl-5">
           <Link href="/" className="nav-link text-body-sm">
             ← {t.common.backToSite}
           </Link>
           <div className="flex items-center gap-4">
             <LocaleSwitcher current={locale} />
-            <span className="font-ui rounded-[4px] bg-sand px-2 py-1 text-caption text-smoke">
+            <span className="font-ui hidden rounded-[4px] bg-sand px-2 py-1 text-caption text-smoke sm:inline">
               {locale === "pt" ? "Ambiente de fundação" : "Foundation environment"}
             </span>
           </div>
