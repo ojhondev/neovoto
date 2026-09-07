@@ -47,8 +47,13 @@ export function IdeologyMatrix({
 
   const maxPop = Math.max(...municipios.map((m) => m.populacao), 1);
   const rOf = (pop: number) => 2.5 + Math.sqrt(pop / maxPop) * 12;
-  const maxDist = Math.max(...municipios.map((m) => m.distancia), 0.01);
-  const colOf = (d: number) => lerpHex("#4b5b0a", "#c9b892", Math.min(1, d / maxDist));
+  // cor pelo campo ideológico (média dos eixos): progressista → centro → conservador
+  const colOf = (m: { eco: number; soc: number }) => {
+    const t = (m.eco + m.soc) / 2; // -1..1
+    return t < 0
+      ? lerpHex("#2f6fed", "#b9b2a6", Math.min(1, (t + 1) / 1))
+      : lerpHex("#b9b2a6", "#e5397f", Math.min(1, t));
+  };
 
   return (
     <div className="grid gap-5 lg:grid-cols-[1fr_260px]">
@@ -91,7 +96,7 @@ export function IdeologyMatrix({
               cx={sx(m.eco)}
               cy={sy(m.soc)}
               r={rOf(m.populacao)}
-              fill={colOf(m.distancia)}
+              fill={colOf(m)}
               fillOpacity={0.62}
               stroke={hover?.code === m.code ? "var(--color-ink)" : "none"}
               onMouseEnter={() => setHover(m)}
@@ -133,11 +138,17 @@ export function IdeologyMatrix({
             </p>
           </div>
         ) : (
-          <p className="text-caption text-pebble">
-            {locale === "pt"
-              ? "Passe o mouse por um município. O tamanho do ponto é a população; a cor, a distância até o candidato."
-              : "Hover a municipality. Dot size is population; colour is distance to the candidate."}
-          </p>
+          <div className="space-y-1.5 text-caption text-pebble">
+            <div className="flex items-center gap-2">
+              <span className="h-2.5 w-16 rounded-full" style={{ background: "linear-gradient(90deg,#2f6fed,#b9b2a6,#e5397f)" }} />
+              <span>{locale === "pt" ? "esquerda → centro → direita" : "left → centre → right"}</span>
+            </div>
+            <p>
+              {locale === "pt"
+                ? "Tamanho do ponto = população. Posição = eixos econômico (X) e de costumes (Y)."
+                : "Dot size = population. Position = economic (X) and social-values (Y) axes."}
+            </p>
+          </div>
         )}
       </div>
     </div>

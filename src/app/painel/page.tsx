@@ -201,13 +201,16 @@ export default async function PainelHome() {
               <p className="font-ui mt-1 text-caption text-pebble">{d.rotulo}</p>
               {d.barras && d.barras.length > 0 && (
                 <div className="mt-4 space-y-1.5">
-                  {d.barras.map((b) => (
+                  {d.barras.map((b, bi) => (
                     <div key={b.label} className="font-ui flex items-center gap-2 text-[11px]">
                       <span className="w-24 shrink-0 truncate text-pebble">{b.label}</span>
                       <span className="h-1.5 flex-1 rounded-[2px] bg-sand">
                         <span
-                          className="block h-full rounded-[2px] bg-olive"
-                          style={{ width: `${Math.round(b.v * 100)}%` }}
+                          className="block h-full rounded-[2px]"
+                          style={{
+                            width: `${Math.round(b.v * 100)}%`,
+                            background: `var(--color-cat-${(bi % 6) + 1})`,
+                          }}
                         />
                       </span>
                     </div>

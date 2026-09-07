@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { ToolShell } from "@/components/app/ToolShell";
 import { Info } from "@/components/app/Info";
+import { URGENCIA_RADAR, urgVar } from "@/lib/viz/colors";
 import { getDictionary } from "@/lib/i18n";
 import { getCurrentCandidacy, perfilFrom } from "@/lib/candidacy";
 import { getAgendaCamara } from "@/lib/data-sources/agenda";
@@ -134,7 +135,13 @@ export default async function Page() {
       <div className="mt-6 grid gap-px overflow-hidden rounded-[var(--radius-card)] border border-ash bg-ash sm:grid-cols-4">
         {counts.map(({ k, n }) => (
           <div key={k} className="bg-paper p-4">
-            <p className="font-ui text-[24px] font-light text-ink">{n}</p>
+            <div className="flex items-center gap-2">
+              <span
+                className="inline-block h-2.5 w-2.5 shrink-0 rounded-full"
+                style={{ background: urgVar(URGENCIA_RADAR[k] ?? "none") }}
+              />
+              <p className="font-ui text-[24px] font-light text-ink">{n}</p>
+            </div>
             <p className="font-ui mt-1 text-caption text-fossil">{tipoLabel[k]}</p>
           </div>
         ))}
@@ -161,8 +168,11 @@ export default async function Page() {
                   </div>
                   <div className="mt-1 h-2 rounded-[2px] bg-sand">
                     <div
-                      className="h-full rounded-[2px] bg-olive"
-                      style={{ width: `${tema.heat}%` }}
+                      className="h-full rounded-[2px]"
+                      style={{
+                        width: `${tema.heat}%`,
+                        background: urgVar(tema.heat >= 60 ? "high" : tema.heat >= 30 ? "med" : "none"),
+                      }}
                     />
                   </div>
                 </div>
@@ -170,8 +180,8 @@ export default async function Page() {
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="font-ui text-body text-ink">{tema.label}</span>
                     <span
-                      className="font-ui rounded-[3px] px-1.5 py-0.5 text-[11px]"
-                      style={{ background: "var(--color-sand)", color: "var(--color-smoke)" }}
+                      className="font-ui rounded-[3px] px-1.5 py-0.5 text-[11px] text-white"
+                      style={{ background: urgVar(URGENCIA_RADAR[tema.tipo] ?? "none") }}
                     >
                       {tipoLabel[tema.tipo]}
                     </span>

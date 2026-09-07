@@ -11,11 +11,15 @@ type FC = {
   }[];
 };
 
-type Scale = "heat" | "sequential";
+type Scale = "heat" | "sequential" | "votes";
 
 const RAMP: Record<Scale, string[]> = {
-  heat: ["#8a3b2f", "#c9772f", "#c9a227", "#8ba33a", "#4b5b0a"],
-  sequential: ["#eef0dd", "#c3cf8a", "#8ba33a", "#4b5b0a"],
+  // prioridade / urgência — vermelho→âmbar→amarelo→verde-claro→verde
+  heat: ["#c0392b", "#e07b1a", "#e0bd3a", "#8bbf4a", "#2e7d32"],
+  // genérico sequencial (verde)
+  sequential: ["#eef4dd", "#b6d271", "#5c9c2e", "#2e6b12"],
+  // votação real — azul, para não confundir com o índice
+  votes: ["#e6eefb", "#9dc2ee", "#4a8fd6", "#1c5aa0"],
 };
 
 function lerpHex(a: string, b: string, t: number) {

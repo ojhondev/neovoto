@@ -10,6 +10,7 @@ import { getIfetResumoUF } from "@/lib/territory";
 import { ingestVotacao, getVotosByIbge } from "@/lib/data-sources/eleitoral";
 import { getVotacaoPartidoUF, getVotosCorteEleito } from "@/lib/data-sources/regional";
 import { computeCenarios, type ResultadoCenario } from "@/lib/intel/cenarios";
+import { URGENCIA_RESULTADO, urgVar } from "@/lib/viz/colors";
 import type { Cargo } from "@/lib/cargos";
 
 export const metadata: Metadata = { title: "Cenários Estatísticos" };
@@ -30,9 +31,9 @@ function fmt(n: number, locale: string) {
 }
 
 const RES_COR: Record<ResultadoCenario, string> = {
-  vitoria: "#4b5b0a",
-  disputa: "#c9772f",
-  derrota: "#8a3b2f",
+  vitoria: urgVar(URGENCIA_RESULTADO.vitoria),
+  disputa: urgVar(URGENCIA_RESULTADO.disputa),
+  derrota: urgVar(URGENCIA_RESULTADO.derrota),
 };
 
 export default async function Page() {
@@ -189,15 +190,18 @@ export default async function Page() {
           </p>
           <p
             className="font-ui text-body font-medium"
-            style={{ color: falta > 0 ? "#c9772f" : "#4b5b0a" }}
+            style={{ color: falta > 0 ? urgVar("high") : urgVar("low") }}
           >
             {falta > 0 ? t.cenarios.faltam : t.cenarios.folga}: {fmt(Math.abs(falta), locale)} {t.cenarios.votos}
           </p>
         </div>
         <div className="relative mt-3 h-3 rounded-[3px] bg-sand">
           <div
-            className="h-full rounded-[3px] bg-olive"
-            style={{ width: `${Math.min(100, (cen.votosBase / cen.votosNecessarios) * 100)}%` }}
+            className="h-full rounded-[3px]"
+            style={{
+              width: `${Math.min(100, (cen.votosBase / cen.votosNecessarios) * 100)}%`,
+              background: falta > 0 ? urgVar("high") : urgVar("low"),
+            }}
           />
           <div className="absolute inset-y-[-3px] w-px bg-ink" style={{ left: "100%" }} />
         </div>
@@ -240,8 +244,11 @@ export default async function Page() {
               <span className="w-52 shrink-0 text-smoke">{s.fator}</span>
               <span className="h-2 flex-1 rounded-[2px] bg-sand">
                 <span
-                  className="block h-full rounded-[2px] bg-olive"
-                  style={{ width: `${Math.round((s.impacto / maxSens) * 100)}%` }}
+                  className="block h-full rounded-[2px]"
+                  style={{
+                    width: `${Math.round((s.impacto / maxSens) * 100)}%`,
+                    background: "var(--color-cat-4)",
+                  }}
                 />
               </span>
               <span className="w-24 shrink-0 text-right text-fossil">

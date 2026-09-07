@@ -33,6 +33,30 @@
   --color-positive: #4b5b0a;
   --color-negative: #8a3b2f;
 
+  /* ---- Escala de urgência / prioridade (mapas, chips, barras) ---- */
+  --color-urg-crit: #c0392b;
+  --color-urg-high: #dd7a1c;
+  --color-urg-med: #caa406;
+  --color-urg-low: #4b8f3a;
+  --color-urg-none: #8b93a1;
+
+  /* ---- Paleta categórica (partidos, temas, pilares) — distinta no papel ---- */
+  --color-cat-1: #2f6fed;
+  --color-cat-2: #e5397f;
+  --color-cat-3: #1f9d6b;
+  --color-cat-4: #e07b1a;
+  --color-cat-5: #8b5cf6;
+  --color-cat-6: #0ea5b5;
+  --color-cat-7: #d4b106;
+  --color-cat-8: #6b8f2e;
+  --color-cat-9: #c2410c;
+  --color-cat-10: #64748b;
+
+  /* ---- Comparação de 2+ entidades (você vs adversário) ---- */
+  --color-cmp-self: #2f6fed;
+  --color-cmp-other: #e5397f;
+  --color-cmp-third: #1f9d6b;
+
   /* ---- Tipografia ---- */
   --font-display: var(--font-fraunces), "GT Sectra Display", Georgia, serif;
   --font-body: var(--font-newsreader), "Tiempos Text", Georgia, serif;
@@ -89,6 +113,24 @@
   --color-signal-right: #e0a488;
   --color-positive: #afc76a;
   --color-negative: #d98a72;
+  --color-urg-crit: #e0604f;
+  --color-urg-high: #ed9440;
+  --color-urg-med: #e0bd3a;
+  --color-urg-low: #79c063;
+  --color-urg-none: #9aa1ae;
+  --color-cat-1: #5b90f5;
+  --color-cat-2: #f05f9a;
+  --color-cat-3: #3cc389;
+  --color-cat-4: #f0973f;
+  --color-cat-5: #a985f7;
+  --color-cat-6: #33c2d1;
+  --color-cat-7: #e5c73d;
+  --color-cat-8: #9cc258;
+  --color-cat-9: #e0743f;
+  --color-cat-10: #8a93a3;
+  --color-cmp-self: #5b90f5;
+  --color-cmp-other: #f05f9a;
+  --color-cmp-third: #3cc389;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
@@ -111,6 +153,24 @@
     --color-signal-right: #e0a488;
     --color-positive: #afc76a;
     --color-negative: #d98a72;
+    --color-urg-crit: #e0604f;
+    --color-urg-high: #ed9440;
+    --color-urg-med: #e0bd3a;
+    --color-urg-low: #79c063;
+    --color-urg-none: #9aa1ae;
+    --color-cat-1: #5b90f5;
+    --color-cat-2: #f05f9a;
+    --color-cat-3: #3cc389;
+    --color-cat-4: #f0973f;
+    --color-cat-5: #a985f7;
+    --color-cat-6: #33c2d1;
+    --color-cat-7: #e5c73d;
+    --color-cat-8: #9cc258;
+    --color-cat-9: #e0743f;
+    --color-cat-10: #8a93a3;
+    --color-cmp-self: #5b90f5;
+    --color-cmp-other: #f05f9a;
+    --color-cmp-third: #3cc389;
   }
 }
 

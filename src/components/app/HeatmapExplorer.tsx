@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { TerritoryMap, type TerritoryMapHandle } from "@/components/viz/TerritoryMap";
 import type { IfetMunicipio, Quadrante } from "@/lib/intel/ifet";
+import { URGENCIA_QUADRANTE, urgVar } from "@/lib/viz/colors";
 
 type QuadInfo = Record<Quadrante, { label: string; acao: string }>;
 
@@ -38,7 +39,7 @@ const QUAD_ORDER: Quadrante[] = [
   "baixa-prioridade",
 ];
 
-function Bar({ label, hint, v }: { label: string; hint: string; v: number }) {
+function Bar({ label, hint, v, color }: { label: string; hint: string; v: number; color: string }) {
   return (
     <div>
       <div className="font-ui mb-1 flex items-baseline justify-between text-caption">
@@ -46,7 +47,7 @@ function Bar({ label, hint, v }: { label: string; hint: string; v: number }) {
         <span className="text-fossil">{Math.round(v * 100)}</span>
       </div>
       <div className="h-2 rounded-[2px] bg-sand">
-        <div className="h-full rounded-[2px] bg-olive" style={{ width: `${v * 100}%` }} />
+        <div className="h-full rounded-[2px]" style={{ width: `${v * 100}%`, background: color }} />
       </div>
       <p className="font-ui mt-1 text-[11px] text-pebble">{hint}</p>
     </div>
@@ -115,7 +116,7 @@ export function HeatmapExplorer({
             valueByCode={showVotos ? votos.byCode : ifet.byCode}
             nameByCode={nameByCode}
             metricLabel={showVotos ? votosField : dict.layerLabel}
-            scale={showVotos ? "sequential" : "heat"}
+            scale={showVotos ? "votes" : "heat"}
             height={460}
             onSelect={(h: TerritoryMapHandle) => pick(h.code)}
             formatValue={(n) => (showVotos ? Math.round(n).toLocaleString(locale) : n.toFixed(0))}
@@ -141,8 +142,8 @@ export function HeatmapExplorer({
               <span className="font-ui text-caption text-fossil">{dict.score}</span>
             </div>
             <div
-              className="font-ui mt-3 inline-block rounded-[4px] px-2 py-1 text-caption"
-              style={{ background: "var(--color-sand)", color: "var(--color-smoke)" }}
+              className="font-ui mt-3 inline-block rounded-[4px] px-2 py-1 text-caption text-white"
+              style={{ background: urgVar(URGENCIA_QUADRANTE[sel.quadrante] ?? "none") }}
             >
               {quad[sel.quadrante].label}
             </div>
@@ -150,14 +151,15 @@ export function HeatmapExplorer({
 
             <div className="mt-5 space-y-3">
               <p className="t-eyebrow">{dict.pillars}</p>
-              <Bar label={dict.pesoEleitoral} hint={dict.pesoEleitoralHint} v={sel.pilares.pesoEleitoral} />
-              <Bar label={dict.perfilEconomico} hint={dict.perfilEconomicoHint} v={sel.pilares.perfilEconomico} />
-              <Bar label={dict.disputabilidade} hint={dict.disputabilidadeHint} v={sel.pilares.disputabilidade} />
+              <Bar label={dict.pesoEleitoral} hint={dict.pesoEleitoralHint} v={sel.pilares.pesoEleitoral} color="var(--color-cat-1)" />
+              <Bar label={dict.perfilEconomico} hint={dict.perfilEconomicoHint} v={sel.pilares.perfilEconomico} color="var(--color-cat-4)" />
+              <Bar label={dict.disputabilidade} hint={dict.disputabilidadeHint} v={sel.pilares.disputabilidade} color="var(--color-cat-5)" />
               {sel.pilares.desempenhoHistorico != null && (
                 <Bar
                   label={dict.desempenhoHistorico}
                   hint={dict.desempenhoHistoricoHint}
                   v={sel.pilares.desempenhoHistorico}
+                  color="var(--color-cat-3)"
                 />
               )}
             </div>
@@ -190,7 +192,13 @@ export function HeatmapExplorer({
         <div className="grid gap-px overflow-hidden rounded-[var(--radius-card)] border border-ash bg-ash sm:grid-cols-2 lg:grid-cols-4">
           {counts.map(({ q, n }) => (
             <div key={q} className="bg-paper p-4">
-              <p className="font-ui text-[24px] font-light text-ink">{n}</p>
+              <div className="flex items-center gap-2">
+                <span
+                  className="inline-block h-2.5 w-2.5 shrink-0 rounded-full"
+                  style={{ background: urgVar(URGENCIA_QUADRANTE[q] ?? "none") }}
+                />
+                <p className="font-ui text-[24px] font-light text-ink">{n}</p>
+              </div>
               <p className="font-ui mt-1 text-body-sm text-ink">{quad[q].label}</p>
               <p className="font-ui mt-1 text-caption text-fossil">{quad[q].acao}</p>
             </div>
@@ -217,7 +225,13 @@ export function HeatmapExplorer({
               >
                 <span className="w-5 shrink-0 text-pebble">{i + 1}</span>
                 <span className="flex-1 truncate">{m.nome}</span>
-                <span className="w-16 shrink-0 text-right text-fossil">
+                <span
+                  className="inline-flex shrink-0 items-center gap-1.5 text-right text-caption text-fossil"
+                >
+                  <span
+                    className="inline-block h-2 w-2 rounded-full"
+                    style={{ background: urgVar(URGENCIA_QUADRANTE[m.quadrante] ?? "none") }}
+                  />
                   {quad[m.quadrante].label.split(" ")[0]}
                 </span>
                 <span className="w-10 shrink-0 text-right font-medium text-ink">

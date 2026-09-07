@@ -2,13 +2,22 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { ToolShell } from "@/components/app/ToolShell";
-import { TerritoryMap } from "@/components/viz/TerritoryMap";
-import { InfluenceNetwork } from "@/components/viz/InfluenceNetwork";
+import { Info } from "@/components/app/Info";
+import { InfluenceGraph } from "@/components/app/InfluenceGraph";
+import { ModuloRoadmap } from "@/components/app/ModuloRoadmap";
 import { getDictionary } from "@/lib/i18n";
 import { getCurrentCandidacy, perfilFrom } from "@/lib/candidacy";
-import { getTerritorioUF } from "@/lib/territory";
+import { getIfetResumoUF } from "@/lib/territory";
+import { getVotacaoPartidoUF } from "@/lib/data-sources/regional";
+import { getBancadaCamara } from "@/lib/data-sources/camara";
+import { getEstadoPorSigla } from "@/lib/data-sources/ibge";
+import { computeInfluencia, INFLUENCIA_PLEITO } from "@/lib/intel/influencia";
 
 export const metadata: Metadata = { title: "Mapa de Influência" };
+
+function fill(s: string, v: Record<string, string | number>) {
+  return Object.entries(v).reduce((a, [k, val]) => a.replaceAll(`{${k}}`, String(val)), s);
+}
 
 export default async function Page() {
   const { locale, t } = await getDictionary();
@@ -16,75 +25,186 @@ export default async function Page() {
   const candidacy = await getCurrentCandidacy();
   const perfil = candidacy ? perfilFrom(candidacy) : null;
 
-  const territorio =
-    candidacy && perfil?.uf ? await getTerritorioUF(perfil.uf, candidacy.id) : null;
+  const howItWorks = pt
+    ? [
+        "Puxa a votação por partido e município no último pleito proporcional (Base dos Dados).",
+        "Dimensiona cada partido pelo voto e posiciona pelo eixo ideológico.",
+        "Liga dois partidos quando disputam os mesmos eleitores nos mesmos municípios.",
+        "Deriva os blocos aliado / adversário / neutro e a dependência territorial.",
+      ]
+    : [
+        "Pulls party vote by municipality in the last proportional election (Base dos Dados).",
+        "Sizes each party by vote and positions it by ideological axis.",
+        "Links two parties when they compete for the same voters in the same municipalities.",
+        "Derives the ally / opponent / neutral blocs and the territorial dependency.",
+      ];
+  const outputs = pt
+    ? ["Rede de partidos por voto, ideologia e sobreposição de base.", "Peso do seu campo vs. o do adversário.", "Onde o adversário é frágil e de quem o seu voto depende."]
+    : ["Party network by vote, ideology and base overlap.", "Weight of your field vs. the opponent's.", "Where the opponent is fragile and who your vote depends on."];
 
-
-  return (
-    <ToolShell
-      id="mapa-de-influencia"
-      realData={!!territorio}
-      updatedAt={territorio ? (territorio.eleitoralAno ? String(territorio.eleitoralAno) : "IBGE 2022") : "—"}
-      howItWorks={
-        pt
-          ? [
-              "Carrega o território real do estado do candidato (malha municipal do IBGE).",
-              "Dimensiona cada município pela presença eleitoral (votação) ou, na ausência dela, pela população.",
-              "Cruza com coligações, federações e mandatos ativos (Câmara e Senado).",
-              "Sobrepõe a rede de atores e os pontos de decisão.",
-            ]
-          : [
-              "Loads the candidate state's real territory (IBGE municipal mesh).",
-              "Sizes each municipality by electoral presence (vote) or, absent it, by population.",
-              "Cross-references coalitions, federations and active mandates (Chamber and Senate).",
-              "Overlays the actor network and decision points.",
-            ]
-      }
-      outputs={
-        pt
-          ? [
-              "Território do candidato dimensionado por peso.",
-              "Rede de atores e vínculos (coligação, histórico, territorial).",
-              "Alertas de base a disputar e de pontes entre blocos.",
-            ]
-          : [
-              "Candidate territory sized by weight.",
-              "Actor network and ties (coalition, historical, territorial).",
-              "Alerts on contested bases and bridges between blocs.",
-            ]
-      }
-    >
-      {territorio ? (
-        <>
-          <p className="font-ui mb-3 text-body-sm text-fossil">
-            {pt
-              ? `Municípios de ${territorio.ufNome} dimensionados pelo IFET — prioridade estratégica de ${perfil!.nome} por território (ver Mapa de Calor para a decomposição).`
-              : `${territorio.ufNome} municipalities sized by IFET — ${perfil!.nome}'s strategic priority by territory (see the Heatmap for the breakdown).`}
-          </p>
-          <TerritoryMap
-            geojson={territorio.geojson}
-            valueByCode={territorio.ifet.byCode}
-            nameByCode={territorio.nomeByCode}
-            metricLabel="IFET (0–100)"
-            scale="heat"
-            height={460}
-            formatValue={(n) => n.toFixed(0)}
-          />
-          <div className="mt-8">
-            <p className="t-eyebrow mb-2">
-              {pt ? "Rede de atores (ilustrativa)" : "Actor network (illustrative)"}
-            </p>
-            <InfluenceNetwork compact />
-          </div>
-        </>
-      ) : (
+  if (!candidacy || !perfil || !perfil.uf || !perfil.partido) {
+    return (
+      <ToolShell id="mapa-de-influencia" updatedAt="—" howItWorks={howItWorks} outputs={outputs}>
         <div className="card">
           <p className="text-body-sm text-fossil">{t.maps.needCandidate}</p>
           <Link href="/onboarding" className="btn btn-primary mt-4">
             {t.maps.goOnboarding} <ArrowRight size={16} />
           </Link>
         </div>
-      )}
+      </ToolShell>
+    );
+  }
+
+  const [resumo, votacao, bancada, estado] = await Promise.all([
+    getIfetResumoUF(perfil.uf, candidacy.id),
+    getVotacaoPartidoUF(INFLUENCIA_PLEITO.ano, INFLUENCIA_PLEITO.turno, perfil.uf, INFLUENCIA_PLEITO.cargo),
+    getBancadaCamara(),
+    getEstadoPorSigla(perfil.uf),
+  ]);
+
+  if (votacao.length < 100 || !resumo) {
+    return (
+      <ToolShell id="mapa-de-influencia" updatedAt="—" howItWorks={howItWorks} outputs={outputs}>
+        <ModuloRoadmap
+          pergunta={pt ? "Quem move o voto no seu território?" : "Who moves the vote in your territory?"}
+          entrega={pt ? "Não foi possível carregar a votação por partido para este estado agora." : "Couldn't load the party vote for this state right now."}
+          etapas={[
+            { label: pt ? "Votação por partido e município (Base dos Dados)" : "Party vote by municipality (Base dos Dados)", feito: votacao.length >= 100 },
+            { label: pt ? "Bancada e escala ideológica" : "Bench and ideology scale", feito: true },
+            { label: pt ? "Dados carregados para este estado" : "Data loaded for this state", feito: false },
+          ]}
+        />
+      </ToolShell>
+    );
+  }
+
+  const inf = computeInfluencia(votacao, perfil.partido, bancada, resumo.nomeByCode);
+  const ufNome = estado?.nome ?? perfil.uf;
+  const pleito = pt ? "deputado federal 2022" : "federal deputy 2022";
+
+  const conclusao = pt
+    ? `Seu campo soma ${Math.round(inf.aliado.share * 100)}% do voto de ${ufNome} (${inf.aliado.bancada} deputados); o campo adversário, ${Math.round(inf.adversario.share * 100)}%. ${inf.dependencias[0] ? `O seu voto em ${inf.dependencias[0].nome} depende do ${inf.dependencias[0].principal}. ` : ""}${inf.fragilidades[0] ? `O adversário está vulnerável em ${inf.fragilidades.slice(0, 3).map((f) => f.nome).join(", ")}.` : ""}`
+    : `Your field holds ${Math.round(inf.aliado.share * 100)}% of ${ufNome}'s vote (${inf.aliado.bancada} deputies); the opponent field, ${Math.round(inf.adversario.share * 100)}%. ${inf.dependencias[0] ? `Your vote in ${inf.dependencias[0].nome} depends on ${inf.dependencias[0].principal}. ` : ""}${inf.fragilidades[0] ? `The opponent is vulnerable in ${inf.fragilidades.slice(0, 3).map((f) => f.nome).join(", ")}.` : ""}`;
+
+  const blocos = [
+    { info: t.influencia.blocAlly, b: inf.aliado, cor: "var(--color-urg-low)" },
+    { info: t.influencia.blocFoe, b: inf.adversario, cor: "var(--color-urg-crit)" },
+    { info: t.influencia.blocNeutral, b: inf.neutro, cor: "var(--color-urg-none)" },
+  ];
+
+  return (
+    <ToolShell
+      id="mapa-de-influencia"
+      realData
+      conclusao={conclusao}
+      updatedAt={inf.version}
+      howItWorks={howItWorks}
+      outputs={outputs}
+    >
+      <h2 className="t-heading flex items-center text-[22px]">
+        {t.tools.influenceMap.name} <span className="mark ml-1 text-caption">{t.influencia.tag}</span>
+        <Info label={t.influencia.tag}>{t.tools.influenceMap.desc}</Info>
+      </h2>
+      <p className="mt-2 max-w-2xl text-body-sm text-fossil">
+        {fill(t.influencia.intro, { uf: ufNome, pleito })}
+      </p>
+
+      <div className="mt-6">
+        <InfluenceGraph
+          nos={inf.nos}
+          arestas={inf.arestas}
+          base={inf.partidoBase}
+          labels={{
+            you: t.influencia.you,
+            ally: t.influencia.ally,
+            foe: t.influencia.foe,
+            neutral: t.influencia.neutral,
+            ideoLeft: t.influencia.ideoLeft,
+            ideoRight: t.influencia.ideoRight,
+          }}
+          locale={locale}
+        />
+      </div>
+
+      {/* blocos */}
+      <div className="mt-6">
+        <p className="t-eyebrow mb-3">{t.influencia.blocsTitle}</p>
+        <div className="grid gap-4 sm:grid-cols-3">
+          {blocos.map(({ info, b, cor }) => (
+            <div key={info} className="card">
+              <div className="flex items-center gap-2">
+                <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ background: cor }} />
+                <p className="t-eyebrow">{info}</p>
+              </div>
+              <p className="font-ui mt-2 text-[26px] font-light leading-none text-ink">
+                {Math.round(b.share * 100)}%
+              </p>
+              <p className="font-ui mt-1 text-caption text-pebble">
+                {b.votos.toLocaleString(locale)} {t.influencia.blocVotes} · {b.bancada} {t.influencia.blocBench}
+              </p>
+              <p className="font-ui mt-2 flex flex-wrap gap-1">
+                {b.partidos.slice(0, 8).map((p) => (
+                  <span key={p} className="rounded-[3px] bg-sand px-1.5 py-0.5 text-[11px] text-smoke">
+                    {p}
+                  </span>
+                ))}
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* fragilidades + dependências */}
+      <div className="mt-6 grid gap-4 md:grid-cols-2">
+        <div className="card">
+          <h3 className="t-heading text-[18px]">{t.influencia.fragTitle}</h3>
+          <p className="font-ui mt-1 text-caption text-pebble">{t.influencia.fragSub}</p>
+          <ol className="font-ui mt-3 divide-y divide-ash text-body-sm">
+            {inf.fragilidades.map((f) => (
+              <li key={f.code} className="flex items-center justify-between py-2">
+                <span className="text-smoke">{f.nome}</span>
+                <span className="text-fossil">
+                  {t.influencia.fragAdv} {Math.round(f.advShare * 100)}% · {t.influencia.fragYou}{" "}
+                  {Math.round(f.seuShare * 100)}%
+                </span>
+              </li>
+            ))}
+            {inf.fragilidades.length === 0 && <li className="py-2 text-pebble">—</li>}
+          </ol>
+        </div>
+        <div className="card">
+          <h3 className="t-heading text-[18px]">{t.influencia.depTitle}</h3>
+          <p className="font-ui mt-1 text-caption text-pebble">{t.influencia.depSub}</p>
+          <ol className="font-ui mt-3 divide-y divide-ash text-body-sm">
+            {inf.dependencias.map((d) => (
+              <li key={d.code} className="flex items-center justify-between py-2">
+                <span className="text-smoke">{d.nome}</span>
+                <span className="text-fossil">
+                  {d.principal} {t.influencia.depCarries} {Math.round(d.principalShare * 100)}%
+                </span>
+              </li>
+            ))}
+            {inf.dependencias.length === 0 && <li className="py-2 text-pebble">—</li>}
+          </ol>
+        </div>
+      </div>
+
+      <div className="card mt-6">
+        <h3 className="t-heading text-[20px]">{t.influencia.fichaTitle}</h3>
+        <dl className="font-ui mt-3 grid gap-x-8 gap-y-3 text-body-sm sm:grid-cols-2">
+          <div>
+            <dt className="text-pebble">{t.influencia.version}</dt>
+            <dd className="text-smoke">{inf.version}</dd>
+          </div>
+          <div>
+            <dt className="text-pebble">{t.influencia.sources}</dt>
+            <dd className="text-smoke">{inf.fontes.join(" · ")}</dd>
+          </div>
+          <div className="sm:col-span-2">
+            <dt className="text-pebble">{t.influencia.pending}</dt>
+          </div>
+        </dl>
+      </div>
     </ToolShell>
   );
 }
