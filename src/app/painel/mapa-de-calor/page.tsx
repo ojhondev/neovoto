@@ -7,6 +7,7 @@ import { getDictionary } from "@/lib/i18n";
 import { getCurrentCandidacy, perfilFrom, cargoOf } from "@/lib/candidacy";
 import { getTerritorioUF } from "@/lib/territory";
 import { CARGO_LABEL } from "@/lib/cargos";
+import { RetryVotacao } from "@/components/app/RetryVotacao";
 
 export const metadata: Metadata = { title: "Mapa de Calor de Influência" };
 
@@ -29,11 +30,7 @@ export default async function Page() {
   }
 
   const cargo = cargoOf(candidacy);
-  const territorio = await getTerritorioUF(perfil.uf, {
-    nome: perfil.nome,
-    uf: perfil.uf,
-    cargo,
-  });
+  const territorio = await getTerritorioUF(perfil.uf, candidacy.id);
 
   if (!territorio) {
     return (
@@ -58,11 +55,14 @@ export default async function Page() {
     : t.maps.layerPopulation;
 
   const valueByCode = eleitoral ?? territorio.populacaoByCode;
+  const throttled = candidacy.source === "tse" && candidacy.electoralStatus === "indisponivel";
   const banner = eleitoral
     ? t.maps.electoralActive
         .replace("{name}", perfil.nome)
         .replace("{ano}", String(territorio.eleitoralAno ?? ""))
-    : t.maps.electoralPending;
+    : throttled
+      ? t.maps.electoralThrottled
+      : t.maps.electoralPending;
 
   const sortedTop = [...territorio.municipios]
     .map((m) => ({ ...m, metric: valueByCode[m.code] ?? 0 }))
@@ -106,6 +106,7 @@ export default async function Page() {
       }
     >
       <p className="font-ui mb-3 text-body-sm text-fossil">{banner}</p>
+      {throttled && <RetryVotacao label={t.maps.retryVotacao} />}
       <TerritoryMap
         geojson={territorio.geojson}
         valueByCode={valueByCode}

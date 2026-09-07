@@ -20,15 +20,16 @@ const pt = {
     product: "Produto",
     tools: "Ferramentas",
     ethics: "Ética & LGPD",
-    method: "Método",
+    method: "Manifesto",
     pricing: "Planos",
   },
   announce: "NeoVoto — plataforma analítica para decisões eleitorais e de governo. Somente dados abertos oficiais.",
   landing: {
     heroKicker: "Plataforma de inteligência política",
-    heroTitle: "Decisões eleitorais e de governo com base em evidência, não em achismo",
+    heroTitle: "Inteligência Eleitoral",
+    heroTitleAccent: "com dados e IA",
     heroSub:
-      "A NeoVoto correlaciona dados públicos oficiais para ajudar partidos, candidaturas e mandatos a entender território, eleitorado e cenários — dentro da LGPD e sem os erros da Cambridge Analytica.",
+      "A NeoVoto correlaciona dados públicos oficiais para ajudar partidos, candidaturas e mandatos a decidir onde investir, com quem coligar e o que priorizar — dentro da LGPD e sem os erros da Cambridge Analytica.",
     heroPrimary: "Solicitar demonstração",
     heroSecondary: "Ver as ferramentas",
     scrollCue: "Role para continuar",
@@ -45,13 +46,13 @@ const pt = {
           "Opinião política é dado sensível (art. 11). A NeoVoto trabalha em nível territorial agregado e com dados de agentes públicos — nunca perfis psicográficos de cidadãos.",
       },
       {
-        title: "Transparência metodológica",
+        title: "Cada número rastreável à fonte",
         body:
-          "Toda projeção mostra suas fontes, o recorte temporal e as premissas. Nada de caixa-preta: o cenário é auditável.",
+          "Toda análise indica a base oficial que a alimenta e o recorte de tempo. Você audita a origem do dado — sem depender de caixa-preta.",
       },
     ],
-    globeTitleA: "Inteligência política ponta a ponta.",
-    globeTitleB: "Uma plataforma.",
+    globeTitleA: "Inteligência eleitoral",
+    globeTitleB: "com dados e IA.",
     globeSub:
       "A NeoVoto conecta pré-campanha, campanha e governo num só lugar — os mesmos dados oficiais acompanham cada decisão que depende deles.",
     pillarsKicker: "Um ciclo, três momentos",
@@ -146,7 +147,7 @@ const pt = {
       name: "Cenários Estatísticos",
       short: "Motor que correlaciona dados para aproximar resultados, a partir do seu objetivo.",
       desc:
-        "Modelos probabilísticos que combinam histórico eleitoral, contexto socioeconômico e composição de coligações para estimar faixas de resultado sob diferentes premissas. Cada cenário declara suas fontes e sua margem.",
+        "A partir do objetivo declarado, o motor da NeoVoto combina histórico eleitoral, contexto socioeconômico e composição de coligações para estimar faixas de resultado. Cada cenário mostra as fontes que o alimentam e a incerteza da estimativa.",
     },
     coalitions: {
       name: "Coligações",
@@ -163,7 +164,10 @@ const pt = {
     electoralActive:
       "Camada eleitoral ativa: votação de {name} por município ({ano}), via brasil.io.",
     electoralPending:
-      "Mostrando a base territorial real (população, Censo 2022). A camada de votação por município liga automaticamente quando a fonte eleitoral (brasil.io) é configurada — ver docs/DADOS-TSE.md.",
+      "Mostrando a base territorial real (população, Censo 2022). A camada de votação por município entra quando a candidatura vier do TSE (busca 'todos os cargos' no onboarding).",
+    electoralThrottled:
+      "A votação por município deste candidato ainda não foi carregada — o brasil.io limitou as requisições. Mostrando a base territorial (população). Tente recarregar em alguns minutos.",
+    retryVotacao: "Recarregar a votação",
     topMunicipios: "Maiores municípios",
     interact: "Passe o mouse pelos municípios; role e arraste para navegar.",
     inhabitants: "hab.",
@@ -250,13 +254,17 @@ const pt = {
     step: "Passo",
     of: "de",
     title: "Quem você vai analisar?",
-    sub: "Digite o nome de um deputado federal ou senador em exercício. A NeoVoto puxa os dados públicos oficiais dessa pessoa para calibrar as ferramentas.",
+    sub: "Digite o nome do candidato. A NeoVoto puxa os dados públicos oficiais dessa pessoa para calibrar as ferramentas.",
     searchPlaceholder: "Nome do candidato ou parlamentar…",
     searching: "Consultando Câmara e Senado…",
-    noResults: "Nada encontrado nas fontes oficiais. Tente outro nome.",
-    hint: "Fontes: Dados Abertos da Câmara dos Deputados e do Senado Federal.",
-    onlyFederal:
-      "Nesta fase só há dados para parlamentares federais em exercício. Prefeitos, vereadores, deputados estaduais e pré-candidaturas entram na Fase 2 (ingestão do TSE).",
+    noResults: "Nada encontrado na Câmara nem no Senado. Tente a busca em todos os cargos abaixo.",
+    hint: "Câmara e Senado: mandato federal atual. Todos os cargos: espelho do TSE (brasil.io), 1996–2022.",
+    onlyFederal: "",
+    allOfficesCta: "Buscar em todos os cargos (prefeito, vereador, governador, deputado estadual…)",
+    allOfficesSearching: "Consultando o TSE (brasil.io)…",
+    allOfficesThrottled:
+      "A fonte do TSE (brasil.io) está limitando as requisições agora — o plano gratuito é restrito. Tente de novo em alguns minutos; os parlamentares federais acima já estão disponíveis.",
+    allOfficesEmpty: "Nenhum candidato com esse nome nas eleições de 1996 a 2022.",
     selected: "Selecionado",
     change: "trocar",
     objectiveTitle: "Qual é o objetivo?",

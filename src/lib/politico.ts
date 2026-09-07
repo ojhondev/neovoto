@@ -7,8 +7,14 @@ import {
 } from "@/lib/data-sources/camara";
 import { searchSenadores, getSenador } from "@/lib/data-sources/senado";
 import { getEstadoPorSigla, getMunicipios } from "@/lib/data-sources/ibge";
+import {
+  buscarCandidatosTSE,
+  BrasilioThrottled,
+  type CandidatoEleitoral,
+} from "@/lib/data-sources/eleitoral";
+import { CARGO_LABEL, anoEleicao, type Cargo } from "@/lib/cargos";
 
-export type Fonte = "camara" | "senado";
+export type Fonte = "camara" | "senado" | "tse";
 
 export type PoliticoBusca = {
   source: Fonte;
@@ -17,6 +23,9 @@ export type PoliticoBusca = {
   partido: string;
   uf: string;
   casa: string;
+  cargo?: Cargo;
+  ano?: number;
+  situacao?: string;
   foto: string;
 };
 
@@ -28,6 +37,8 @@ export type PerfilPolitico = {
   partido: string;
   uf: string;
   casa: string;
+  cargo?: Cargo;
+  ano?: number;
   foto: string;
   email: string | null;
   nascimento?: string | null;
@@ -48,7 +59,7 @@ export type PerfilPolitico = {
   } | null;
 };
 
-/** Busca unificada por nome nas duas casas. */
+/** Busca nas casas federais (Câmara + Senado), rápida e sem rate limit. */
 export async function buscarPoliticos(q: string): Promise<PoliticoBusca[]> {
   const termo = q.trim();
   if (termo.length < 2) return [];
@@ -68,6 +79,7 @@ export async function buscarPoliticos(q: string): Promise<PoliticoBusca[]> {
         partido: d.siglaPartido,
         uf: d.siglaUf,
         casa: "Câmara dos Deputados",
+        cargo: "deputado-federal",
         foto: d.urlFoto,
       });
     }
@@ -81,11 +93,28 @@ export async function buscarPoliticos(q: string): Promise<PoliticoBusca[]> {
         partido: s.siglaPartido,
         uf: s.uf,
         casa: "Senado Federal",
+        cargo: "senador",
         foto: s.urlFoto,
       });
     }
   }
   return out;
+}
+
+export type CandidatoTSEDisplay = CandidatoEleitoral & { casa: string; foto: string };
+
+/** Busca no espelho do TSE (brasil.io) — todos os cargos. Pode lançar BrasilioThrottled. */
+export async function buscarPoliticosTSE(q: string): Promise<CandidatoTSEDisplay[]> {
+  const cands = await buscarCandidatosTSE(q);
+  return cands.map((c) => {
+    const nivel = CARGO_LABEL[c.cargo].nivel;
+    const escopo = nivel === "municipal" ? c.unidadeEleitoral : c.uf;
+    return {
+      ...c,
+      casa: `${CARGO_LABEL[c.cargo].pt} · ${escopo} · ${c.ano}`,
+      foto: "",
+    };
+  });
 }
 
 async function territorioDaUF(uf: string) {
@@ -127,6 +156,7 @@ export async function montarPerfil(
       partido: det.siglaPartido,
       uf: det.siglaUf,
       casa: "Câmara dos Deputados",
+      cargo: "deputado-federal",
       foto: det.urlFoto,
       email: det.email,
       nascimento: det.dataNascimento,
@@ -147,21 +177,54 @@ export async function montarPerfil(
     };
   }
 
-  const sen = await getSenador(externalId);
-  if (!sen) return null;
-  const territorio = await territorioDaUF(sen.uf);
+  if (source === "senado") {
+    const sen = await getSenador(externalId);
+    if (!sen) return null;
+    const territorio = await territorioDaUF(sen.uf);
+    return {
+      source,
+      externalId,
+      nome: sen.nome,
+      nomeCompleto: sen.nomeCompleto,
+      partido: sen.siglaPartido,
+      uf: sen.uf,
+      casa: "Senado Federal",
+      cargo: "senador",
+      foto: sen.urlFoto,
+      email: sen.email,
+      frentes: [],
+      proposicoes: null,
+      territorio,
+    };
+  }
+
+  // source === "tse": o perfil é montado por perfilFromCandidatoEleitoral (no select).
+  return null;
+}
+
+/** Monta o perfil TSE a partir de um objeto de candidato já em mãos (evita 2ª busca). */
+export async function perfilFromCandidatoEleitoral(
+  c: CandidatoEleitoral,
+): Promise<PerfilPolitico> {
+  const territorio = await territorioDaUF(c.uf);
   return {
-    source,
-    externalId,
-    nome: sen.nome,
-    nomeCompleto: sen.nomeCompleto,
-    partido: sen.siglaPartido,
-    uf: sen.uf,
-    casa: "Senado Federal",
-    foto: sen.urlFoto,
-    email: sen.email,
+    source: "tse",
+    externalId: c.externalId,
+    nome: c.nome,
+    partido: c.partido,
+    uf: c.uf,
+    casa: `${CARGO_LABEL[c.cargo].pt} · ${c.ano}`,
+    cargo: c.cargo,
+    ano: c.ano,
+    foto: "",
+    email: null,
+    nascimento: c.nascimento,
+    situacao: c.situacao,
+    escolaridade: c.escolaridade,
     frentes: [],
     proposicoes: null,
     territorio,
   };
 }
+
+export { BrasilioThrottled, anoEleicao };

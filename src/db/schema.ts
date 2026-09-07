@@ -2,6 +2,7 @@ import {
   pgTable,
   uuid,
   text,
+  integer,
   timestamp,
   jsonb,
   pgEnum,
@@ -25,7 +26,12 @@ export const orgKind = pgEnum("org_kind", [
   "consultoria",
   "outro",
 ]);
-export const candidacySource = pgEnum("candidacy_source", ["camara", "senado", "manual"]);
+export const candidacySource = pgEnum("candidacy_source", [
+  "camara",
+  "senado",
+  "tse",
+  "manual",
+]);
 
 export const organizations = pgTable("organizations", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -81,15 +87,50 @@ export const candidacies = pgTable(
     house: text("house"), // 'camara' | 'senado' | null
     party: text("party"),
     uf: text("uf"),
+    cargo: text("cargo"), // presidente | governador | senador | deputado-* | prefeito | vereador
+    electionYear: integer("election_year"),
     photoUrl: text("photo_url"),
     email: text("email"),
     objective: text("objective"), // objetivo declarado pelo usuário
     raw: jsonb("raw").$type<Record<string, unknown>>().notNull().default({}),
+    /** estado da ingestão da votação: pendente | ok | indisponivel | na */
+    electoralStatus: text("electoral_status").notNull().default("na"),
     refreshedAt: timestamp("refreshed_at", { withTimezone: true }).defaultNow().notNull(),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   },
   (t) => [index("candidacies_source_idx").on(t.source, t.externalId)],
 );
+
+/**
+ * Votação do candidato por município (espelho do TSE via brasil.io / Base dos Dados).
+ * Dado histórico agregado — nunca de eleitor. Cacheado para sempre; a fonte tem
+ * rate limit agressivo, então o request path do usuário só lê daqui.
+ */
+export const electoralResults = pgTable(
+  "electoral_results",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    candidacyId: uuid("candidacy_id")
+      .references(() => candidacies.id, { onDelete: "cascade" })
+      .notNull(),
+    ano: integer("ano").notNull(),
+    turno: integer("turno").notNull().default(1),
+    ufSigla: text("uf_sigla").notNull(),
+    ibgeCode: text("ibge_code"),
+    tseCode: text("tse_code"),
+    municipio: text("municipio").notNull(),
+    votos: integer("votos").notNull().default(0),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [index("electoral_candidacy_idx").on(t.candidacyId)],
+);
+
+/** Cache das buscas de candidato no brasil.io (por termo normalizado). */
+export const candidateSearchCache = pgTable("candidate_search_cache", {
+  term: text("term").primaryKey(),
+  results: jsonb("results").$type<unknown[]>().notNull().default([]),
+  fetchedAt: timestamp("fetched_at", { withTimezone: true }).defaultNow().notNull(),
+});
 
 /** Análises salvas (recorte territorial + parâmetros). Sem PII. */
 export const analyses = pgTable(
@@ -129,3 +170,4 @@ export type User = typeof users.$inferSelect;
 export type Organization = typeof organizations.$inferSelect;
 export type Analysis = typeof analyses.$inferSelect;
 export type Candidacy = typeof candidacies.$inferSelect;
+export type ElectoralResult = typeof electoralResults.$inferSelect;

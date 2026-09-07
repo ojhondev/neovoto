@@ -22,16 +22,17 @@ const en: Dictionary = {
     product: "Product",
     tools: "Tools",
     ethics: "Ethics & privacy",
-    method: "Method",
+    method: "Manifesto",
     pricing: "Pricing",
   },
   announce:
     "NeoVoto — analytics for electoral and governing decisions. Official open data only.",
   landing: {
     heroKicker: "Political intelligence platform",
-    heroTitle: "Electoral and governing decisions grounded in evidence, not hunches",
+    heroTitle: "Electoral Intelligence",
+    heroTitleAccent: "with data and AI",
     heroSub:
-      "NeoVoto correlates official public data to help parties, campaigns and mandates read territory, electorate and scenarios — within Brazil's data-protection law and without Cambridge Analytica's mistakes.",
+      "NeoVoto correlates official public data to help parties, campaigns and mandates decide where to invest, who to ally with and what to prioritise — within Brazil's data-protection law and without Cambridge Analytica's mistakes.",
     heroPrimary: "Request a demo",
     heroSecondary: "See the tools",
     scrollCue: "Scroll to continue",
@@ -48,13 +49,13 @@ const en: Dictionary = {
           "Political opinion is sensitive data under Brazilian law. NeoVoto works at aggregate territorial level and on public-official data — never psychographic profiles of citizens.",
       },
       {
-        title: "Methodological transparency",
+        title: "Every figure traceable to its source",
         body:
-          "Every projection shows its sources, its time window and its assumptions. No black box: the scenario is auditable.",
+          "Every analysis names the official base that feeds it and the time window. You audit where the data comes from — no black box.",
       },
     ],
-    globeTitleA: "Political intelligence, end to end.",
-    globeTitleB: "One platform.",
+    globeTitleA: "Electoral intelligence",
+    globeTitleB: "with data and AI.",
     globeSub:
       "NeoVoto connects pre-campaign, campaign and government in one place — the same official data follows every decision that depends on it.",
     pillarsKicker: "One cycle, three moments",
@@ -148,7 +149,7 @@ const en: Dictionary = {
       name: "Statistical Scenarios",
       short: "An engine that correlates data to approximate results, driven by your objective.",
       desc:
-        "Probabilistic models combining electoral history, socioeconomic context and coalition composition to estimate result ranges under different assumptions. Every scenario states its sources and its margin.",
+        "From your declared objective, NeoVoto's engine combines electoral history, socioeconomic context and coalition composition to estimate result ranges. Every scenario shows the sources feeding it and the uncertainty of the estimate.",
     },
     coalitions: {
       name: "Coalitions",
@@ -165,7 +166,10 @@ const en: Dictionary = {
     electoralActive:
       "Electoral layer active: {name}'s vote by municipality ({ano}), via brasil.io.",
     electoralPending:
-      "Showing the real territorial base (population, 2022 Census). The vote-by-municipality layer switches on automatically once the electoral source (brasil.io) is configured — see docs/DADOS-TSE.md.",
+      "Showing the real territorial base (population, 2022 Census). The vote-by-municipality layer comes in when the candidacy is sourced from the TSE ('all offices' search in the onboarding).",
+    electoralThrottled:
+      "This candidate's vote by municipality hasn't loaded yet — brasil.io rate-limited the requests. Showing the territorial base (population). Try reloading in a few minutes.",
+    retryVotacao: "Reload the vote",
     topMunicipios: "Largest municipalities",
     interact: "Hover the municipalities; scroll and drag to navigate.",
     inhabitants: "inhab.",
@@ -252,13 +256,17 @@ const en: Dictionary = {
     step: "Step",
     of: "of",
     title: "Who are you going to analyse?",
-    sub: "Type the name of a sitting federal deputy or senator. NeoVoto pulls that person's official public data to calibrate the tools.",
+    sub: "Type the candidate's name. NeoVoto pulls that person's official public data to calibrate the tools.",
     searchPlaceholder: "Candidate or member's name…",
     searching: "Querying the Chamber and the Senate…",
-    noResults: "Nothing found in the official sources. Try another name.",
-    hint: "Sources: open data from the Chamber of Deputies and the Federal Senate.",
-    onlyFederal:
-      "In this phase only sitting federal members are available. Mayors, councillors, state deputies and pre-candidacies come in Phase 2 (TSE ingestion).",
+    noResults: "Nothing found in the Chamber or the Senate. Try the all-offices search below.",
+    hint: "Chamber and Senate: current federal mandate. All offices: TSE mirror (brasil.io), 1996–2022.",
+    onlyFederal: "",
+    allOfficesCta: "Search every office (mayor, councillor, governor, state deputy…)",
+    allOfficesSearching: "Querying the TSE (brasil.io)…",
+    allOfficesThrottled:
+      "The TSE source (brasil.io) is rate-limiting requests right now — the free tier is restrictive. Try again in a few minutes; the federal members above are already available.",
+    allOfficesEmpty: "No candidate by that name in the 1996–2022 elections.",
     selected: "Selected",
     change: "change",
     objectiveTitle: "What is the objective?",

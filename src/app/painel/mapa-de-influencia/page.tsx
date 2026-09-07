@@ -5,7 +5,7 @@ import { ToolShell } from "@/components/app/ToolShell";
 import { TerritoryMap } from "@/components/viz/TerritoryMap";
 import { InfluenceNetwork } from "@/components/viz/InfluenceNetwork";
 import { getDictionary } from "@/lib/i18n";
-import { getCurrentCandidacy, perfilFrom, cargoOf } from "@/lib/candidacy";
+import { getCurrentCandidacy, perfilFrom } from "@/lib/candidacy";
 import { getTerritorioUF } from "@/lib/territory";
 
 export const metadata: Metadata = { title: "Mapa de Influência" };
@@ -17,13 +17,7 @@ export default async function Page() {
   const perfil = candidacy ? perfilFrom(candidacy) : null;
 
   const territorio =
-    candidacy && perfil?.uf
-      ? await getTerritorioUF(perfil.uf, {
-          nome: perfil.nome,
-          uf: perfil.uf,
-          cargo: cargoOf(candidacy),
-        })
-      : null;
+    candidacy && perfil?.uf ? await getTerritorioUF(perfil.uf, candidacy.id) : null;
 
   const eleitoral = territorio?.eleitoralByCode ?? null;
 

@@ -4,17 +4,7 @@ import {
   getPopulacaoMunicipiosUF,
   type GeoFeatureCollection,
 } from "@/lib/data-sources/ibge";
-import { getVotosPorMunicipioNome } from "@/lib/data-sources/eleitoral";
-import type { Cargo } from "@/lib/cargos";
-
-function norm(s: string): string {
-  return s
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .replace(/['´`^~]/g, "")
-    .trim();
-}
+import { getVotosByIbge } from "@/lib/data-sources/eleitoral";
 
 export type MunicipioTerritorio = {
   code: string;
@@ -29,21 +19,18 @@ export type TerritorioUF = {
   regiao: string;
   geojson: GeoFeatureCollection;
   municipios: MunicipioTerritorio[];
-  /** métrica territorial por código IBGE (população do Censo 2022) */
   populacaoByCode: Record<string, number>;
   nomeByCode: Record<string, string>;
-  /**
-   * Camada eleitoral por código IBGE — votos do candidato por município.
-   * `null` até a fonte eleitoral estar conectada (ver docs/DADOS-TSE.md).
-   */
+  /** votos do candidato por código IBGE — null até a ingestão do brasil.io rodar */
   eleitoralByCode: Record<string, number> | null;
   eleitoralAno: number | null;
+  eleitoralTotal: number | null;
 };
 
-/** Territórios pesados: um por UF, cacheado bem no servidor. */
+/** Territórios pesados: um por UF, cacheado no servidor (fetch do IBGE). */
 export async function getTerritorioUF(
   ufSigla: string,
-  candidato?: { nome: string; uf: string; cargo?: Cargo },
+  candidacyId?: string,
 ): Promise<TerritorioUF | null> {
   const estado = await getEstadoPorSigla(ufSigla);
   if (!estado) return null;
@@ -67,22 +54,13 @@ export async function getTerritorioUF(
 
   let eleitoralByCode: Record<string, number> | null = null;
   let eleitoralAno: number | null = null;
-  if (candidato) {
-    const votos = await getVotosPorMunicipioNome(candidato).catch(() => null);
-    if (votos) {
-      const nameToCode = new Map<string, string>();
-      for (const [code, nome] of Object.entries(nomeByCode)) {
-        nameToCode.set(norm(nome), code);
-      }
-      const map: Record<string, number> = {};
-      for (const [nome, v] of Object.entries(votos.byName)) {
-        const code = nameToCode.get(nome);
-        if (code) map[code] = v;
-      }
-      if (Object.keys(map).length > 0) {
-        eleitoralByCode = map;
-        eleitoralAno = votos.ano;
-      }
+  let eleitoralTotal: number | null = null;
+  if (candidacyId) {
+    const v = await getVotosByIbge(candidacyId).catch(() => null);
+    if (v && Object.keys(v.byCode).length > 0) {
+      eleitoralByCode = v.byCode;
+      eleitoralAno = v.ano;
+      eleitoralTotal = v.total;
     }
   }
 
@@ -97,5 +75,6 @@ export async function getTerritorioUF(
     nomeByCode,
     eleitoralByCode,
     eleitoralAno,
+    eleitoralTotal,
   };
 }

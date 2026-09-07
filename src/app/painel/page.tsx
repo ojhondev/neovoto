@@ -2,9 +2,12 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowRight, ExternalLink } from "lucide-react";
+import { UserRound } from "lucide-react";
 import { getDictionary } from "@/lib/i18n";
 import { TOOLS, toolPath } from "@/lib/tools";
 import { getCurrentCandidacy, perfilFrom } from "@/lib/candidacy";
+import { getVotosByIbge } from "@/lib/data-sources/eleitoral";
+import { CARGO_LABEL, type Cargo } from "@/lib/cargos";
 
 export const metadata: Metadata = { title: "Painel" };
 
@@ -46,11 +49,16 @@ export default async function PainelHome() {
   const props = perfil.proposicoes;
   const maxTipo = props?.tipos[0]?.count ?? 1;
 
+  const votos = candidacy.source === "tse" ? await getVotosByIbge(candidacy.id).catch(() => null) : null;
+  const cargoLabel = candidacy.cargo
+    ? CARGO_LABEL[candidacy.cargo as Cargo]?.[locale] ?? candidacy.cargo
+    : null;
+
   return (
     <>
       {/* Cabeçalho da candidatura — dados reais */}
       <div className="flex flex-wrap items-start gap-5">
-        {perfil.foto && (
+        {perfil.foto ? (
           <Image
             src={perfil.foto}
             alt={perfil.nome}
@@ -59,6 +67,10 @@ export default async function PainelHome() {
             unoptimized
             className="h-24 w-[72px] shrink-0 rounded-[8px] border border-ash object-cover"
           />
+        ) : (
+          <span className="flex h-24 w-[72px] shrink-0 items-center justify-center rounded-[8px] border border-ash bg-sand">
+            <UserRound size={28} className="text-fossil" />
+          </span>
         )}
         <div className="min-w-0 flex-1">
           <p className="t-eyebrow mb-1">{perfil.casa}</p>
@@ -110,8 +122,26 @@ export default async function PainelHome() {
         </section>
 
         <section className="card">
-          <h2 className="t-heading text-[22px]">{t.dash.territory}</h2>
-          {perfil.territorio ? (
+          <h2 className="t-heading text-[22px]">
+            {votos ? (locale === "pt" ? "Votação" : "Vote") : t.dash.territory}
+          </h2>
+          {votos ? (
+            <div className="mt-3">
+              <p className="font-ui text-[28px] font-light text-ink">
+                {votos.total.toLocaleString(locale)}
+              </p>
+              <p className="font-ui text-body-sm text-fossil">
+                {locale === "pt" ? "votos" : "votes"} · {cargoLabel} · {votos.ano}
+                {perfil.territorio ? ` · ${perfil.territorio.ufNome}` : ""}
+              </p>
+              <Link
+                href={toolPath("mapa-de-calor")}
+                className="nav-link mt-4 inline-flex items-center gap-1.5 text-[13px]"
+              >
+                {t.dash.openTool} <ArrowRight size={13} />
+              </Link>
+            </div>
+          ) : perfil.territorio ? (
             <div className="mt-3">
               <p className="font-ui text-[28px] font-light text-ink">
                 {perfil.territorio.municipios}
