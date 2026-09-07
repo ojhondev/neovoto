@@ -86,21 +86,21 @@ export async function buscarCandidatosTSE(nome: string): Promise<CandidatoEleito
       .from(candidateSearchCache)
       .where(eq(candidateSearchCache.term, term))
       .limit(1);
-    if (cached[0] && Date.now() - new Date(cached[0].fetchedAt).getTime() < CACHE_TTL) {
-      return cached[0].results as CandidatoEleitoral[];
+    const hit = cached[0];
+    if (
+      hit &&
+      (hit.results as unknown[]).length > 0 &&
+      Date.now() - new Date(hit.fetchedAt).getTime() < CACHE_TTL
+    ) {
+      return hit.results as CandidatoEleitoral[];
     }
   } catch {
     /* segue para a fonte */
   }
 
-  // UMA requisição só (search), cobrindo as duas últimas eleições
-  let raw: BioCandidato[] = [];
-  try {
-    raw = await buscarCandidatosPorNome(nome, [2022, 2020, 2018]);
-  } catch (e) {
-    if (e instanceof BrasilioThrottled) throw e;
-    throw e;
-  }
+  // Busca no brasil.io (nome de urna exato + fallback full-text). Sem filtro de ano:
+  // o usuário escolhe a candidatura certa (o ano aparece no resultado).
+  const raw: BioCandidato[] = await buscarCandidatosPorNome(nome, []);
 
   const seen = new Set<string>();
   const out: CandidatoEleitoral[] = [];
@@ -111,19 +111,22 @@ export async function buscarCandidatosTSE(nome: string): Promise<CandidatoEleito
     seen.add(c.externalId);
     out.push(c);
   }
-  // eleitos / 2º turno primeiro
-  out.sort((a, b) => rank(b.situacao) - rank(a.situacao));
+  // mais recente + eleito/2º turno primeiro
+  out.sort((a, b) => b.ano - a.ano || rank(b.situacao) - rank(a.situacao));
 
-  try {
-    await db
-      .insert(candidateSearchCache)
-      .values({ term, results: out, fetchedAt: new Date() })
-      .onConflictDoUpdate({
-        target: candidateSearchCache.term,
-        set: { results: out, fetchedAt: new Date() },
-      });
-  } catch {
-    /* cache best-effort */
+  // só cacheia resultado não-vazio (evita "gravar" uma falha transitória)
+  if (out.length > 0) {
+    try {
+      await db
+        .insert(candidateSearchCache)
+        .values({ term, results: out, fetchedAt: new Date() })
+        .onConflictDoUpdate({
+          target: candidateSearchCache.term,
+          set: { results: out, fetchedAt: new Date() },
+        });
+    } catch {
+      /* cache best-effort */
+    }
   }
   return out;
 }
