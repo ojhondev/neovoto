@@ -8,6 +8,7 @@ export function GET() {
     service: "neovoto",
     phase: "fundacao",
     db: process.env.DATABASE_URL ? "configured" : "pending",
+    brasilio: process.env.BRASILIO_API_TOKEN ? "configured" : "pending",
     time: new Date().toISOString(),
   });
 }
