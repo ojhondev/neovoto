@@ -1,9 +1,10 @@
 # NeoVoto — PRD (Product Requirements Document)
 
-> Plataforma de **inteligência política baseada em evidência**. Ajuda partidos,
-> candidaturas e mandatos a tomar melhores decisões de **estratégia eleitoral** e de
-> **governabilidade**, correlacionando **dados abertos oficiais** — dentro da LGPD e
-> sem repetir os erros da Cambridge Analytica.
+> Plataforma de **inteligência eleitoral**. É, prioritariamente, uma **arma para eleger**:
+> ajuda candidaturas a **ganhar a eleição** — de vereador a presidente — transformando
+> **dados abertos oficiais** em vantagem de campanha. Uso pós-eleição (governabilidade,
+> sustentação de base) é um **plus**, não o foco. Tudo dentro da LGPD e sem repetir os
+> erros da Cambridge Analytica: a análise é sempre **territorial**, nunca do eleitor.
 
 - **Repositório:** https://github.com/ojhondev/neovoto
 - **Stack:** Next.js (App Router) · TypeScript · Tailwind v4 · Drizzle ORM · Neon (Postgres) · Vercel
@@ -15,20 +16,22 @@
 
 ## 1. Problema
 
-Campanhas e gabinetes decidem alocação de recursos, formação de alianças e prioridades
-de agenda com base em intuição, pesquisa cara e pontual, e leitura enviesada de território.
-Os dados que permitiriam decidir melhor **existem e são públicos** (TSE, IBGE, Câmara,
-Senado, Portal da Transparência), mas estão dispersos, em formatos difíceis e sem
-ferramenta que os correlacione de forma auditável.
+Campanhas perdem eleição por decidir no escuro: gastam verba, tempo e palanque onde não
+muda resultado, coligam com quem só divide o palco e falam a mensagem errada em cada praça.
+Os dados que permitiriam **atacar onde a eleição se decide** já **existem e são públicos**
+(TSE, IBGE, Câmara, Senado, Portal da Transparência), mas estão dispersos, em formatos
+difíceis e sem ferramenta que os correlacione e devolva uma decisão clara.
 
 Ao mesmo tempo, o mercado de "dados políticos" carrega o trauma da Cambridge Analytica:
 coleta não consentida, perfis psicográficos individuais e microdirecionamento manipulativo.
-Qualquer produto sério nesse espaço precisa ser **desenhado pela negativa** desse caso.
+A NeoVoto quer ser **implacável para eleger** sem cair nisso — potência no nível
+**territorial/estratégico**, desenhada pela negativa daquele caso.
 
 ## 2. Objetivo do produto
 
-Dar a quem decide uma **camada analítica única** sobre a realidade eleitoral e territorial,
-com seis ferramentas que partem dos mesmos dados oficiais e se conectam entre si:
+Dar à campanha uma **camada analítica única** que responde a uma pergunta: **o que fazer,
+onde e com quem para ganhar esta eleição.** Seis ferramentas partem dos mesmos dados
+oficiais e se conectam entre si:
 
 1. **Mapa de Influência** — quem move o eleitorado num território e como as forças se conectam.
 2. **Matriz Ideológica por Região** — como cada região se posiciona em eixos temáticos.

@@ -2,9 +2,25 @@
 
 ## Contexto do projeto
 
-**NeoVoto** — SaaS de inteligência política. Ferramentas obrigatórias: Mapa de Influência,
+**NeoVoto** — SaaS de inteligência eleitoral. Ferramentas obrigatórias: Mapa de Influência,
 Matriz Ideológica por Região, Mapa de Calor de Influência, Mapa de Propostas, Cenários
 Estatísticos, Coligações. Repo: https://github.com/ojhondev/neovoto · dev na porta 3010.
+
+### Posicionamento (vale para toda a copy e decisões de produto)
+
+A NeoVoto é, **prioritariamente, uma arma para ELEGER** — ajudar uma candidatura a
+**ganhar a eleição** (vereador, prefeito, deputado, governador, senador, presidente).
+É uma ferramenta "maquiavélica": implacável na eficácia de campanha. Uso pós-eleição
+(governabilidade, sustentação de base) é um **plus**, nunca o foco.
+
+Toda a copy — LP, painel, onboarding, nomes/descrições de ferramentas, pilares da marca —
+deve refletir isso: linguagem de disputa, adversário, voto, vitória; não "análise" morna.
+
+**Os guardrails continuam valendo** e não conflitam com o acima: só dados abertos oficiais;
+análise sempre **territorial** (seção/bairro/município/região), nunca perfil do eleitor;
+a plataforma **não gera nem dispara mensagens**; LGPD do começo ao fim; desenhada pela
+negativa da Cambridge Analytica. O "maquiavélico" é no nível **estratégico/territorial**,
+posicionado como "poderosa E dentro da lei".
 
 Visão em `docs/PRD.md`; arquitetura em `docs/ARQUITETURA.md`; limites de ética/LGPD em
 `docs/ETICA.md` e `docs/LGPD.md`; fontes oficiais em `docs/FONTES-DE-DADOS.md`; identidade

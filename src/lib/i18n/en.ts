@@ -3,7 +3,7 @@ import type { Dictionary } from "./pt";
 const en: Dictionary = {
   common: {
     appName: "NeoVoto",
-    tagline: "Evidence-based political intelligence",
+    tagline: "The intelligence that wins elections",
     enter: "Sign in",
     createAccount: "Create account",
     requestDemo: "Request a demo",
@@ -26,65 +26,65 @@ const en: Dictionary = {
     pricing: "Pricing",
   },
   announce:
-    "NeoVoto — analytics for electoral and governing decisions. Official open data only.",
+    "NeoVoto — the electoral intelligence that helps candidates win. Official open data only, within Brazil's data-protection law.",
   landing: {
-    heroKicker: "Political intelligence platform",
+    heroKicker: "The intelligence that wins elections",
     heroTitle: "Electoral Intelligence",
     heroTitleAccent: "with data and AI",
     heroSub:
-      "NeoVoto correlates official public data to help parties, campaigns and mandates decide where to invest, who to ally with and what to prioritise — within Brazil's data-protection law and without Cambridge Analytica's mistakes.",
+      "NeoVoto turns official data into campaign advantage: where your votes are, where the opponent is weak, who to ally with and what to say in each region to win the election — from councillor to president.",
     heroPrimary: "Request a demo",
     heroSecondary: "See the tools",
     scrollCue: "Scroll to continue",
-    trustTitle: "Built on three non-negotiable commitments",
+    trustTitle: "A powerful weapon — and inside the law",
     trust: [
       {
-        title: "Official open data only",
+        title: "Official data only: no baggage",
         body:
-          "Electoral court (TSE), statistics bureau (IBGE), Chamber of Deputies, Federal Senate and the federal transparency portal. No social-media scraping, no third-party data brokers.",
+          "TSE, IBGE, Chamber, Senate, the federal transparency portal. No social-media scraping, no third-party data brokers. It's public information used intelligently.",
       },
       {
-        title: "Privacy by design, end to end",
+        title: "Territory, never the voter",
         body:
-          "Political opinion is sensitive data under Brazilian law. NeoVoto works at aggregate territorial level and on public-official data — never psychographic profiles of citizens.",
+          "NeoVoto analyses precinct, neighbourhood, municipality and region — never a person's psychological profile. It's the opposite of what sank Cambridge Analytica: power without the scandal.",
       },
       {
-        title: "Every figure traceable to its source",
+        title: "Every figure has a defence",
         body:
-          "Every analysis names the official base that feeds it and the time window. You audit where the data comes from — no black box.",
+          "Every analysis names its source, its window and its margin. You walk into the campaign meeting with evidence, not a hunch — and can hold the decision in front of the candidate.",
       },
     ],
     globeTitleA: "Electoral intelligence",
     globeTitleB: "with data and AI.",
     globeSub:
-      "NeoVoto connects pre-campaign, campaign and government in one place — the same official data follows every decision that depends on it.",
-    pillarsKicker: "One cycle, three moments",
-    pillarsTitle: "From reading the territory to holding the mandate — without switching tools",
+      "From the first map to the vote count, NeoVoto works toward one goal: more votes in your ballot box than in the opponent's.",
+    pillarsKicker: "How NeoVoto gets you elected",
+    pillarsTitle: "Read the ground, strike where it's decided, and don't lose what you won",
     pillars: [
       {
-        tab: "Pre-campaign",
-        heading: "See the territory before you decide the candidacy",
+        tab: "Read the ground",
+        heading: "Know where your votes are — and where the opponent is strong",
         body:
-          "Territorial profile, ideological matrix by region and influence map from official results. Where the base is, where the room is, who to talk to.",
-        cta: "See the territorial profile",
+          "Influence map, ideological matrix by region and the Territorial Electoral Strength Index from official results. Before you spend the first real, you know the playing field.",
+        cta: "See the Territorial Strength Index",
       },
       {
-        tab: "Campaign",
-        heading: "Put resources where they change the result",
+        tab: "Strike where it's decided",
+        heading: "Concentrate time, money and stage where the election turns",
         body:
-          "Heatmap by zone, coalition simulation and statistical scenarios driven by your objective. Every projection states its sources and its margin.",
+          "The heatmap shows where each vote costs less; the scenarios show what's missing to win; the coalition simulation shows which alliance elects you and which one only splits the stage.",
         cta: "Open the scenarios",
       },
       {
-        tab: "Government",
-        heading: "Keep the mandate connected to the demand that elected it",
+        tab: "Hold the mandate",
+        heading: "After winning, don't lose the base that elected you",
         body:
-          "A proposal map crossing what was promised, what is on the legislative agenda and what each region prioritises. Gaps and overlaps in one place.",
+          "The proposal map crosses what you promised, what's on the legislative agenda and what each region demands. The plus that turns a win into re-election.",
         cta: "Open the proposal map",
       },
     ],
     marqueeLine:
-      "With NeoVoto it all comes together: official data becomes territory, territory becomes strategy, strategy becomes a decision.",
+      "Official data becomes territory. Territory becomes a target. A target becomes a vote. A vote becomes a win.",
     marqueeRowA: [
       "TSE results",
       "IBGE meshes",
@@ -117,34 +117,34 @@ const en: Dictionary = {
       "It does not do manipulative microtargeting based on vulnerabilities.",
     ],
     manifestoCta: "Read the manifesto and the privacy policy",
-    ctaTitle: "Ready to decide with evidence?",
-    ctaBody: "Book a demo using data from your state or municipality.",
+    ctaTitle: "Ready to play to win?",
+    ctaBody: "Book a demo with the data of your race — your municipality or your state.",
     testimonialsKicker: "Who uses it",
-    testimonialsTitle: "Decisions that stopped being made in the dark",
+    testimonialsTitle: "Campaigns that stopped betting in the dark",
     testimonials: [
       {
         quote:
-          "We stopped splitting the budget by gut feeling. The heatmap surfaced three micro-regions nobody had on the radar — and that's where the swing happened.",
+          "We cut spending in a city that was already ours and threw everything at three micro-regions nobody had on the radar. That's where the election turned.",
         name: "Campaign coordination",
-        role: "State government · Southeast",
+        role: "State race · Southeast",
       },
       {
         quote:
-          "Coalition simulation with the real marginal gain changed the negotiating table. We showed up with a number, not a hunch.",
+          "The coalition simulation showed the real vote gain of each alliance. We sat at the negotiating table with a number — and closed the ticket that would win.",
         name: "Party strategy",
         role: "State party committee",
       },
       {
         quote:
-          "In the mandate, the proposal map crossing what we promised with what's on the agenda became a fixed item in the Monday meeting.",
-        name: "Chief of staff",
-        role: "Chamber of Deputies",
+          "The scenario told us exactly how many votes were missing and which regions to find them in. The candidate's agenda became a mirror of the map.",
+        name: "Campaign strategist",
+        role: "City hall · capital",
       },
       {
         quote:
-          "What convinced me was the technical sheet: every figure has a source, a window and a margin. I can defend the decision to the candidate.",
-        name: "Political scientist",
-        role: "Electoral consultancy",
+          "After winning, the proposal map kept the base that got us there. Winning was half of it; not losing the territory was the other half.",
+        name: "Chief of staff",
+        role: "Chamber of Deputies",
       },
     ],
     testimonialsNote:
@@ -258,39 +258,39 @@ const en: Dictionary = {
   tools: {
     influenceMap: {
       name: "Influence Map",
-      short: "Who moves the electorate in a territory and how the forces connect.",
+      short: "Who moves the vote in your territory — and where the opponent's network holds.",
       desc:
-        "A network of political actors — leaders, mandates, parties and coalitions — sized by historical vote, territorial reach and formal ties. Built on TSE results and official compositions.",
+        "A network of political actors — leaders, mandates, parties and coalitions — sized by historical vote, territorial reach and formal ties. Shows which pocket of vote depends on whom and where the opponent's structure is fragile. Built on TSE results and official compositions.",
     },
     ideologicalMatrix: {
       name: "Ideological Matrix by Region",
-      short: "How each region sits on thematic axes, inferred from electoral behaviour.",
+      short: "What each region wants to hear — the tone that wins votes there and the one that loses them.",
       desc:
-        "Relative position of municipalities and regions on axes (for example economic and social values), estimated from aggregate party vote and IBGE socioeconomic indicators. No inference about individuals.",
+        "Relative position of municipalities and regions on axes (for example economic and social values), estimated from aggregate party vote and IBGE socioeconomic indicators. Guides how the message is framed by region. No inference about individuals.",
     },
     influenceHeatmap: {
       name: "Influence Heatmap",
-      short: "Where the campaign or coalition is strong, weak or contested.",
+      short: "Where each vote costs less — that's where the campaign concentrates time, money and bodies.",
       desc:
-        "Geographic intensity of performance by electoral zone and municipality, with TSE historical series filtered by office and round. Surfaces pockets of growth and of loss.",
+        "Geographic intensity of performance and of opportunity by electoral zone and municipality, with TSE historical series filtered by office and round. Separates what's already won, what's a sure loss and what's decided by effort — so the campaign lands where it turns into a result.",
     },
     proposalMap: {
       name: "Proposal Map",
-      short: "Matches the campaign's proposals against the issues that move each electorate.",
+      short: "The banners that move each electorate — and the ones you haven't raised yet.",
       desc:
-        "Maps government proposals (filed with the TSE) and issues on the legislative agenda (Chamber and Senate), aligning them with observable regional priorities. Flags gaps and overlaps.",
+        "Maps government proposals (filed with the TSE) and issues on the legislative agenda (Chamber and Senate), aligning them with observable regional priorities. Flags the promise missing in each place and where the opponent already owns the issue.",
     },
     scenarios: {
       name: "Statistical Scenarios",
-      short: "An engine that correlates data to approximate results, driven by your objective.",
+      short: "How much is missing for you to win — and what moves the needle fastest.",
       desc:
-        "From your declared objective, NeoVoto's engine combines electoral history, socioeconomic context and coalition composition to estimate result ranges. Every scenario shows the sources feeding it and the uncertainty of the estimate.",
+        "From your declared objective, NeoVoto's engine combines electoral history, socioeconomic context and coalition composition to estimate result ranges and the path to a majority. Every scenario shows the sources feeding it and the uncertainty of the estimate.",
     },
     coalitions: {
       name: "Coalitions",
-      short: "Simulates compositions and measures each alliance's effect on the ground.",
+      short: "Which alliance elects you and which one only splits the stage.",
       desc:
-        "Compares possible coalitions and federations using broadcast time, party fund, municipal footholds and historical party vote. Shows marginal gain and base overlap.",
+        "Compares possible coalitions and federations using broadcast time, party fund, municipal footholds and historical party vote. Shows the real vote gain of each composition, base overlap and what each partner costs.",
     },
   },
   maps: {
@@ -389,9 +389,9 @@ const en: Dictionary = {
     ],
   },
   dash: {
-    emptyTitle: "Start by naming the candidate",
+    emptyTitle: "Start with the candidate who's running",
     emptyBody:
-      "NeoVoto works around one politician. Run the onboarding so the platform pulls the official data and calibrates the six tools.",
+      "NeoVoto works around one candidacy and one objective: winning. Run the onboarding so the platform pulls the official data and calibrates the six tools for your race.",
     emptyCta: "Run the onboarding",
     objectiveLabel: "Objective",
     profile: "Official profile",
@@ -411,13 +411,13 @@ const en: Dictionary = {
     refreshedAt: "Official data refreshed on",
     sourcesNote:
       "Profile and activity: Chamber / Senate open data. Territory: IBGE. Electoral results land in Phase 2.",
-    toolsForCandidate: "The six tools, calibrated for {name}",
+    toolsForCandidate: "The six tools, calibrated to elect {name}",
   },
   onboarding: {
     step: "Step",
     of: "of",
-    title: "Who are you going to analyse?",
-    sub: "Type the candidate's name. NeoVoto pulls that person's official public data to calibrate the tools.",
+    title: "Who are you going to elect?",
+    sub: "Type the candidate's name. NeoVoto pulls that person's official public data to calibrate the tools around winning.",
     searchPlaceholder: "Candidate or member's name…",
     searching: "Querying the Chamber and the Senate…",
     noResults: "Nothing found in the Chamber or the Senate. Try the all-offices search below.",
@@ -430,13 +430,13 @@ const en: Dictionary = {
     allOfficesEmpty: "No candidate by that name in the 1996–2022 elections.",
     selected: "Selected",
     change: "change",
-    objectiveTitle: "What is the objective?",
+    objectiveTitle: "What is the objective of the race?",
     objectiveSub: "The platform's scenarios and priorities are computed against the objective.",
     objectives: [
-      { value: "eleicao", label: "Win the next election" },
-      { value: "bancada", label: "Grow the caucus / coalition" },
-      { value: "governo", label: "Governability during the mandate" },
-      { value: "avaliando", label: "Still assessing the landscape" },
+      { value: "eleicao", label: "Win the election" },
+      { value: "bancada", label: "Elect the largest caucus / carry the coalition" },
+      { value: "avaliando", label: "Still measuring whether the candidacy is viable" },
+      { value: "governo", label: "Hold the base after being elected" },
     ],
     finish: "Finish and open the dashboard",
     creating: "Loading the official data…",

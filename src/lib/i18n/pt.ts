@@ -1,7 +1,7 @@
 const pt = {
   common: {
     appName: "NeoVoto",
-    tagline: "Inteligência política baseada em evidência",
+    tagline: "A inteligência que elege",
     enter: "Entrar",
     createAccount: "Criar conta",
     requestDemo: "Solicitar demonstração",
@@ -23,65 +23,65 @@ const pt = {
     method: "Manifesto",
     pricing: "Planos",
   },
-  announce: "NeoVoto — plataforma analítica para decisões eleitorais e de governo. Somente dados abertos oficiais.",
+  announce: "NeoVoto — a inteligência eleitoral que ajuda candidatos a vencer. Somente dados abertos oficiais, dentro da LGPD.",
   landing: {
-    heroKicker: "Plataforma de inteligência política",
+    heroKicker: "A inteligência que elege",
     heroTitle: "Inteligência Eleitoral",
     heroTitleAccent: "com dados e IA",
     heroSub:
-      "A NeoVoto correlaciona dados públicos oficiais para ajudar partidos, candidaturas e mandatos a decidir onde investir, com quem coligar e o que priorizar — dentro da LGPD e sem os erros da Cambridge Analytica.",
+      "A NeoVoto transforma dados oficiais em vantagem de campanha: onde estão seus votos, onde o adversário é fraco, com quem coligar e o que dizer em cada região para ganhar a eleição — de vereador a presidente.",
     heroPrimary: "Solicitar demonstração",
     heroSecondary: "Ver as ferramentas",
     scrollCue: "Role para continuar",
-    trustTitle: "Construída sobre três compromissos inegociáveis",
+    trustTitle: "Uma arma poderosa — e dentro da lei",
     trust: [
       {
-        title: "Somente dados abertos oficiais",
+        title: "Só dado oficial: nada de processo",
         body:
-          "TSE, IBGE, Câmara dos Deputados, Senado Federal e Portal da Transparência. Nada de raspagem de redes sociais nem compra de bases de terceiros.",
+          "TSE, IBGE, Câmara, Senado, Portal da Transparência. Sem raspagem de redes sociais, sem compra de base de terceiros. É informação pública usada de forma inteligente.",
       },
       {
-        title: "LGPD do início ao fim",
+        title: "Território, nunca o eleitor",
         body:
-          "Opinião política é dado sensível (art. 11). A NeoVoto trabalha em nível territorial agregado e com dados de agentes públicos — nunca perfis psicográficos de cidadãos.",
+          "A NeoVoto analisa seção, bairro, município e região — jamais o perfil psicológico de uma pessoa. É o oposto do que afundou a Cambridge Analytica: potência sem escândalo.",
       },
       {
-        title: "Cada número rastreável à fonte",
+        title: "Todo número tem defesa",
         body:
-          "Toda análise indica a base oficial que a alimenta e o recorte de tempo. Você audita a origem do dado — sem depender de caixa-preta.",
+          "Cada análise mostra a fonte, o recorte e a margem. Você chega na mesa da campanha com evidência, não com achismo — e sustenta a decisão diante do candidato.",
       },
     ],
     globeTitleA: "Inteligência eleitoral",
     globeTitleB: "com dados e IA.",
     globeSub:
-      "A NeoVoto conecta pré-campanha, campanha e governo num só lugar — os mesmos dados oficiais acompanham cada decisão que depende deles.",
-    pillarsKicker: "Um ciclo, três momentos",
-    pillarsTitle: "Da leitura de território ao mandato — sem trocar de ferramenta",
+      "Do primeiro mapa até a apuração, a NeoVoto trabalha por um objetivo só: colocar mais voto na sua urna do que na do adversário.",
+    pillarsKicker: "Como a NeoVoto te faz ganhar",
+    pillarsTitle: "Ler o terreno, atacar onde decide, e não perder o que conquistou",
     pillars: [
       {
-        tab: "Pré-Campanha",
-        heading: "Enxergar o território antes de decidir a candidatura",
+        tab: "Ler o terreno",
+        heading: "Saber onde estão seus votos — e onde o adversário é forte",
         body:
-          "Perfil territorial, matriz ideológica por região e mapa de influência a partir de resultados oficiais. Onde há base, onde há espaço, com quem conversar.",
-        cta: "Ver o perfil territorial",
+          "Mapa de influência, matriz ideológica por região e o Índice de Força Eleitoral Territorial a partir de resultados oficiais. Antes de gastar o primeiro real, você sabe o campo de jogo.",
+        cta: "Ver o Índice de Força Territorial",
       },
       {
-        tab: "Campanha",
-        heading: "Alocar recurso onde ele muda o resultado",
+        tab: "Atacar onde decide",
+        heading: "Concentrar tempo, dinheiro e palanque onde a eleição vira",
         body:
-          "Mapa de calor por zona, simulação de coligações e cenários estatísticos guiados pelo seu objetivo. Cada projeção declara suas fontes e sua margem.",
+          "O mapa de calor mostra onde cada voto custa menos; os cenários mostram o que falta para ganhar; a simulação de coligações mostra qual aliança te elege e qual só divide o palanque.",
         cta: "Abrir os cenários",
       },
       {
-        tab: "Governo",
-        heading: "Manter o mandato conectado à demanda que elegeu",
+        tab: "Sustentar o mandato",
+        heading: "Depois de ganhar, não perder a base que te elegeu",
         body:
-          "Mapa de propostas cruzando o que foi prometido, o que está em pauta no Legislativo e o que cada região prioriza. Lacunas e sobreposições em um lugar.",
+          "O mapa de propostas cruza o que você prometeu, o que está em pauta no Legislativo e o que cada região cobra. O plus para transformar a vitória em reeleição.",
         cta: "Abrir o mapa de propostas",
       },
     ],
     marqueeLine:
-      "Com a NeoVoto tudo se encontra: dados oficiais viram território, território vira estratégia, estratégia vira decisão.",
+      "Dado oficial vira território. Território vira alvo. Alvo vira voto. Voto vira vitória.",
     marqueeRowA: [
       "Resultados do TSE",
       "Malhas do IBGE",
@@ -114,35 +114,35 @@ const pt = {
       "Não faz microdirecionamento manipulativo baseado em vulnerabilidades.",
     ],
     manifestoCta: "Ler o manifesto e a política de LGPD",
-    ctaTitle: "Pronto para decidir com evidência?",
+    ctaTitle: "Pronto para jogar para ganhar?",
     ctaBody:
-      "Agende uma demonstração com dados do seu estado ou município.",
+      "Agende uma demonstração com os dados da sua disputa — do seu município ou do seu estado.",
     testimonialsKicker: "Quem usa",
-    testimonialsTitle: "Decisões que deixaram de ser no escuro",
+    testimonialsTitle: "Campanhas que pararam de apostar no escuro",
     testimonials: [
       {
         quote:
-          "Paramos de rateio de verba por intuição. O mapa de calor mostrou três microrregiões que ninguém tinha no radar — e foi lá que a virada aconteceu.",
+          "Cortamos gasto em cidade que já era nossa e joguemos tudo em três microrregiões que ninguém tinha no radar. Foi lá que a eleição virou.",
         name: "Coordenação de campanha",
-        role: "Governo estadual · Sudeste",
+        role: "Disputa estadual · Sudeste",
       },
       {
         quote:
-          "A simulação de coligação com o ganho marginal real mudou a mesa de negociação. Chegamos com número, não com achismo.",
+          "A simulação de coligação mostrou o ganho real de voto de cada aliança. Sentamos na mesa de negociação com número — e fechamos a chapa que elegia.",
         name: "Articulação partidária",
         role: "Diretório estadual",
       },
       {
         quote:
-          "No mandato, o mapa de propostas cruzando o que prometemos com o que está em pauta virou pauta fixa da reunião de segunda.",
-        name: "Chefia de gabinete",
-        role: "Câmara dos Deputados",
+          "O cenário disse exatamente quantos votos faltavam e em que regiões buscá-los. A agenda do candidato virou espelho do mapa.",
+        name: "Estrategista de campanha",
+        role: "Prefeitura · capital",
       },
       {
         quote:
-          "O que me convenceu foi a ficha técnica: cada número tem fonte, recorte e margem. Consigo defender a decisão para o candidato.",
-        name: "Cientista político",
-        role: "Consultoria eleitoral",
+          "Depois de eleito, o mapa de propostas manteve a base que nos levou lá. Ganhar foi metade; não perder o território foi a outra.",
+        name: "Chefia de gabinete",
+        role: "Câmara dos Deputados",
       },
     ],
     testimonialsNote:
@@ -256,39 +256,39 @@ const pt = {
   tools: {
     influenceMap: {
       name: "Mapa de Influência",
-      short: "Quem move o eleitorado num território e como as forças se conectam.",
+      short: "Quem move o voto no seu território — e onde a rede do adversário se sustenta.",
       desc:
-        "Rede de atores políticos — lideranças, mandatos, partidos e coligações — dimensionada por votação histórica, capilaridade territorial e vínculos formais. Baseado em resultados do TSE e composições oficiais.",
+        "Rede de atores políticos — lideranças, mandatos, partidos e coligações — dimensionada por votação histórica, capilaridade territorial e vínculos formais. Mostra de quem depende cada bolsão de voto e onde a estrutura do adversário é frágil. Baseado em resultados do TSE e composições oficiais.",
     },
     ideologicalMatrix: {
       name: "Matriz Ideológica por Região",
-      short: "Como cada região se posiciona em eixos temáticos, a partir de comportamento eleitoral.",
+      short: "O que cada região quer ouvir — o tom que ganha voto ali e o que faz perder.",
       desc:
-        "Posição relativa de municípios e regiões em eixos (por exemplo econômico e de costumes), estimada a partir de votação agregada por partido e de indicadores socioeconômicos do IBGE. Sem inferência sobre indivíduos.",
+        "Posição relativa de municípios e regiões em eixos (por exemplo econômico e de costumes), estimada a partir de votação agregada por partido e de indicadores socioeconômicos do IBGE. Orienta o enquadramento do discurso por região. Sem inferência sobre indivíduos.",
     },
     influenceHeatmap: {
       name: "Mapa de Calor de Influência",
-      short: "Onde a candidatura ou coligação é forte, fraca ou disputada.",
+      short: "Onde cada voto custa menos — é aí que a campanha concentra tempo, dinheiro e corpo.",
       desc:
-        "Intensidade geográfica de desempenho por zona e município, com séries históricas do TSE e recorte por cargo e turno. Identifica bolsões de crescimento e de perda.",
+        "Intensidade geográfica de desempenho e de oportunidade por zona e município, com séries históricas do TSE e recorte por cargo e turno. Separa o que já está ganho, o que é perda certa e o que se decide no esforço — para alocar a campanha onde ela vira resultado.",
     },
     proposalMap: {
       name: "Mapa de Propostas",
-      short: "Cruza as propostas da candidatura com os temas que mobilizam cada eleitorado.",
+      short: "As bandeiras que mobilizam cada eleitorado — e as que você ainda não levantou.",
       desc:
-        "Mapeia as propostas de governo (registradas no TSE) e os temas em pauta no Legislativo (Câmara e Senado), aproximando-os das prioridades observáveis por região. Aponta lacunas e sobreposições.",
+        "Mapeia as propostas de governo (registradas no TSE) e os temas em pauta no Legislativo (Câmara e Senado), aproximando-os das prioridades observáveis por região. Aponta a promessa que falta em cada praça e onde o adversário já ocupou o tema.",
     },
     scenarios: {
       name: "Cenários Estatísticos",
-      short: "Motor que correlaciona dados para aproximar resultados, a partir do seu objetivo.",
+      short: "Quanto falta para você ganhar — e o que move o ponteiro mais rápido.",
       desc:
-        "A partir do objetivo declarado, o motor da NeoVoto combina histórico eleitoral, contexto socioeconômico e composição de coligações para estimar faixas de resultado. Cada cenário mostra as fontes que o alimentam e a incerteza da estimativa.",
+        "A partir do objetivo declarado, o motor da NeoVoto combina histórico eleitoral, contexto socioeconômico e composição de coligações para estimar faixas de resultado e o caminho até a maioria. Cada cenário mostra as fontes que o alimentam e a incerteza da estimativa.",
     },
     coalitions: {
       name: "Coligações",
-      short: "Simula composições e mede o efeito de cada aliança no território.",
+      short: "Que aliança te elege e qual só divide o palanque.",
       desc:
-        "Compara coligações e federações possíveis usando tempo de propaganda, fundo partidário, bases municipais e votação histórica dos partidos. Mostra ganho marginal e sobreposição de bases.",
+        "Compara coligações e federações possíveis usando tempo de propaganda, fundo partidário, bases municipais e votação histórica dos partidos. Mostra o ganho real de voto de cada composição, a sobreposição de bases e o que cada parceiro custa.",
     },
   },
   maps: {
@@ -387,9 +387,9 @@ const pt = {
     ],
   },
   dash: {
-    emptyTitle: "Comece informando o candidato",
+    emptyTitle: "Comece pelo candidato que vai disputar",
     emptyBody:
-      "A NeoVoto trabalha em torno de um político. Faça o onboarding para a plataforma puxar os dados oficiais e calibrar as seis ferramentas.",
+      "A NeoVoto trabalha em torno de uma candidatura e de um objetivo: ganhar. Faça o onboarding para a plataforma puxar os dados oficiais e calibrar as seis ferramentas para a sua disputa.",
     emptyCta: "Fazer o onboarding",
     objectiveLabel: "Objetivo",
     profile: "Perfil oficial",
@@ -409,13 +409,13 @@ const pt = {
     refreshedAt: "Dados oficiais atualizados em",
     sourcesNote:
       "Perfil e atividade: Dados Abertos da Câmara / Senado. Território: IBGE. Resultados eleitorais entram na Fase 2.",
-    toolsForCandidate: "As seis ferramentas, calibradas para {name}",
+    toolsForCandidate: "As seis ferramentas, calibradas para eleger {name}",
   },
   onboarding: {
     step: "Passo",
     of: "de",
-    title: "Quem você vai analisar?",
-    sub: "Digite o nome do candidato. A NeoVoto puxa os dados públicos oficiais dessa pessoa para calibrar as ferramentas.",
+    title: "Quem você vai eleger?",
+    sub: "Digite o nome do candidato. A NeoVoto puxa os dados públicos oficiais dessa pessoa para calibrar as ferramentas em torno da vitória.",
     searchPlaceholder: "Nome do candidato ou parlamentar…",
     searching: "Consultando Câmara e Senado…",
     noResults: "Nada encontrado na Câmara nem no Senado. Tente a busca em todos os cargos abaixo.",
@@ -428,13 +428,13 @@ const pt = {
     allOfficesEmpty: "Nenhum candidato com esse nome nas eleições de 1996 a 2022.",
     selected: "Selecionado",
     change: "trocar",
-    objectiveTitle: "Qual é o objetivo?",
-    objectiveSub: "Os cenários e prioridades da plataforma são calculados em função do objetivo.",
+    objectiveTitle: "Qual é o objetivo da disputa?",
+    objectiveSub: "Os cenários e as prioridades da plataforma são calculados em função do objetivo.",
     objectives: [
-      { value: "eleicao", label: "Vencer a próxima eleição" },
-      { value: "bancada", label: "Ampliar a bancada / coligação" },
-      { value: "governo", label: "Governabilidade durante o mandato" },
-      { value: "avaliando", label: "Ainda avaliando o cenário" },
+      { value: "eleicao", label: "Vencer a eleição" },
+      { value: "bancada", label: "Eleger a maior bancada / puxar a coligação" },
+      { value: "avaliando", label: "Ainda medindo se a candidatura é viável" },
+      { value: "governo", label: "Sustentar a base depois de eleito" },
     ],
     finish: "Concluir e abrir o painel",
     creating: "Carregando os dados oficiais…",
