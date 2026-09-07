@@ -105,7 +105,10 @@ export function ParticleField({ children }: { children: React.ReactNode }) {
     };
 
     const draw = (time: number) => {
-      const p = reduce ? 0.55 : progress();
+      // Sempre dirigido pelo scroll — inclusive com prefers-reduced-motion
+      // (movimento por scroll é manipulação direta, aceitável). O que o
+      // reduced-motion desliga é só a animação autônoma (rotação/deriva no tempo).
+      const p = progress();
       const appear = smoothstep(0.0, 0.16, p);
       const formed = easeInOut(smoothstep(0.14, 0.66, p));
       const fade = 1 - smoothstep(0.8, 1.0, p);
@@ -120,7 +123,7 @@ export function ParticleField({ children }: { children: React.ReactNode }) {
       const cx = w / 2;
       const cy = h * 0.5;
       const R = Math.min(w, h) * (w < 720 ? 0.44 : 0.4);
-      const rot = (reduce ? 0.4 : p * 2) + time * 0.00003;
+      const rot = p * 2 + (reduce ? 0 : time * 0.00003);
       const cosR = Math.cos(rot);
       const sinR = Math.sin(rot);
 
