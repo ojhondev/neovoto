@@ -21,19 +21,33 @@
  */
 
 export const IFET_VERSION = "v1.0-contexto";
+export const IFET_VERSION_DESEMPENHO = "v1.1-desempenho";
 
 type Pesos = {
   pesoEleitoral: number;
   perfilEconomico: number;
   disputabilidade: number;
-  historicoEleitoral: number; // 0 na v1.0
+  desempenhoHistorico: number;
 };
 
-const PESOS: Pesos = {
+/** v1.0 — só contexto territorial (sem votação do candidato). Soma 1. */
+const PESOS_BASE: Pesos = {
   pesoEleitoral: 0.46,
   perfilEconomico: 0.18,
   disputabilidade: 0.36,
-  historicoEleitoral: 0,
+  desempenhoHistorico: 0,
+};
+
+/**
+ * v1.1 — com o histórico de votação do próprio candidato. Entra com PESO MENOR
+ * (puxa a prioridade para cima onde ele já teve voto, sem dominar o índice);
+ * os outros pilares são reduzidos proporcionalmente. Soma 1.
+ */
+const PESOS_DESEMPENHO: Pesos = {
+  pesoEleitoral: 0.4,
+  perfilEconomico: 0.16,
+  disputabilidade: 0.32,
+  desempenhoHistorico: 0.12,
 };
 
 export type MunicipioEntrada = {
@@ -41,6 +55,8 @@ export type MunicipioEntrada = {
   nome: string;
   populacao: number;
   pibTotal: number; // R$
+  /** votos do próprio candidato no município na última eleição (Base dos Dados). */
+  votosCandidato?: number;
 };
 
 export type Quadrante =
@@ -57,10 +73,12 @@ export type IfetMunicipio = {
     pesoEleitoral: number; // 0–1
     perfilEconomico: number; // 0–1
     disputabilidade: number; // 0–1
+    desempenhoHistorico?: number; // 0–1 — só quando há votação do candidato
   };
   quadrante: Quadrante;
   pibPerCapita: number;
   populacao: number;
+  votosCandidato?: number;
 };
 
 export type IfetResultado = {
@@ -100,10 +118,17 @@ export function computeIFET(entradas: MunicipioEntrada[]): IfetResultado {
   const comPib = entradas.map((m) => ({
     ...m,
     pibPerCapita: m.populacao > 0 ? m.pibTotal / m.populacao : 0,
+    // penetração: votos do candidato por habitante (proxy de força territorial
+    // que não é só população). Upgrade futuro: share sobre votos válidos do cargo.
+    penetracao: m.populacao > 0 ? (m.votosCandidato ?? 0) / m.populacao : 0,
   }));
+
+  const temDesempenho = comPib.some((m) => (m.votosCandidato ?? 0) > 0);
+  const PESOS = temDesempenho ? PESOS_DESEMPENHO : PESOS_BASE;
 
   const rankPop = percentRank(comPib.map((m) => Math.log(m.populacao + 1)));
   const rankPib = percentRank(comPib.map((m) => m.pibPerCapita));
+  const rankPen = percentRank(comPib.map((m) => m.penetracao));
 
   const parciais = comPib.map((m) => {
     const p1 = rankPop(Math.log(m.populacao + 1));
@@ -111,6 +136,8 @@ export function computeIFET(entradas: MunicipioEntrada[]): IfetResultado {
     // disputabilidade: curva de sino sobre o perfil econômico — municípios de
     // renda média tendem a ter voto menos cristalizado / mais conquistável.
     const p3 = 1 - Math.abs(p2 - 0.5) * 2;
+    // desempenho histórico do candidato (0..1). Sem dado → não pontua.
+    const p4 = temDesempenho ? rankPen(m.penetracao) : 0;
 
     const score =
       100 *
@@ -118,6 +145,8 @@ export function computeIFET(entradas: MunicipioEntrada[]): IfetResultado {
         { x: p1, w: PESOS.pesoEleitoral },
         { x: p2 * 0.5 + 0.5, w: PESOS.perfilEconomico }, // achata p2 (não é "melhor" ter renda alta)
         { x: Math.max(0.15, p3), w: PESOS.disputabilidade },
+        // achatado: mesmo sem histórico não zera; histórico alto puxa pra cima.
+        { x: 0.35 + 0.65 * p4, w: PESOS.desempenhoHistorico },
       ]);
 
     const quadrante: Quadrante =
@@ -137,10 +166,12 @@ export function computeIFET(entradas: MunicipioEntrada[]): IfetResultado {
         pesoEleitoral: Math.round(p1 * 100) / 100,
         perfilEconomico: Math.round(p2 * 100) / 100,
         disputabilidade: Math.round(p3 * 100) / 100,
+        ...(temDesempenho ? { desempenhoHistorico: Math.round(p4 * 100) / 100 } : {}),
       },
       quadrante,
       pibPerCapita: Math.round(m.pibPerCapita),
       populacao: m.populacao,
+      ...(temDesempenho ? { votosCandidato: m.votosCandidato ?? 0 } : {}),
     };
   });
 
@@ -150,18 +181,24 @@ export function computeIFET(entradas: MunicipioEntrada[]): IfetResultado {
   for (const p of parciais) byCode[p.code] = p.score;
 
   return {
-    version: IFET_VERSION,
+    version: temDesempenho ? IFET_VERSION_DESEMPENHO : IFET_VERSION,
     municipios: parciais,
     byCode,
     pesos: PESOS,
     fontes: [
       "IBGE — Censo 2022 (população)",
       "IBGE — PIB dos Municípios (renda territorial)",
+      ...(temDesempenho
+        ? ["TSE / Base dos Dados — votação do candidato por município"]
+        : []),
     ],
     pendencias: [
-      "Histórico eleitoral do campo político por município — entra com a Base dos Dados (peso 0 na v1.0).",
+      ...(temDesempenho
+        ? []
+        : ["Histórico eleitoral do candidato por município — entra com a Base dos Dados."]),
       "Densidade de rede local (saída do Mapa de Influência).",
       "Emendas e transferências ao município (Portal da Transparência).",
+      "Contexto em tempo real e enquadramento ideológico por região.",
     ],
   };
 }

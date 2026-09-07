@@ -126,6 +126,12 @@ export default async function Page() {
               {t.ifet.pesoEleitoral} {Math.round(ifet.pesos.pesoEleitoral * 100)}% · {t.ifet.perfilEconomico}{" "}
               {Math.round(ifet.pesos.perfilEconomico * 100)}% · {t.ifet.disputabilidade}{" "}
               {Math.round(ifet.pesos.disputabilidade * 100)}%
+              {ifet.pesos.desempenhoHistorico > 0 && (
+                <>
+                  {" "}
+                  · {t.ifet.desempenhoHistorico} {Math.round(ifet.pesos.desempenhoHistorico * 100)}%
+                </>
+              )}
             </dd>
           </div>
           <div className="sm:col-span-2">

@@ -50,22 +50,6 @@ export async function getTerritorioUF(
   );
   municipios.sort((a, b) => b.populacao - a.populacao);
 
-  const ifet = computeIFET(
-    municipios.map((m) => ({
-      code: m.code,
-      nome: m.nome,
-      populacao: m.populacao,
-      pibTotal: pib[m.code] ?? 0,
-    })),
-  );
-
-  const populacaoByCode: Record<string, number> = {};
-  const nomeByCode: Record<string, string> = {};
-  for (const m of municipios) {
-    populacaoByCode[m.code] = m.populacao;
-    nomeByCode[m.code] = m.nome;
-  }
-
   let eleitoralByCode: Record<string, number> | null = null;
   let eleitoralAno: number | null = null;
   let eleitoralTotal: number | null = null;
@@ -76,6 +60,23 @@ export async function getTerritorioUF(
       eleitoralAno = v.ano;
       eleitoralTotal = v.total;
     }
+  }
+
+  const ifet = computeIFET(
+    municipios.map((m) => ({
+      code: m.code,
+      nome: m.nome,
+      populacao: m.populacao,
+      pibTotal: pib[m.code] ?? 0,
+      votosCandidato: eleitoralByCode?.[m.code],
+    })),
+  );
+
+  const populacaoByCode: Record<string, number> = {};
+  const nomeByCode: Record<string, string> = {};
+  for (const m of municipios) {
+    populacaoByCode[m.code] = m.populacao;
+    nomeByCode[m.code] = m.nome;
   }
 
   return {

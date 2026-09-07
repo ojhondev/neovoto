@@ -18,9 +18,11 @@ type Dict = {
   pesoEleitoral: string;
   perfilEconomico: string;
   disputabilidade: string;
+  desempenhoHistorico: string;
   pesoEleitoralHint: string;
   perfilEconomicoHint: string;
   disputabilidadeHint: string;
+  desempenhoHistoricoHint: string;
   quadrantsTitle: string;
   ranking: string;
   clickHint: string;
@@ -151,6 +153,13 @@ export function HeatmapExplorer({
               <Bar label={dict.pesoEleitoral} hint={dict.pesoEleitoralHint} v={sel.pilares.pesoEleitoral} />
               <Bar label={dict.perfilEconomico} hint={dict.perfilEconomicoHint} v={sel.pilares.perfilEconomico} />
               <Bar label={dict.disputabilidade} hint={dict.disputabilidadeHint} v={sel.pilares.disputabilidade} />
+              {sel.pilares.desempenhoHistorico != null && (
+                <Bar
+                  label={dict.desempenhoHistorico}
+                  hint={dict.desempenhoHistoricoHint}
+                  v={sel.pilares.desempenhoHistorico}
+                />
+              )}
             </div>
 
             <dl className="font-ui mt-4 space-y-1 border-t border-ash pt-3 text-caption">
