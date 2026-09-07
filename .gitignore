@@ -40,3 +40,5 @@ next-env.d.ts
 
 # referências internas grandes
 /docs/_ref-*.png
+
+.env*
