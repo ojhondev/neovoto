@@ -25,6 +25,7 @@ export const orgKind = pgEnum("org_kind", [
   "consultoria",
   "outro",
 ]);
+export const candidacySource = pgEnum("candidacy_source", ["camara", "senado", "manual"]);
 
 export const organizations = pgTable("organizations", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -64,6 +65,32 @@ export const sessions = pgTable(
   (t) => [index("sessions_user_idx").on(t.userId)],
 );
 
+/**
+ * Candidato/político em análise. O usuário informa o nome no onboarding e a plataforma
+ * puxa os dados públicos (Câmara / Senado). `raw` guarda o snapshot da fonte oficial.
+ * São dados de AGENTE PÚBLICO, já públicos por lei — ver docs/LGPD.md.
+ */
+export const candidacies = pgTable(
+  "candidacies",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    orgId: uuid("org_id").references(() => organizations.id, { onDelete: "set null" }),
+    source: candidacySource("source").notNull(),
+    externalId: text("external_id").notNull(),
+    name: text("name").notNull(),
+    house: text("house"), // 'camara' | 'senado' | null
+    party: text("party"),
+    uf: text("uf"),
+    photoUrl: text("photo_url"),
+    email: text("email"),
+    objective: text("objective"), // objetivo declarado pelo usuário
+    raw: jsonb("raw").$type<Record<string, unknown>>().notNull().default({}),
+    refreshedAt: timestamp("refreshed_at", { withTimezone: true }).defaultNow().notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [index("candidacies_source_idx").on(t.source, t.externalId)],
+);
+
 /** Análises salvas (recorte territorial + parâmetros). Sem PII. */
 export const analyses = pgTable(
   "analyses",
@@ -101,3 +128,4 @@ export const auditLog = pgTable(
 export type User = typeof users.$inferSelect;
 export type Organization = typeof organizations.$inferSelect;
 export type Analysis = typeof analyses.$inferSelect;
+export type Candidacy = typeof candidacies.$inferSelect;
