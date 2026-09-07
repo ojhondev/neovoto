@@ -13,7 +13,7 @@ import { computeCenarios, type ResultadoCenario } from "@/lib/intel/cenarios";
 import { URGENCIA_RESULTADO, urgVar } from "@/lib/viz/colors";
 import type { Cargo } from "@/lib/cargos";
 
-export const metadata: Metadata = { title: "Cenários Estatísticos" };
+export const metadata: Metadata = { title: "Cenários" };
 
 const REF: Record<Cargo, { ano: number; turno: number; cargo: string; prop: boolean }> = {
   presidente: { ano: 2022, turno: 1, cargo: "presidente", prop: false },

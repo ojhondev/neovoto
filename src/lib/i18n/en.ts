@@ -248,7 +248,7 @@ const en: Dictionary = {
       { feature: "Influence Map", vals: ["preview", "yes", "yes", "yes"] },
       { feature: "Ideological Matrix by Region", vals: ["—", "yes", "yes", "yes"] },
       { feature: "Proposal Map", vals: ["—", "yes", "yes", "yes"] },
-      { feature: "Statistical Scenarios", vals: ["—", "yes", "yes", "yes"] },
+      { feature: "Scenarios", vals: ["—", "yes", "yes", "yes"] },
       { feature: "Coalitions", vals: ["—", "yes", "yes", "yes"] },
       { feature: "Vote by municipality", vals: ["—", "—", "yes", "yes"] },
       { feature: "Precinct granularity", vals: ["—", "—", "yes", "yes"] },
@@ -285,7 +285,7 @@ const en: Dictionary = {
         "Maps government proposals (filed with the TSE) and issues on the legislative agenda (Chamber and Senate), aligning them with observable regional priorities. Flags the promise missing in each place and where the opponent already owns the issue.",
     },
     scenarios: {
-      name: "Statistical Scenarios",
+      name: "Scenarios",
       short: "How much is missing for you to win — and what moves the needle fastest.",
       desc:
         "From your declared objective, NeoVoto's engine combines electoral history, socioeconomic context and coalition composition to estimate result ranges and the path to a majority. Every scenario shows the sources feeding it and the uncertainty of the estimate.",

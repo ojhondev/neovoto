@@ -246,7 +246,7 @@ const pt = {
       { feature: "Mapa de Influência", vals: ["prévia", "sim", "sim", "sim"] },
       { feature: "Matriz Ideológica por Região", vals: ["—", "sim", "sim", "sim"] },
       { feature: "Mapa de Propostas", vals: ["—", "sim", "sim", "sim"] },
-      { feature: "Cenários Estatísticos", vals: ["—", "sim", "sim", "sim"] },
+      { feature: "Cenários", vals: ["—", "sim", "sim", "sim"] },
       { feature: "Coligações", vals: ["—", "sim", "sim", "sim"] },
       { feature: "Votação por município", vals: ["—", "—", "sim", "sim"] },
       { feature: "Granularidade de seção", vals: ["—", "—", "sim", "sim"] },
@@ -283,7 +283,7 @@ const pt = {
         "Mapeia as propostas de governo (registradas no TSE) e os temas em pauta no Legislativo (Câmara e Senado), aproximando-os das prioridades observáveis por região. Aponta a promessa que falta em cada praça e onde o adversário já ocupou o tema.",
     },
     scenarios: {
-      name: "Cenários Estatísticos",
+      name: "Cenários",
       short: "Quanto falta para você ganhar — e o que move o ponteiro mais rápido.",
       desc:
         "A partir do objetivo declarado, o motor da NeoVoto combina histórico eleitoral, contexto socioeconômico e composição de coligações para estimar faixas de resultado e o caminho até a maioria. Cada cenário mostra as fontes que o alimentam e a incerteza da estimativa.",
