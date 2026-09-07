@@ -84,6 +84,14 @@ O cliente já está pronto (`src/lib/data-sources/basedosdados.ts`) — usa a RE
 BigQuery com um JWT assinado pelo `node:crypto` (sem SDK, sem grpc). Liga sozinho quando
 as duas env vars aparecerem.
 
+> **ATIVO desde 2026-09-07.** `GCP_PROJECT_ID` + `GCP_SERVICE_ACCOUNT_KEY` configurados
+> (Production + Preview + Development) e verificados ao vivo: `buscarCandidatos` traz o
+> histórico multi-cargo (ex. Boulos: prefeito 2024/2020, dep. federal 2022, presidente
+> 2018) e `votacaoPorMunicipio` de Tabata Amaral 2022 = 645 municípios / 337.873 votos.
+> Schema real: a tabela `candidatos` **não tem `turno`** nem resultado de urna (só o
+> cadastro; campo `situacao` = deferido/indeferido); `resultados_candidato_municipio` usa
+> **`sequencial_candidato`** (não `sequencial`).
+
 ### Passo a passo (uma vez, ~10 minutos)
 
 1. **Conta Google Cloud.** Acesse **https://console.cloud.google.com/** com uma conta
