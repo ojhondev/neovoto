@@ -2,9 +2,11 @@ import {
   getEstadoPorSigla,
   getMalhaMunicipiosUF,
   getPopulacaoMunicipiosUF,
+  getPibMunicipiosUF,
   type GeoFeatureCollection,
 } from "@/lib/data-sources/ibge";
 import { getVotosByIbge } from "@/lib/data-sources/eleitoral";
+import { computeIFET, type IfetResultado } from "@/lib/intel/ifet";
 
 export type MunicipioTerritorio = {
   code: string;
@@ -25,6 +27,8 @@ export type TerritorioUF = {
   eleitoralByCode: Record<string, number> | null;
   eleitoralAno: number | null;
   eleitoralTotal: number | null;
+  /** IFET v1 — Índice de Força Eleitoral Territorial (contexto IBGE) */
+  ifet: IfetResultado;
 };
 
 /** Territórios pesados: um por UF, cacheado no servidor (fetch do IBGE). */
@@ -35,15 +39,25 @@ export async function getTerritorioUF(
   const estado = await getEstadoPorSigla(ufSigla);
   if (!estado) return null;
 
-  const [geojson, pops] = await Promise.all([
+  const [geojson, pops, pib] = await Promise.all([
     getMalhaMunicipiosUF(estado.id),
     getPopulacaoMunicipiosUF(estado.id),
+    getPibMunicipiosUF(estado.id).catch(() => ({}) as Record<string, number>),
   ]);
 
   const municipios: MunicipioTerritorio[] = Object.entries(pops).map(
     ([code, v]) => ({ code, nome: v.nome, populacao: v.populacao }),
   );
   municipios.sort((a, b) => b.populacao - a.populacao);
+
+  const ifet = computeIFET(
+    municipios.map((m) => ({
+      code: m.code,
+      nome: m.nome,
+      populacao: m.populacao,
+      pibTotal: pib[m.code] ?? 0,
+    })),
+  );
 
   const populacaoByCode: Record<string, number> = {};
   const nomeByCode: Record<string, string> = {};
@@ -76,5 +90,6 @@ export async function getTerritorioUF(
     eleitoralByCode,
     eleitoralAno,
     eleitoralTotal,
+    ifet,
   };
 }

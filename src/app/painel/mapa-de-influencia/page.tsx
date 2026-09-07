@@ -59,28 +59,18 @@ export default async function Page() {
         <>
           <p className="font-ui mb-3 text-body-sm text-fossil">
             {eleitoral
-              ? pt
-                ? `Municípios de ${territorio.ufNome} dimensionados pela votação de ${perfil!.nome}.`
-                : `${territorio.ufNome} municipalities sized by ${perfil!.nome}'s vote.`
-              : pt
-                ? `Base territorial de ${territorio.ufNome} (população, Censo 2022). A camada de votação entra com a fonte eleitoral — ver docs/DADOS-TSE.md.`
-                : `${territorio.ufNome} territorial base (population, 2022 Census). The vote layer arrives with the electoral source — see docs/DADOS-TSE.md.`}
+              {pt
+                ? `Municípios de ${territorio.ufNome} dimensionados pelo IFET — prioridade estratégica de ${perfil!.nome} por território (ver Mapa de Calor para a decomposição).`
+                : `${territorio.ufNome} municipalities sized by IFET — ${perfil!.nome}'s strategic priority by territory (see the Heatmap for the breakdown).`}
           </p>
           <TerritoryMap
             geojson={territorio.geojson}
-            valueByCode={eleitoral ?? territorio.populacaoByCode}
+            valueByCode={territorio.ifet.byCode}
             nameByCode={territorio.nomeByCode}
-            metricLabel={
-              eleitoral
-                ? pt
-                  ? "votação"
-                  : "vote"
-                : pt
-                  ? "população — Censo 2022"
-                  : "population — 2022 Census"
-            }
-            scale={eleitoral ? "heat" : "sequential"}
+            metricLabel="IFET (0–100)"
+            scale="heat"
             height={460}
+            formatValue={(n) => n.toFixed(0)}
           />
           <div className="mt-8">
             <p className="t-eyebrow mb-2">

@@ -2,12 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { ToolShell } from "@/components/app/ToolShell";
-import { TerritoryMap } from "@/components/viz/TerritoryMap";
+import { HeatmapExplorer } from "@/components/app/HeatmapExplorer";
 import { getDictionary } from "@/lib/i18n";
-import { getCurrentCandidacy, perfilFrom, cargoOf } from "@/lib/candidacy";
+import { getCurrentCandidacy, perfilFrom } from "@/lib/candidacy";
 import { getTerritorioUF } from "@/lib/territory";
-import { CARGO_LABEL } from "@/lib/cargos";
-import { RetryVotacao } from "@/components/app/RetryVotacao";
+import { QUADRANTE_INFO, type Quadrante } from "@/lib/intel/ifet";
 
 export const metadata: Metadata = { title: "Mapa de Calor de Influência" };
 
@@ -29,9 +28,7 @@ export default async function Page() {
     );
   }
 
-  const cargo = cargoOf(candidacy);
   const territorio = await getTerritorioUF(perfil.uf, candidacy.id);
-
   if (!territorio) {
     return (
       <ToolShell id="mapa-de-calor" updatedAt="—" howItWorks={[]} outputs={[]}>
@@ -46,100 +43,101 @@ export default async function Page() {
     );
   }
 
-  const eleitoral = territorio.eleitoralByCode;
-  const cargoLabel = CARGO_LABEL[cargo][locale];
-  const metricLabel = eleitoral
-    ? t.maps.layerElectoral
-        .replace("{ano}", String(territorio.eleitoralAno ?? ""))
-        .replace("{cargo}", cargoLabel)
-    : t.maps.layerPopulation;
+  const { ifet } = territorio;
+  const quad = Object.fromEntries(
+    (Object.keys(QUADRANTE_INFO) as Quadrante[]).map((q) => [q, QUADRANTE_INFO[q][locale]]),
+  ) as Record<Quadrante, { label: string; acao: string }>;
 
-  const valueByCode = eleitoral ?? territorio.populacaoByCode;
-  const throttled = candidacy.source === "tse" && candidacy.electoralStatus === "indisponivel";
-  const banner = eleitoral
-    ? t.maps.electoralActive
-        .replace("{name}", perfil.nome)
-        .replace("{ano}", String(territorio.eleitoralAno ?? ""))
-    : throttled
-      ? t.maps.electoralThrottled
-      : t.maps.electoralPending;
-
-  const sortedTop = [...territorio.municipios]
-    .map((m) => ({ ...m, metric: valueByCode[m.code] ?? 0 }))
-    .sort((a, b) => b.metric - a.metric)
-    .slice(0, 12);
-
-  const unit = eleitoral ? t.maps.votes : t.maps.inhabitants;
+  const pt = locale === "pt";
 
   return (
     <ToolShell
       id="mapa-de-calor"
       realData
-      updatedAt={territorio.eleitoralAno ? String(territorio.eleitoralAno) : "IBGE 2022"}
+      updatedAt={`IFET ${ifet.version}`}
       howItWorks={
-        locale === "pt"
+        pt
           ? [
-              "Carrega a malha municipal real do estado do candidato (IBGE, GeoJSON).",
-              "Colore cada município pela métrica ativa (votação do candidato ou população).",
-              "Permite navegar, dar zoom e inspecionar município a município.",
-              "A camada de votação usa o espelho do TSE no brasil.io (todos os cargos).",
+              "Carrega a malha municipal real e o contexto socioeconômico do estado (IBGE).",
+              "Calcula o IFET de cada município: peso eleitoral, perfil econômico e disputabilidade.",
+              "Agrega os pilares e classifica cada município num quadrante estratégico.",
+              "Colore o mapa pelo índice e permite inspecionar a decomposição município a município.",
             ]
           : [
-              "Loads the candidate state's real municipal mesh (IBGE, GeoJSON).",
-              "Colours each municipality by the active metric (candidate vote or population).",
-              "Lets you pan, zoom and inspect municipality by municipality.",
-              "The vote layer uses the TSE mirror on brasil.io (every office).",
+              "Loads the real municipal mesh and the state's socioeconomic context (IBGE).",
+              "Computes each municipality's IFET: electoral weight, economic profile and contestability.",
+              "Aggregates the pillars and classifies each municipality into a strategic quadrant.",
+              "Colours the map by the index and lets you inspect the breakdown municipality by municipality.",
             ]
       }
       outputs={
-        locale === "pt"
+        pt
           ? [
-              "Choropleth interativo por município.",
-              "Ranking de municípios pela métrica ativa.",
-              "Base pronta para comparar turnos e eleições (Fase 2).",
+              "Choropleth por prioridade estratégica (IFET 0–100).",
+              "Quadrantes: onde concentrar, consolidar, buscar oportunidade ou não gastar.",
+              "Ficha de cada município com a decomposição e as fontes.",
             ]
           : [
-              "Interactive choropleth by municipality.",
-              "Municipality ranking by the active metric.",
-              "Base ready to compare rounds and elections (Phase 2).",
+              "Choropleth by strategic priority (IFET 0–100).",
+              "Quadrants: where to concentrate, consolidate, seek opportunity or not spend.",
+              "Per-municipality sheet with the breakdown and the sources.",
             ]
       }
     >
-      <p className="font-ui mb-3 text-body-sm text-fossil">{banner}</p>
-      {throttled && <RetryVotacao label={t.maps.retryVotacao} />}
-      <TerritoryMap
-        geojson={territorio.geojson}
-        valueByCode={valueByCode}
-        nameByCode={territorio.nomeByCode}
-        metricLabel={metricLabel}
-        scale={eleitoral ? "heat" : "sequential"}
-        height={480}
-      />
-      <p className="font-ui mt-2 text-caption text-pebble">{t.maps.interact}</p>
+      <h2 className="t-heading text-[22px]">
+        {t.ifet.name} <span className="mark ml-1 text-caption">{t.ifet.tag} {ifet.version}</span>
+      </h2>
+      <p className="mt-2 max-w-2xl text-body-sm text-fossil">
+        {t.ifet.intro.replace("{name}", perfil.nome)}
+      </p>
 
+      <div className="mt-6">
+        <HeatmapExplorer
+          geojson={territorio.geojson}
+          nameByCode={territorio.nomeByCode}
+          ifet={{ municipios: ifet.municipios, byCode: ifet.byCode }}
+          quad={quad}
+          dict={{ ...t.ifet, interact: t.maps.interact }}
+          ufNome={territorio.ufNome}
+          locale={locale}
+        />
+      </div>
+
+      {/* Ficha técnica */}
       <div className="card mt-6">
-        <h3 className="t-heading text-[20px]">
-          {eleitoral
-            ? locale === "pt"
-              ? "Municípios por votação"
-              : "Municipalities by vote"
-            : t.maps.topMunicipios}
-          {" "}
-          — {territorio.ufNome}
-        </h3>
-        <ol className="font-ui mt-3 space-y-1.5 text-body-sm">
-          {sortedTop.map((m, i) => (
-            <li key={m.code} className="flex items-center justify-between gap-3">
-              <span className="text-smoke">
-                <span className="mr-2 text-pebble">{i + 1}</span>
-                {m.nome}
-              </span>
-              <span className="text-fossil">
-                {m.metric.toLocaleString(locale)} {unit}
-              </span>
-            </li>
-          ))}
-        </ol>
+        <h3 className="t-heading text-[20px]">{t.ifet.fichaTitle}</h3>
+        <dl className="font-ui mt-3 grid gap-x-8 gap-y-3 text-body-sm sm:grid-cols-2">
+          <div>
+            <dt className="text-pebble">{t.ifet.version}</dt>
+            <dd className="text-smoke">IFET {ifet.version}</dd>
+          </div>
+          <div>
+            <dt className="text-pebble">{t.ifet.weights}</dt>
+            <dd className="text-smoke">
+              {t.ifet.pesoEleitoral} {Math.round(ifet.pesos.pesoEleitoral * 100)}% · {t.ifet.perfilEconomico}{" "}
+              {Math.round(ifet.pesos.perfilEconomico * 100)}% · {t.ifet.disputabilidade}{" "}
+              {Math.round(ifet.pesos.disputabilidade * 100)}%
+            </dd>
+          </div>
+          <div className="sm:col-span-2">
+            <dt className="text-pebble">{t.ifet.sources}</dt>
+            <dd className="mt-1 flex flex-wrap gap-2">
+              {ifet.fontes.map((f) => (
+                <span key={f} className="rounded-[4px] bg-sand px-2 py-1 text-caption text-smoke">
+                  {f}
+                </span>
+              ))}
+            </dd>
+          </div>
+          <div className="sm:col-span-2">
+            <dt className="text-pebble">{t.ifet.pending}</dt>
+            <dd className="mt-1 space-y-1 text-caption text-fossil">
+              {ifet.pendencias.map((p) => (
+                <p key={p}>— {p}</p>
+              ))}
+            </dd>
+          </div>
+        </dl>
       </div>
     </ToolShell>
   );

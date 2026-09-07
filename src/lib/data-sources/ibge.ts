@@ -105,6 +105,36 @@ export async function getMalhaBrasilUFs(): Promise<unknown> {
   );
 }
 
+type SerieRow = {
+  resultados: {
+    series: { localidade: { id: string; nome: string }; serie: Record<string, string> }[];
+  }[];
+};
+
+function lastValue(serie: Record<string, string>): number {
+  const vals = Object.values(serie);
+  const n = Number(vals[vals.length - 1]);
+  return Number.isNaN(n) ? 0 : n;
+}
+
+/**
+ * PIB total dos municípios de um estado (agregado 5938 / variável 37, R$ 1.000, ~2021).
+ * Usado como proxy de renda territorial quando dividido pela população.
+ */
+export async function getPibMunicipiosUF(
+  ufId: number | string,
+): Promise<Record<string, number>> {
+  const data = await get<SerieRow[]>(
+    `${AGREG}/5938/periodos/-1/variaveis/37?localidades=N6[N3[${ufId}]]`,
+    60 * 60 * 24 * 30,
+  );
+  const out: Record<string, number> = {};
+  for (const s of data?.[0]?.resultados?.[0]?.series ?? []) {
+    out[s.localidade.id] = lastValue(s.serie) * 1000; // R$ 1.000 → R$
+  }
+  return out;
+}
+
 /**
  * População estimada mais recente por UF (agregado 6579, variável 9324).
  * Retorna mapa sigla → população.

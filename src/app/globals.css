@@ -21,6 +21,10 @@
   --color-olive: #4b5b0a;
   --color-lavender: #b8a3ff;
   --color-map-bg: #efece5;
+  /* marca-texto (muda por tema) */
+  --color-mark: #dbf570;
+  /* texto sobre fundo chartreuse — fixo nos dois temas (verde bem escuro) */
+  --color-ink-accent: #26330a;
 
   /* Sinal político — usado só em gráficos/legendas, nunca como cor de ação */
   --color-signal-left: #6f8fd6;
@@ -80,6 +84,7 @@
   --color-olive: #afc76a;
   --color-lavender: #c6b4ff;
   --color-map-bg: #201d16;
+  --color-mark: #3f5410;
   --color-signal-left: #8aa6e0;
   --color-signal-right: #e0a488;
   --color-positive: #afc76a;
@@ -101,6 +106,7 @@
     --color-olive: #afc76a;
     --color-lavender: #c6b4ff;
     --color-map-bg: #201d16;
+  --color-mark: #3f5410;
     --color-signal-left: #8aa6e0;
     --color-signal-right: #e0a488;
     --color-positive: #afc76a;
@@ -205,9 +211,9 @@ h1, h2, h3, h4 {
   color: var(--color-fossil);
 }
 
-/* Marca-texto chartreuse — pontuação, nunca fundo largo de UI */
+/* Marca-texto — chartreuse no claro; verde escuro no dark (contraste com texto claro) */
 .mark {
-  background: linear-gradient(transparent 62%, var(--color-chartreuse) 62%);
+  background: linear-gradient(transparent 62%, var(--color-mark) 62%);
   padding: 0 0.06em;
 }
 
