@@ -13,10 +13,39 @@ import { ingestVotacao, setEleitoralStatus } from "@/lib/data-sources/eleitoral"
 import type { Cargo } from "@/lib/cargos";
 
 export const CANDIDACY_COOKIE = "neovoto_candidacy";
+export const COMPARE_COOKIE = "neovoto_compare";
 
 export async function getCurrentCandidacyId(): Promise<string | null> {
   const store = await cookies();
   return store.get(CANDIDACY_COOKIE)?.value ?? null;
+}
+
+/** Ids das candidaturas na "arena" de comparação (concorrentes). */
+export async function getCompareIds(): Promise<string[]> {
+  const store = await cookies();
+  const raw = store.get(COMPARE_COOKIE)?.value ?? "";
+  return raw.split(",").map((s) => s.trim()).filter(Boolean).slice(0, 4);
+}
+
+async function setCompareIds(ids: string[]) {
+  const store = await cookies();
+  const uniq = [...new Set(ids)].slice(0, 4);
+  if (uniq.length === 0) store.delete(COMPARE_COOKIE);
+  else store.set(COMPARE_COOKIE, uniq.join(","), { path: "/", maxAge: 60 * 60 * 24 * 90, sameSite: "lax" });
+}
+
+export async function addCompareId(id: string) {
+  const ids = await getCompareIds();
+  if (!ids.includes(id)) await setCompareIds([...ids, id]);
+}
+
+export async function removeCompareId(id: string) {
+  const ids = await getCompareIds();
+  await setCompareIds(ids.filter((x) => x !== id));
+}
+
+export async function clearCompare() {
+  await setCompareIds([]);
 }
 
 export async function getCurrentCandidacy(): Promise<Candidacy | null> {
@@ -49,6 +78,7 @@ async function persist(
   externalId: string,
   objective: string,
   extra: { cargo?: string; electionYear?: number; electoralStatus: string },
+  opts: { setCookie?: boolean } = {},
 ): Promise<string> {
   const existing = await db
     .select({ id: candidacies.id })
@@ -83,8 +113,10 @@ async function persist(
     id = inserted[0].id;
   }
 
-  const store = await cookies();
-  store.set(CANDIDACY_COOKIE, id, { path: "/", maxAge: 60 * 60 * 24 * 90, sameSite: "lax" });
+  if (opts.setCookie !== false) {
+    const store = await cookies();
+    store.set(CANDIDACY_COOKIE, id, { path: "/", maxAge: 60 * 60 * 24 * 90, sameSite: "lax" });
+  }
   return id;
 }
 
@@ -136,6 +168,60 @@ export async function selectCandidacyTSE(
 export async function clearCandidacy() {
   const store = await cookies();
   store.delete(CANDIDACY_COOKIE);
+}
+
+/** Adiciona um concorrente à arena de comparação (TSE — qualquer cargo). */
+export async function adicionarConcorrenteTSE(
+  cand: CandidatoEleitoral,
+): Promise<{ ok: true; id: string } | { ok: false; error: string }> {
+  try {
+    const perfil = await perfilFromCandidatoEleitoral(cand);
+    const id = await persist(
+      perfil,
+      "tse",
+      cand.externalId,
+      "concorrente",
+      { cargo: cand.cargo, electionYear: cand.ano, electoralStatus: "pendente" },
+      { setCookie: false },
+    );
+    try {
+      await setEleitoralStatus(id, await ingestVotacao(id));
+    } catch {
+      /* ingest best-effort */
+    }
+    await addCompareId(id);
+    return { ok: true, id };
+  } catch {
+    return { ok: false, error: "Falha ao adicionar o concorrente." };
+  }
+}
+
+/** Adiciona um concorrente à arena (Câmara/Senado — mandato federal atual). */
+export async function adicionarConcorrente(
+  source: "camara" | "senado",
+  externalId: string,
+): Promise<{ ok: true; id: string } | { ok: false; error: string }> {
+  const perfil = await montarPerfil(source, externalId);
+  if (!perfil) return { ok: false, error: "Não foi possível carregar o perfil oficial." };
+  try {
+    const id = await persist(
+      perfil,
+      source,
+      externalId,
+      "concorrente",
+      { cargo: perfil.cargo, electoralStatus: "na" },
+      { setCookie: false },
+    );
+    try {
+      await setEleitoralStatus(id, await ingestVotacao(id));
+    } catch {
+      /* best-effort */
+    }
+    await addCompareId(id);
+    return { ok: true, id };
+  } catch {
+    return { ok: false, error: "Falha ao adicionar o concorrente." };
+  }
 }
 
 /** Reprocessa a votação de uma candidatura TSE (quando ficou "indisponivel"). */

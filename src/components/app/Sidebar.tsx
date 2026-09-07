@@ -7,6 +7,7 @@ import { useLocalStorageBoolean } from "@/lib/use-local-storage";
 import {
   LayoutDashboard,
   Trophy,
+  Users,
   PanelLeftClose,
   PanelLeftOpen,
   Menu,
@@ -26,6 +27,7 @@ import { toolPath, type ToolId } from "@/lib/tools";
 type Labels = {
   dashboard: string;
   comoGanhar: string;
+  concorrentes: string;
   candidate: string;
   collapse: string;
   groupOverview: string;
@@ -48,6 +50,7 @@ function buildGroups(labels: Labels, toolNames: Record<ToolId, string>) {
       items: [
         { href: "/painel", label: labels.dashboard, icon: LayoutDashboard, exact: true },
         { href: "/painel/como-ganhar", label: labels.comoGanhar, icon: Trophy },
+        { href: "/painel/concorrentes", label: labels.concorrentes, icon: Users },
         { href: "/painel/candidato", label: labels.candidate, icon: UserRound },
       ] as Item[],
     },
