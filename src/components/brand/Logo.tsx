@@ -1,53 +1,48 @@
 import Link from "next/link";
+import Image from "next/image";
+import logo from "../../../public/brand/logo-neovoto.png";
 
-/**
- * Marca NeoVoto: quadrado tinta com elipse "cédula" vazada, + logotipo.
- * O ativo enviado pelo cliente (public/brand/logo-neovoto.png) traz o wordmark
- * antigo "NeoVote"; aqui reconstruímos como "NeoVoto" em vetor.
- */
+/** Marca oficial NeoVoto (public/brand/logo-neovoto.png): quadrado tinta + elipse
+ *  "cédula" vazada + logotipo "NeoVoto". Em fundo escuro usamos filtro de inversão. */
 export function Logo({
   className = "",
-  showWordmark = true,
+  height = 26,
   invert = false,
+  markOnly = false,
 }: {
   className?: string;
-  showWordmark?: boolean;
+  height?: number;
   invert?: boolean;
+  markOnly?: boolean;
 }) {
-  const ink = invert ? "var(--color-paper)" : "var(--color-ink)";
-  const paper = invert ? "var(--color-ink)" : "var(--color-paper)";
+  if (markOnly) {
+    return (
+      <Link href="/" aria-label="NeoVoto" className={"inline-flex " + className}>
+        <svg width={height} height={height} viewBox="0 0 28 28" fill="none" aria-hidden="true">
+          <rect width="28" height="28" rx="4" fill={invert ? "var(--color-paper)" : "var(--color-ink)"} />
+          <ellipse
+            cx="14"
+            cy="14"
+            rx="6"
+            ry="10.5"
+            transform="rotate(-32 14 14)"
+            fill={invert ? "var(--color-ink)" : "var(--color-paper)"}
+          />
+        </svg>
+      </Link>
+    );
+  }
+
   return (
-    <Link
-      href="/"
-      aria-label="NeoVoto"
-      className={"inline-flex items-center gap-2.5 " + className}
-    >
-      <svg
-        width="28"
-        height="28"
-        viewBox="0 0 28 28"
-        fill="none"
-        aria-hidden="true"
-        className="shrink-0"
-      >
-        <rect width="28" height="28" rx="4" fill={ink} />
-        <ellipse
-          cx="14"
-          cy="14"
-          rx="6"
-          ry="10.5"
-          transform="rotate(-32 14 14)"
-          fill={paper}
-        />
-      </svg>
-      {showWordmark && (
-        <span
-          className="font-ui text-[19px] font-semibold tracking-[-0.02em]"
-          style={{ color: ink }}
-        >
-          NeoVoto
-        </span>
-      )}
+    <Link href="/" aria-label="NeoVoto" className={"inline-flex " + className}>
+      <Image
+        src={logo}
+        alt="NeoVoto"
+        height={height}
+        width={Math.round((logo.width / logo.height) * height)}
+        priority
+        style={invert ? { filter: "invert(1) brightness(2)" } : undefined}
+      />
     </Link>
   );
 }

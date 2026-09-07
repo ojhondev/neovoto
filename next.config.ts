@@ -1,8 +1,13 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  experimental: {
-    // Server Actions são usadas para autenticação e mutações do painel.
+  images: {
+    remotePatterns: [
+      { protocol: "https", hostname: "www.camara.leg.br" },
+      { protocol: "https", hostname: "www.camara.gov.br" },
+      { protocol: "https", hostname: "www.senado.leg.br" },
+      { protocol: "https", hostname: "www25.senado.leg.br" },
+    ],
   },
 };
 
