@@ -10,6 +10,7 @@ export async function ToolShell({
   howItWorks,
   outputs,
   realData = false,
+  conclusao,
 }: {
   id: ToolId;
   updatedAt: string;
@@ -17,8 +18,10 @@ export async function ToolShell({
   howItWorks: string[];
   outputs: string[];
   realData?: boolean;
+  /** Leitura objetiva no topo — "o que isto diz". */
+  conclusao?: ReactNode;
 }) {
-  const { t } = await getDictionary();
+  const { locale, t } = await getDictionary();
   const tool = getTool(id);
   const meta = t.tools[tool.key];
   const Icon = tool.icon;
@@ -33,6 +36,13 @@ export async function ToolShell({
         </div>
       </div>
       <p className="mt-4 max-w-2xl text-body text-fossil">{meta.desc}</p>
+
+      {conclusao && (
+        <div className="mt-6 rounded-[var(--radius-card)] border-l-2 border-olive bg-paper p-4">
+          <p className="t-eyebrow mb-1">{locale === "pt" ? "O que isto diz" : "What this says"}</p>
+          <div className="text-body-sm text-ink">{conclusao}</div>
+        </div>
+      )}
 
       {!realData && (
         <div className="mt-8">

@@ -293,8 +293,9 @@ h1, h2, h3, h4 {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  /* Só desativa a animação de entrada (one-shot). O marquee e as partículas
+     são parte da identidade da marca e seguem rodando — decisão de produto. */
   .rise { animation: none; }
-  [style*="marquee-"] { animation: none !important; }
 }
 
 /* Sublinhado que cresce da esquerda no hover dos links de navegação */

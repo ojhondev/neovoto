@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { ToolShell } from "@/components/app/ToolShell";
+import { Info } from "@/components/app/Info";
 import { getDictionary } from "@/lib/i18n";
 import { getCurrentCandidacy, perfilFrom } from "@/lib/candidacy";
 import { getAgendaCamara } from "@/lib/data-sources/agenda";
@@ -104,10 +105,17 @@ export default async function Page() {
     n: radar.temas.filter((x) => x.tipo === k).length,
   }));
 
+  const lacunas = radar.temas.filter((x) => x.tipo === "lacuna").sort((a, b) => b.heat - a.heat);
+  const exposicoes = radar.temas.filter((x) => x.tipo === "exposicao");
+  const conclusao = pt
+    ? `${lacunas.length} ${lacunas.length === 1 ? "tema quente" : "temas quentes"} da agenda ${lacunas.length === 1 ? "é" : "são"} terreno do campo de ${perfil.nome} e ${lacunas.length === 1 ? "está" : "estão"} sem posição pública${lacunas[0] ? ` — a maior é "${lacunas[0].label}"` : ""}. ${exposicoes.length} ${exposicoes.length === 1 ? "exige" : "exigem"} cuidado ao entrar. Priorize ocupar as lacunas.`
+    : `${lacunas.length} hot ${lacunas.length === 1 ? "theme is" : "themes are"} friendly terrain for ${perfil.nome} with no public position${lacunas[0] ? ` — the biggest is "${lacunas[0].label}"` : ""}. ${exposicoes.length} need care before entering. Prioritise claiming the gaps.`;
+
   return (
     <ToolShell
       id="mapa-de-propostas"
       realData
+      conclusao={conclusao}
       updatedAt={radar.version}
       howItWorks={howItWorks}
       outputs={outputs}
@@ -134,7 +142,14 @@ export default async function Page() {
 
       {/* ranking */}
       <div className="card mt-6">
-        <h3 className="t-heading text-[20px]">{t.radar.ranking}</h3>
+        <h3 className="t-heading flex items-center text-[20px]">
+          {t.radar.ranking}
+          <Info label={t.radar.colHeat}>
+            {pt
+              ? '"No ciclo" (0–100) é o quanto o tema aparece na agenda recente da Câmara, com peso maior para projetos dos últimos dias. "Lacuna a ocupar" = quente + afim ao seu campo + sem posição sua. "Cuidado ao entrar" = quente, mas terreno de tensão para o seu lado.'
+              : '"In cycle" (0–100) is how much the theme shows up in the Chamber\'s recent agenda, weighted toward the last few days. "Gap to claim" = hot + friendly to your field + no position of yours. "Careful entering" = hot, but tense terrain for your side.'}
+          </Info>
+        </h3>
         <ol className="mt-4 divide-y divide-ash">
           {radar.temas.map((tema) => (
             <li key={tema.id} className="py-4 first:pt-0 last:pb-0">

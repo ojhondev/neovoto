@@ -18,9 +18,12 @@ export default async function PainelLayout({
       <Sidebar
         labels={{
           dashboard: t.common.dashboard,
-          tools: t.nav.tools,
           candidate: locale === "pt" ? "Candidato" : "Candidate",
           collapse: locale === "pt" ? "Recolher" : "Collapse",
+          groupOverview: t.nav.groupOverview,
+          groupTerritory: t.nav.groupTerritory,
+          groupPositioning: t.nav.groupPositioning,
+          groupProjection: t.nav.groupProjection,
         }}
         toolNames={toolNames}
       />

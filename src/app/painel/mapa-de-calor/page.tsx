@@ -50,10 +50,20 @@ export default async function Page() {
 
   const pt = locale === "pt";
 
+  const prioridade = ifet.municipios.filter((m) => m.quadrante === "prioridade-maxima");
+  const top3 = prioridade.slice(0, 3).map((m) => m.nome);
+  const popPrioridade = prioridade.reduce((s, m) => s + m.populacao, 0);
+  const popTotal = ifet.municipios.reduce((s, m) => s + m.populacao, 0) || 1;
+  const pctEleitorado = Math.round((popPrioridade / popTotal) * 100);
+  const conclusao = pt
+    ? `${prioridade.length} ${prioridade.length === 1 ? "município concentra" : "municípios concentram"} a prioridade máxima da campanha de ${perfil.nome} — cerca de ${pctEleitorado}% da população do estado.${top3.length ? ` Comece por ${top3.join(", ")}.` : ""} ${territorio.eleitoralByCode ? "O mapa pode alternar entre o índice e a votação real." : "Carregue a votação por município para o índice ganhar o pilar de desempenho histórico."}`
+    : `${prioridade.length} ${prioridade.length === 1 ? "municipality concentrates" : "municipalities concentrate"} the campaign's top priority for ${perfil.nome} — about ${pctEleitorado}% of the state's population.${top3.length ? ` Start with ${top3.join(", ")}.` : ""} ${territorio.eleitoralByCode ? "The map can toggle between the index and the real vote." : "Load the vote by municipality to add the track-record pillar."}`;
+
   return (
     <ToolShell
       id="mapa-de-calor"
       realData
+      conclusao={conclusao}
       updatedAt={`IFET ${ifet.version}`}
       howItWorks={
         pt

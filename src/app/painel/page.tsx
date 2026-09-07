@@ -1,15 +1,30 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowRight, ExternalLink } from "lucide-react";
-import { UserRound } from "lucide-react";
+import { ArrowRight, UserRound, Sparkles } from "lucide-react";
 import { getDictionary } from "@/lib/i18n";
 import { TOOLS, toolPath } from "@/lib/tools";
 import { getCurrentCandidacy, perfilFrom } from "@/lib/candidacy";
-import { getVotosByIbge } from "@/lib/data-sources/eleitoral";
-import { CARGO_LABEL, type Cargo } from "@/lib/cargos";
+import { analisarCandidatura, type DimensaoLeitura, type NivelProntidao } from "@/lib/intel/motor";
+import { Info } from "@/components/app/Info";
 
 export const metadata: Metadata = { title: "Painel" };
+
+const NIVEL_COR: Record<NivelProntidao, string> = {
+  critico: "#8a3b2f",
+  atencao: "#c9772f",
+  competitivo: "#8ba33a",
+  favoravel: "#4b5b0a",
+};
+
+function nivelLabel(n: NivelProntidao, t: Awaited<ReturnType<typeof getDictionary>>["t"]) {
+  return { critico: t.motor.critico, atencao: t.motor.atencao, competitivo: t.motor.competitivo, favoravel: t.motor.favoravel }[n];
+}
+
+function StatusDot({ status }: { status: DimensaoLeitura["status"] }) {
+  const c = status === "ok" ? "#4b5b0a" : status === "atencao" ? "#c9772f" : "#a8a29a";
+  return <span className="inline-block h-2 w-2 shrink-0 rounded-full" style={{ background: c }} />;
+}
 
 export default async function PainelHome() {
   const { locale, t } = await getDictionary();
@@ -19,23 +34,23 @@ export default async function PainelHome() {
   if (!candidacy || !perfil) {
     return (
       <>
-        <p className="t-eyebrow mb-3">{t.common.appName}</p>
+        <p className="t-eyebrow mb-3">{t.motor.name}</p>
         <h1 className="t-heading-lg">{t.dash.emptyTitle}</h1>
         <p className="mt-3 max-w-xl text-body text-fossil">{t.dash.emptyBody}</p>
         <Link href="/onboarding" className="btn btn-primary mt-6">
           {t.dash.emptyCta} <ArrowRight size={16} />
         </Link>
 
-        <div className="mt-14 grid gap-px overflow-hidden rounded-[var(--radius-card-lg)] border border-ash bg-ash sm:grid-cols-2">
+        <div className="mt-14 grid gap-px overflow-hidden rounded-[var(--radius-card-lg)] border border-ash bg-ash sm:grid-cols-2 lg:grid-cols-3">
           {TOOLS.map((tool) => {
             const meta = t.tools[tool.key];
             const Icon = tool.icon;
             return (
-              <Link key={tool.id} href={toolPath(tool.id)} className="flex flex-col bg-paper p-6 hover:bg-bone">
+              <div key={tool.id} className="flex flex-col bg-paper p-6">
                 <Icon size={20} strokeWidth={1.5} className="text-ink" />
-                <h2 className="t-heading mt-3 text-[22px]">{meta.name}</h2>
+                <h2 className="t-heading mt-3 text-[19px]">{meta.name}</h2>
                 <p className="mt-2 text-body-sm text-fossil">{meta.short}</p>
-              </Link>
+              </div>
             );
           })}
         </div>
@@ -46,30 +61,32 @@ export default async function PainelHome() {
   const objectiveLabel =
     t.onboarding.objectives.find((o) => o.value === candidacy.objective)?.label ??
     candidacy.objective;
-  const props = perfil.proposicoes;
-  const maxTipo = props?.tipos[0]?.count ?? 1;
 
-  const votos = candidacy.source === "tse" ? await getVotosByIbge(candidacy.id).catch(() => null) : null;
-  const cargoLabel = candidacy.cargo
-    ? CARGO_LABEL[candidacy.cargo as Cargo]?.[locale] ?? candidacy.cargo
-    : null;
+  const leitura = await analisarCandidatura(
+    candidacy,
+    perfil,
+    t,
+    locale === "pt" ? "pt" : "en",
+  );
+
+  const scoreCor = NIVEL_COR[leitura.prontidao.nivel];
 
   return (
     <>
-      {/* Cabeçalho da candidatura — dados reais */}
-      <div className="flex flex-wrap items-start gap-5">
+      {/* ---- Cabeçalho da candidatura ---- */}
+      <div className="flex flex-wrap items-start gap-4">
         {perfil.foto ? (
           <Image
             src={perfil.foto}
             alt={perfil.nome}
-            width={72}
-            height={96}
+            width={56}
+            height={72}
             unoptimized
-            className="h-24 w-[72px] shrink-0 rounded-[8px] border border-ash object-cover"
+            className="h-[72px] w-14 shrink-0 rounded-[8px] border border-ash object-cover"
           />
         ) : (
-          <span className="flex h-24 w-[72px] shrink-0 items-center justify-center rounded-[8px] border border-ash bg-sand">
-            <UserRound size={28} className="text-fossil" />
+          <span className="flex h-[72px] w-14 shrink-0 items-center justify-center rounded-[8px] border border-ash bg-sand">
+            <UserRound size={24} className="text-fossil" />
           </span>
         )}
         <div className="min-w-0 flex-1">
@@ -79,8 +96,7 @@ export default async function PainelHome() {
             {perfil.partido}
             {perfil.uf ? `-${perfil.uf}` : ""}
             {perfil.territorio ? ` · ${perfil.territorio.ufNome}` : ""}
-          </p>
-          <p className="font-ui mt-2 inline-flex items-center gap-2 rounded-[4px] bg-sand px-2 py-1 text-caption text-smoke">
+            {" · "}
             {t.dash.objectiveLabel}: {objectiveLabel}
           </p>
         </div>
@@ -89,167 +105,151 @@ export default async function PainelHome() {
         </Link>
       </div>
 
-      {/* Widgets de dados reais */}
-      <div className="mt-8 grid gap-4 md:grid-cols-2">
-        <section className="card">
-          <h2 className="t-heading text-[22px]">{t.dash.profile}</h2>
-          <dl className="font-ui mt-3 space-y-1.5 text-body-sm">
-            {perfil.situacao && (
-              <div className="flex justify-between gap-4">
-                <dt className="text-pebble">{t.dash.situation}</dt>
-                <dd className="text-smoke">{perfil.situacao}</dd>
-              </div>
-            )}
-            {perfil.escolaridade && (
-              <div className="flex justify-between gap-4">
-                <dt className="text-pebble">{t.dash.education}</dt>
-                <dd className="text-right text-smoke">{perfil.escolaridade}</dd>
-              </div>
-            )}
-            {perfil.nascimento && (
-              <div className="flex justify-between gap-4">
-                <dt className="text-pebble">{t.dash.born}</dt>
-                <dd className="text-smoke">{perfil.nascimento}</dd>
-              </div>
-            )}
-            {perfil.email && (
-              <div className="flex justify-between gap-4">
-                <dt className="text-pebble">E-mail</dt>
-                <dd className="truncate text-smoke">{perfil.email}</dd>
-              </div>
-            )}
-          </dl>
-        </section>
+      {/* ---- Leitura NeoVoto (o "algoritmo" visível) ---- */}
+      <section className="mt-6 rounded-[var(--radius-card-lg)] border border-ash bg-paper p-6">
+        <div className="flex flex-wrap items-center gap-2">
+          <Sparkles size={16} className="text-ink" />
+          <span className="t-eyebrow">{t.motor.name}</span>
+          <span className="font-ui text-caption text-pebble">· {t.motor.tagline}</span>
+        </div>
 
-        <section className="card">
-          <h2 className="t-heading text-[22px]">
-            {votos ? (locale === "pt" ? "Votação" : "Vote") : t.dash.territory}
-          </h2>
-          {votos ? (
-            <div className="mt-3">
-              <p className="font-ui text-[28px] font-light text-ink">
-                {votos.total.toLocaleString(locale)}
-              </p>
-              <p className="font-ui text-body-sm text-fossil">
-                {locale === "pt" ? "votos" : "votes"} · {cargoLabel} · {votos.ano}
-                {perfil.territorio ? ` · ${perfil.territorio.ufNome}` : ""}
-              </p>
-              <Link
-                href={toolPath("mapa-de-calor")}
-                className="nav-link mt-4 inline-flex items-center gap-1.5 text-[13px]"
-              >
-                {t.dash.openTool} <ArrowRight size={13} />
-              </Link>
+        <div className="mt-5 grid gap-6 md:grid-cols-[200px_1fr]">
+          {/* score */}
+          <div className="shrink-0">
+            <p className="font-ui flex items-center text-caption text-pebble">
+              {t.motor.readiness}
+              <Info label={t.motor.readiness}>
+                {locale === "pt"
+                  ? "Índice 0–100 do Motor NeoVoto. Combina a concentração da sua força no território (IFET), quantas lacunas de agenda estão abertas no seu campo e o seu capital político. Quanto maior, mais a estratégia 'fecha'."
+                  : "0–100 index from the NeoVoto Engine. Combines how concentrated your territorial strength is (IFET), how many agenda gaps are open on your side, and your political capital. Higher means the strategy 'closes' better."}
+              </Info>
+            </p>
+            <p className="font-ui mt-1 text-[52px] font-light leading-none" style={{ color: scoreCor }}>
+              {leitura.prontidao.score}
+            </p>
+            <p className="font-ui mt-1 text-body-sm font-medium" style={{ color: scoreCor }}>
+              {nivelLabel(leitura.prontidao.nivel, t)}
+            </p>
+            <div className="mt-3 h-2 rounded-[2px] bg-sand">
+              <div
+                className="h-full rounded-[2px]"
+                style={{ width: `${leitura.prontidao.score}%`, background: scoreCor }}
+              />
             </div>
-          ) : perfil.territorio ? (
-            <div className="mt-3">
-              <p className="font-ui text-[28px] font-light text-ink">
-                {perfil.territorio.municipios}
-              </p>
-              <p className="font-ui text-body-sm text-fossil">
-                {t.dash.municipalities} — {perfil.territorio.ufNome} ({t.dash.region}{" "}
-                {perfil.territorio.regiao})
-              </p>
-              <Link
-                href={toolPath("mapa-de-calor")}
-                className="nav-link mt-4 inline-flex items-center gap-1.5 text-[13px]"
-              >
-                {t.dash.openTool} <ArrowRight size={13} />
-              </Link>
-            </div>
-          ) : (
-            <p className="mt-3 text-body-sm text-fossil">—</p>
-          )}
-        </section>
+            <p className="font-ui mt-2 text-caption text-pebble">{leitura.prontidao.leitura}</p>
+          </div>
 
-        {props && (
-          <section className="card md:col-span-2">
-            <div className="flex items-baseline justify-between">
-              <h2 className="t-heading text-[22px]">{t.dash.legislative}</h2>
-              <p className="font-ui text-body-sm text-fossil">
-                {props.total} {t.dash.propositions} · {props.comEmenta} {t.dash.withSummary}
-              </p>
-            </div>
-            <div className="mt-4 space-y-2">
-              {props.tipos.slice(0, 6).map((tp) => (
-                <div key={tp.label} className="font-ui flex items-center gap-3 text-body-sm">
-                  <span className="w-40 shrink-0 truncate text-smoke">{tp.label}</span>
-                  <span className="h-3 flex-1 rounded-[3px] bg-sand">
-                    <span
-                      className="block h-full rounded-[3px] bg-olive"
-                      style={{ width: `${Math.max(6, (tp.count / maxTipo) * 100)}%` }}
-                    />
-                  </span>
-                  <span className="w-8 shrink-0 text-right text-fossil">{tp.count}</span>
-                </div>
-              ))}
-            </div>
-            {props.recentes.length > 0 && (
-              <div className="mt-5">
-                <p className="font-ui text-caption uppercase tracking-wider text-pebble">
-                  {t.dash.recent}
-                </p>
-                <ul className="mt-2 space-y-2">
-                  {props.recentes.slice(0, 3).map((r) => (
-                    <li key={r.titulo} className="font-ui text-body-sm">
-                      <span className="text-ink">{r.titulo}</span>{" "}
-                      <span className="text-fossil">— {r.ementa.slice(0, 130)}…</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-            <Link
-              href={toolPath("mapa-de-propostas")}
-              className="nav-link mt-5 inline-flex items-center gap-1.5 text-[13px]"
-            >
-              {t.dash.openTool} <ArrowRight size={13} />
-            </Link>
-          </section>
-        )}
+          {/* síntese */}
+          <div>
+            <p className="t-eyebrow mb-2">{t.motor.reading}</p>
+            <p className="text-body text-ink">{leitura.sintese}</p>
+            <p className="font-ui mt-3 text-caption text-pebble">
+              {t.motor.crossed
+                .replace("{n}", leitura.sinaisAnalisados.toLocaleString(locale))
+                .replace("{m}", String(leitura.fontes.length))}
+              {" · "}
+              {t.motor.recalc}
+            </p>
+          </div>
+        </div>
+      </section>
 
-        {perfil.frentes.length > 0 && (
-          <section className="card md:col-span-2">
-            <div className="flex items-baseline justify-between">
-              <h2 className="t-heading text-[22px]">{t.dash.fronts}</h2>
-              <p className="font-ui text-body-sm text-fossil">{perfil.frentes.length}</p>
-            </div>
-            <ul className="mt-3 flex flex-wrap gap-2">
-              {perfil.frentes.slice(0, 12).map((f) => (
-                <li
-                  key={f.id}
-                  className="font-ui rounded-[4px] bg-sand px-2.5 py-1 text-caption text-smoke"
+      {/* ---- Ações prioritárias ---- */}
+      {leitura.acoes.length > 0 && (
+        <section className="mt-6">
+          <h2 className="t-heading text-[20px]">{t.motor.actions}</h2>
+          <p className="font-ui mt-1 text-caption text-pebble">{t.motor.actionsSub}</p>
+          <ol className="mt-4 space-y-2">
+            {leitura.acoes.map((a) => (
+              <li key={a.ordem} className="card flex items-start gap-4 p-4">
+                <span
+                  className="font-ui mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-caption text-ink-accent"
+                  style={{ background: "var(--color-chartreuse)" }}
                 >
-                  {f.titulo}
-                </li>
-              ))}
-            </ul>
-          </section>
-        )}
-      </div>
+                  {a.ordem}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="font-ui text-body text-ink">{a.titulo}</p>
+                  <p className="mt-1 text-body-sm text-fossil">
+                    <span className="text-pebble">{t.motor.why}: </span>
+                    {a.porque}
+                  </p>
+                </div>
+                <Link
+                  href={a.href}
+                  className="nav-link mt-1 inline-flex shrink-0 items-center gap-1 text-[13px]"
+                >
+                  {t.motor.openModule} <ArrowRight size={13} />
+                </Link>
+              </li>
+            ))}
+          </ol>
+        </section>
+      )}
 
-      {/* Ferramentas */}
-      <h2 className="t-heading mt-12">
+      {/* ---- Dimensões ---- */}
+      <section className="mt-8">
+        <h2 className="t-heading text-[20px]">{t.motor.dimensions}</h2>
+        <div className="mt-4 grid gap-4 md:grid-cols-3">
+          {leitura.dimensoes.map((d) => (
+            <div key={d.chave} className="card flex flex-col">
+              <div className="flex items-center justify-between">
+                <p className="t-eyebrow">{d.titulo}</p>
+                <StatusDot status={d.status} />
+              </div>
+              <p className="font-ui mt-3 text-[30px] font-light leading-none text-ink">{d.valor}</p>
+              <p className="font-ui mt-1 text-caption text-pebble">{d.rotulo}</p>
+              {d.barras && d.barras.length > 0 && (
+                <div className="mt-4 space-y-1.5">
+                  {d.barras.map((b) => (
+                    <div key={b.label} className="font-ui flex items-center gap-2 text-[11px]">
+                      <span className="w-24 shrink-0 truncate text-pebble">{b.label}</span>
+                      <span className="h-1.5 flex-1 rounded-[2px] bg-sand">
+                        <span
+                          className="block h-full rounded-[2px] bg-olive"
+                          style={{ width: `${Math.round(b.v * 100)}%` }}
+                        />
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <p className="mt-4 flex-1 text-body-sm text-fossil">{d.leitura}</p>
+              <Link
+                href={d.href}
+                className="nav-link mt-4 inline-flex items-center gap-1 text-[13px]"
+              >
+                {t.motor.openModule} <ArrowRight size={13} />
+              </Link>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ---- Todos os módulos ---- */}
+      <h2 className="t-heading mt-10 text-[20px]">
         {t.dash.toolsForCandidate.replace("{name}", perfil.nome)}
       </h2>
-      <div className="mt-5 grid gap-px overflow-hidden rounded-[var(--radius-card-lg)] border border-ash bg-ash sm:grid-cols-2 lg:grid-cols-3">
+      <div className="mt-4 grid gap-px overflow-hidden rounded-[var(--radius-card-lg)] border border-ash bg-ash sm:grid-cols-2 lg:grid-cols-3">
         {TOOLS.map((tool) => {
           const meta = t.tools[tool.key];
           const Icon = tool.icon;
           return (
             <Link key={tool.id} href={toolPath(tool.id)} className="flex flex-col bg-paper p-5 hover:bg-bone">
               <Icon size={18} strokeWidth={1.5} className="text-ink" />
-              <h3 className="t-heading mt-3 text-[19px]">{meta.name}</h3>
+              <h3 className="t-heading mt-3 text-[18px]">{meta.name}</h3>
               <p className="mt-1.5 text-body-sm text-fossil">{meta.short}</p>
             </Link>
           );
         })}
       </div>
 
-      <p className="font-ui mt-8 flex items-center gap-1.5 text-caption text-pebble">
-        <ExternalLink size={12} />
-        {t.dash.refreshedAt} {new Date(candidacy.refreshedAt).toLocaleDateString(locale)} ·{" "}
-        {t.dash.sourcesNote}
+      <p className="font-ui mt-8 border-t border-ash pt-4 text-caption text-pebble">
+        {t.motor.disclaimer}
+        {" "}
+        {t.dash.refreshedAt} {new Date(candidacy.refreshedAt).toLocaleDateString(locale)}.
+        {" "}
+        {leitura.fontes.join(" · ")}
       </p>
     </>
   );

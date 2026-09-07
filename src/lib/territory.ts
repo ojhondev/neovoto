@@ -31,6 +31,80 @@ export type TerritorioUF = {
   ifet: IfetResultado;
 };
 
+export type IfetResumoUF = {
+  ufNome: string;
+  regiao: string;
+  ifet: IfetResultado;
+  eleitoralByCode: Record<string, number> | null;
+  eleitoralAno: number | null;
+  eleitoralTotal: number | null;
+  nomeByCode: Record<string, string>;
+  populacaoByCode: Record<string, number>;
+};
+
+/**
+ * Versão leve do território para o painel/motor: computa o IFET sem baixar a
+ * malha geográfica (só população + PIB + votação). Rápido o suficiente para
+ * rodar no dashboard.
+ */
+export async function getIfetResumoUF(
+  ufSigla: string,
+  candidacyId?: string,
+): Promise<IfetResumoUF | null> {
+  const estado = await getEstadoPorSigla(ufSigla);
+  if (!estado) return null;
+
+  const [pops, pib] = await Promise.all([
+    getPopulacaoMunicipiosUF(estado.id),
+    getPibMunicipiosUF(estado.id).catch(() => ({}) as Record<string, number>),
+  ]);
+  const municipios = Object.entries(pops).map(([code, v]) => ({
+    code,
+    nome: v.nome,
+    populacao: v.populacao,
+  }));
+
+  let eleitoralByCode: Record<string, number> | null = null;
+  let eleitoralAno: number | null = null;
+  let eleitoralTotal: number | null = null;
+  if (candidacyId) {
+    const v = await getVotosByIbge(candidacyId).catch(() => null);
+    if (v && Object.keys(v.byCode).length > 0) {
+      eleitoralByCode = v.byCode;
+      eleitoralAno = v.ano;
+      eleitoralTotal = v.total;
+    }
+  }
+
+  const ifet = computeIFET(
+    municipios.map((m) => ({
+      code: m.code,
+      nome: m.nome,
+      populacao: m.populacao,
+      pibTotal: pib[m.code] ?? 0,
+      votosCandidato: eleitoralByCode?.[m.code],
+    })),
+  );
+
+  const nomeByCode: Record<string, string> = {};
+  const populacaoByCode: Record<string, number> = {};
+  for (const m of municipios) {
+    nomeByCode[m.code] = m.nome;
+    populacaoByCode[m.code] = m.populacao;
+  }
+
+  return {
+    ufNome: estado.nome,
+    regiao: estado.regiao.nome,
+    ifet,
+    eleitoralByCode,
+    eleitoralAno,
+    eleitoralTotal,
+    nomeByCode,
+    populacaoByCode,
+  };
+}
+
 /** Territórios pesados: um por UF, cacheado no servidor (fetch do IBGE). */
 export async function getTerritorioUF(
   ufSigla: string,

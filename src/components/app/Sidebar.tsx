@@ -11,16 +11,57 @@ import {
   Menu,
   X,
   UserRound,
+  Flame,
+  Network,
+  MessageSquareText,
+  LayoutGrid,
+  Sigma,
+  Handshake,
+  type LucideIcon,
 } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
-import { TOOLS, toolPath, type ToolId } from "@/lib/tools";
+import { toolPath, type ToolId } from "@/lib/tools";
 
 type Labels = {
   dashboard: string;
-  tools: string;
   candidate: string;
   collapse: string;
+  groupOverview: string;
+  groupTerritory: string;
+  groupPositioning: string;
+  groupProjection: string;
 };
+
+type Item = { href: string; label: string; icon: LucideIcon; exact?: boolean };
+
+function buildGroups(labels: Labels, toolNames: Record<ToolId, string>) {
+  const tool = (id: ToolId, icon: LucideIcon): Item => ({
+    href: toolPath(id),
+    label: toolNames[id],
+    icon,
+  });
+  return [
+    {
+      title: labels.groupOverview,
+      items: [
+        { href: "/painel", label: labels.dashboard, icon: LayoutDashboard, exact: true },
+        { href: "/painel/candidato", label: labels.candidate, icon: UserRound },
+      ] as Item[],
+    },
+    {
+      title: labels.groupTerritory,
+      items: [tool("mapa-de-calor", Flame), tool("mapa-de-influencia", Network)],
+    },
+    {
+      title: labels.groupPositioning,
+      items: [tool("mapa-de-propostas", MessageSquareText), tool("matriz-ideologica", LayoutGrid)],
+    },
+    {
+      title: labels.groupProjection,
+      items: [tool("cenarios", Sigma), tool("coligacoes", Handshake)],
+    },
+  ];
+}
 
 function NavItems({
   labels,
@@ -34,49 +75,42 @@ function NavItems({
   onNavigate?: () => void;
 }) {
   const pathname = usePathname();
-  const active = (href: string, exact = false) =>
-    exact ? pathname === href : pathname.startsWith(href);
+  const isActive = (href: string, exact = false) =>
+    exact ? pathname === href : pathname === href || pathname.startsWith(href + "/");
 
-  const row = (isActive: boolean) =>
+  const row = (active: boolean) =>
     "flex items-center gap-2.5 rounded-[8px] px-3 py-2 transition-colors " +
-    (isActive ? "bg-sand text-ink" : "text-fossil hover:bg-sand/60 hover:text-ink") +
+    (active ? "bg-sand text-ink" : "text-fossil hover:bg-sand/60 hover:text-ink") +
     (collapsed ? " justify-center px-0" : "");
+
+  const groups = buildGroups(labels, toolNames);
 
   return (
     <nav className="font-ui flex flex-1 flex-col gap-1 text-body-sm">
-      <Link href="/painel" onClick={onNavigate} className={row(active("/painel", true))} title={labels.dashboard}>
-        <LayoutDashboard size={16} strokeWidth={1.6} className="shrink-0" />
-        {!collapsed && labels.dashboard}
-      </Link>
-      <Link
-        href="/painel/candidato"
-        onClick={onNavigate}
-        className={row(active("/painel/candidato"))}
-        title={labels.candidate}
-      >
-        <UserRound size={16} strokeWidth={1.6} className="shrink-0" />
-        {!collapsed && labels.candidate}
-      </Link>
-
-      {!collapsed && <p className="t-eyebrow mt-6 mb-1 px-3">{labels.tools}</p>}
-      {collapsed && <div className="my-3 h-px bg-ash" />}
-
-      {TOOLS.map((tool) => {
-        const Icon = tool.icon;
-        const href = toolPath(tool.id);
-        return (
-          <Link
-            key={tool.id}
-            href={href}
-            onClick={onNavigate}
-            className={row(active(href))}
-            title={toolNames[tool.id]}
-          >
-            <Icon size={16} strokeWidth={1.6} className="shrink-0" />
-            {!collapsed && <span className="truncate">{toolNames[tool.id]}</span>}
-          </Link>
-        );
-      })}
+      {groups.map((g, gi) => (
+        <div key={g.title} className={gi > 0 ? "mt-5" : ""}>
+          {collapsed ? (
+            gi > 0 && <div className="mx-2 my-2 h-px bg-ash" />
+          ) : (
+            <p className="t-eyebrow mb-1 px-3">{g.title}</p>
+          )}
+          {g.items.map((it) => {
+            const Icon = it.icon;
+            return (
+              <Link
+                key={it.href}
+                href={it.href}
+                onClick={onNavigate}
+                className={row(isActive(it.href, it.exact))}
+                title={it.label}
+              >
+                <Icon size={16} strokeWidth={1.6} className="shrink-0" />
+                {!collapsed && <span className="truncate">{it.label}</span>}
+              </Link>
+            );
+          })}
+        </div>
+      ))}
     </nav>
   );
 }
@@ -91,11 +125,8 @@ export function Sidebar({
   const [collapsed, setCollapsed] = useLocalStorageBoolean("neovoto:sidebar", false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const toggle = () => setCollapsed(!collapsed);
-
   return (
     <>
-      {/* Trigger mobile — flutua sobre a topbar do layout (que reserva padding à esquerda) */}
       <button
         type="button"
         aria-label="Menu"
@@ -105,7 +136,6 @@ export function Sidebar({
         <Menu size={18} />
       </button>
 
-      {/* Rail desktop */}
       <aside
         className={
           "sticky top-0 hidden h-svh shrink-0 flex-col border-r border-ash bg-bone px-3 py-4 transition-[width] duration-200 lg:flex " +
@@ -115,12 +145,12 @@ export function Sidebar({
         <div className={"px-1 " + (collapsed ? "flex justify-center" : "")}>
           {collapsed ? <Logo markOnly height={22} /> : <Logo height={22} />}
         </div>
-        <div className="mt-7 flex flex-1 flex-col">
+        <div className="mt-7 flex flex-1 flex-col overflow-y-auto">
           <NavItems labels={labels} toolNames={toolNames} collapsed={collapsed} />
         </div>
         <button
           type="button"
-          onClick={toggle}
+          onClick={() => setCollapsed(!collapsed)}
           title={labels.collapse}
           className="font-ui mt-2 flex items-center gap-2 rounded-[8px] px-3 py-2 text-caption text-fossil hover:bg-sand/60"
         >
@@ -129,11 +159,10 @@ export function Sidebar({
         </button>
       </aside>
 
-      {/* Drawer mobile */}
       {mobileOpen && (
         <div className="fixed inset-0 z-50 lg:hidden">
           <div className="absolute inset-0 bg-ink/30" onClick={() => setMobileOpen(false)} />
-          <div className="absolute inset-y-0 left-0 flex w-72 flex-col border-r border-ash bg-bone px-3 py-4">
+          <div className="absolute inset-y-0 left-0 flex w-72 flex-col overflow-y-auto border-r border-ash bg-bone px-3 py-4">
             <div className="flex items-center justify-between px-1">
               <Logo height={22} />
               <button type="button" aria-label="Fechar" onClick={() => setMobileOpen(false)} className="p-1.5">
