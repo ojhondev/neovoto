@@ -9,6 +9,11 @@ type QuadInfo = Record<Quadrante, { label: string; acao: string }>;
 type Dict = {
   layerLabel: string;
   score: string;
+  layerIfet: string;
+  layerVotos: string;
+  votosField: string;
+  votosTotal: string;
+  votosNone: string;
   pillars: string;
   pesoEleitoral: string;
   perfilEconomico: string;
@@ -50,6 +55,7 @@ export function HeatmapExplorer({
   geojson,
   nameByCode,
   ifet,
+  votos,
   quad,
   dict,
   ufNome,
@@ -58,12 +64,14 @@ export function HeatmapExplorer({
   geojson: React.ComponentProps<typeof TerritoryMap>["geojson"];
   nameByCode: Record<string, string>;
   ifet: { municipios: IfetMunicipio[]; byCode: Record<string, number> };
+  votos: { byCode: Record<string, number>; ano: number; total: number } | null;
   quad: QuadInfo;
   dict: Dict;
   ufNome: string;
   locale: string;
 }) {
   const [sel, setSel] = useState<IfetMunicipio | null>(ifet.municipios[0] ?? null);
+  const [layer, setLayer] = useState<"ifet" | "votos">("ifet");
 
   const pick = (code: string) => {
     const m = ifet.municipios.find((x) => x.code === code);
@@ -75,21 +83,47 @@ export function HeatmapExplorer({
     n: ifet.municipios.filter((m) => m.quadrante === q).length,
   }));
 
+  const votosField = dict.votosField.replace("{ano}", String(votos?.ano ?? ""));
+  const showVotos = layer === "votos" && votos;
+
   return (
     <>
+      {votos && (
+        <div className="font-ui mb-3 inline-flex rounded-[4px] border border-ash p-0.5 text-caption">
+          {(["ifet", "votos"] as const).map((k) => (
+            <button
+              key={k}
+              type="button"
+              onClick={() => setLayer(k)}
+              className={
+                "rounded-[3px] px-3 py-1 transition-colors " +
+                (layer === k ? "bg-ink text-paper" : "text-fossil hover:text-ink")
+              }
+            >
+              {k === "ifet" ? dict.layerIfet : dict.layerVotos}
+            </button>
+          ))}
+        </div>
+      )}
       <div className="grid gap-5 lg:grid-cols-[1.6fr_1fr]">
         <div>
           <TerritoryMap
+            key={layer}
             geojson={geojson}
-            valueByCode={ifet.byCode}
+            valueByCode={showVotos ? votos.byCode : ifet.byCode}
             nameByCode={nameByCode}
-            metricLabel={dict.layerLabel}
-            scale="heat"
+            metricLabel={showVotos ? votosField : dict.layerLabel}
+            scale={showVotos ? "sequential" : "heat"}
             height={460}
             onSelect={(h: TerritoryMapHandle) => pick(h.code)}
-            formatValue={(n) => n.toFixed(0)}
+            formatValue={(n) => (showVotos ? Math.round(n).toLocaleString(locale) : n.toFixed(0))}
           />
           <p className="font-ui mt-2 text-caption text-pebble">{dict.interact}</p>
+          {showVotos && (
+            <p className="font-ui mt-1 text-caption text-pebble">
+              {dict.votosTotal}: {votos.total.toLocaleString(locale)}
+            </p>
+          )}
         </div>
 
         {sel && (
@@ -120,6 +154,14 @@ export function HeatmapExplorer({
             </div>
 
             <dl className="font-ui mt-4 space-y-1 border-t border-ash pt-3 text-caption">
+              {votos && (
+                <div className="flex justify-between">
+                  <dt className="text-pebble">{votosField}</dt>
+                  <dd className="text-smoke">
+                    {(votos.byCode[sel.code] ?? 0).toLocaleString(locale)}
+                  </dd>
+                </div>
+              )}
               <div className="flex justify-between">
                 <dt className="text-pebble">{dict.pibPerCapita}</dt>
                 <dd className="text-smoke">R$ {sel.pibPerCapita.toLocaleString(locale)}</dd>

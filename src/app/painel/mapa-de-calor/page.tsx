@@ -96,6 +96,15 @@ export default async function Page() {
           geojson={territorio.geojson}
           nameByCode={territorio.nomeByCode}
           ifet={{ municipios: ifet.municipios, byCode: ifet.byCode }}
+          votos={
+            territorio.eleitoralByCode && territorio.eleitoralAno != null
+              ? {
+                  byCode: territorio.eleitoralByCode,
+                  ano: territorio.eleitoralAno,
+                  total: territorio.eleitoralTotal ?? 0,
+                }
+              : null
+          }
           quad={quad}
           dict={{ ...t.ifet, interact: t.maps.interact }}
           ufNome={territorio.ufNome}
