@@ -114,22 +114,21 @@ function normCand(r: Row): BioCandidato {
   };
 }
 
-/** Busca candidatos por nome. Uma requisição por chamada (o cache é no Neon). */
+/**
+ * Busca candidatos por nome. UMA requisição por chamada (o cache fica no Neon).
+ * O único filtro aceito com segurança pelo brasil.io nessa tabela é `search`;
+ * `ano_eleicao` / `descricao_cargo` são filtrados aqui.
+ */
 export async function buscarCandidatosPorNome(
   nome: string,
-  ano: number,
+  anos: number[],
 ): Promise<BioCandidato[]> {
   const termo = nome.trim();
   if (termo.length < 3) return [];
-  const { results } = await page("candidatos", {
-    search: termo,
-    ano_eleicao: ano,
-    page_size: 60,
-  });
+  const { results } = await page("candidatos", { search: termo, page_size: 200 });
   return results
     .map(normCand)
-    .filter((c) => c.ano === ano || ano === 0)
-    .filter((c) => c.sequencial);
+    .filter((c) => c.sequencial && (anos.length === 0 || anos.includes(c.ano)));
 }
 
 export type BioVoto = {

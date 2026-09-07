@@ -93,18 +93,14 @@ export async function buscarCandidatosTSE(nome: string): Promise<CandidatoEleito
     /* segue para a fonte */
   }
 
-  // uma requisição por ano (2 no total)
-  const [geral, municipal] = await Promise.allSettled([
-    buscarCandidatosPorNome(nome, 2022),
-    buscarCandidatosPorNome(nome, 2020),
-  ]);
-  if (geral.status === "rejected" && geral.reason instanceof BrasilioThrottled) {
-    throw geral.reason;
+  // UMA requisição só (search), cobrindo as duas últimas eleições
+  let raw: BioCandidato[] = [];
+  try {
+    raw = await buscarCandidatosPorNome(nome, [2022, 2020, 2018]);
+  } catch (e) {
+    if (e instanceof BrasilioThrottled) throw e;
+    throw e;
   }
-
-  const raw: BioCandidato[] = [];
-  if (geral.status === "fulfilled") raw.push(...geral.value);
-  if (municipal.status === "fulfilled") raw.push(...municipal.value);
 
   const seen = new Set<string>();
   const out: CandidatoEleitoral[] = [];

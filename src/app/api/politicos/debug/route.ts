@@ -3,41 +3,42 @@ import { NextResponse } from "next/server";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-/**
- * Diagnóstico da conexão com o brasil.io (dado eleitoral público).
- * Uso: /api/politicos/debug?q=lula  → mostra status, campos e 1ª linha crua.
- */
-export async function GET(req: Request) {
-  const token = process.env.BRASILIO_API_TOKEN;
-  if (!token) return NextResponse.json({ error: "sem BRASILIO_API_TOKEN" }, { status: 400 });
-  const q = new URL(req.url).searchParams.get("q") ?? "lula";
+const BASE = "https://brasil.io/api/v1/dataset/eleicoes-brasil";
 
-  const url =
-    "https://brasil.io/api/v1/dataset/eleicoes-brasil/candidatos/data/?" +
-    new URLSearchParams({ search: q, ano_eleicao: "2022", page_size: "5" });
-
+async function probe(label: string, path: string, token: string) {
   try {
-    const res = await fetch(url, {
+    const res = await fetch(`${BASE}${path}`, {
       headers: { Authorization: `Token ${token}` },
       cache: "no-store",
     });
     const ct = res.headers.get("content-type") ?? "";
     if (!ct.includes("json")) {
-      return NextResponse.json({
-        status: res.status,
-        throttled: res.status === 429,
-        note: "resposta não-JSON (provável rate limit / bloqueio de IP)",
-      });
+      return { label, status: res.status, note: res.status === 429 ? "rate limit" : "não-JSON" };
     }
-    const j = (await res.json()) as { count?: number; results?: Record<string, unknown>[] };
-    const first = j.results?.[0];
-    return NextResponse.json({
+    const j = (await res.json()) as { count?: number; results?: Record<string, unknown>[]; detail?: string };
+    return {
+      label,
       status: res.status,
-      count: j.count ?? 0,
-      fields: first ? Object.keys(first) : [],
-      first: first ?? null,
-    });
+      count: j.count ?? null,
+      detail: j.detail ?? null,
+      fields: j.results?.[0] ? Object.keys(j.results[0]) : [],
+      first: j.results?.[0] ?? null,
+    };
   } catch (e) {
-    return NextResponse.json({ error: String(e) }, { status: 502 });
+    return { label, error: String(e) };
   }
+}
+
+/** Diagnóstico do brasil.io: testa estratégias de filtro nas tabelas candidatos e votacao. */
+export async function GET(req: Request) {
+  const token = process.env.BRASILIO_API_TOKEN;
+  if (!token) return NextResponse.json({ error: "sem BRASILIO_API_TOKEN" }, { status: 400 });
+  const q = new URL(req.url).searchParams.get("q") ?? "lula";
+
+  const out = [];
+  out.push(await probe("candidatos: search", `/candidatos/data/?search=${encodeURIComponent(q)}&page_size=3`, token));
+  out.push(await probe("votacao: search", `/votacao/data/?search=${encodeURIComponent(q)}&page_size=3`, token));
+  out.push(await probe("votacao: nome+ano+uf", `/votacao/data/?nome_candidato=${encodeURIComponent(q.toUpperCase())}&ano_eleicao=2022&page_size=3`, token));
+
+  return NextResponse.json({ q, probes: out });
 }
