@@ -55,6 +55,23 @@
 6. **Recusa explícita.** Pedidos de uso que violem estes princípios são recusados e
    registrados.
 
+## 3-A. Tendência social agregada (decisão sessão 7)
+
+O **Radar de Posicionamento** (`RADAR-POSICIONAMENTO.md`) usa sinal de tendência de
+imprensa e de redes para saber **qual assunto está subindo** em cada região. Isso **não
+reabre** o erro nº 2 da Cambridge Analytica, sob condições fixas:
+
+- **Só o tópico agregado.** Entra "o assunto X cresceu Y% na UF Z esta semana" — nunca o
+  conteúdo, o autor ou o perfil de quem publicou. Não há coleta de pessoa natural.
+- **Só API oficial de produto / feed público.** X/Twitter *trends*, YouTube *trending*,
+  Google Trends, RSS de veículos. **Nenhuma raspagem de timeline ou de perfil.**
+- **Nada é armazenado além da série temporal do tópico por região.**
+- A saída continua sendo **decisão de agenda** (princípio 3), qualitativa e interna — a
+  plataforma não gera mensagem nem público de anúncio.
+
+Isso mantém o princípio 1 (agregação como padrão): tendência de tópico é agregada por
+natureza.
+
 ## 4. Leitura de referência
 
 - The Guardian / Observer — "The Cambridge Analytica Files" (2018).
