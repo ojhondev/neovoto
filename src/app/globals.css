@@ -1,0 +1,211 @@
+@import "tailwindcss";
+
+/*
+  NeoVoto — Sistema visual "Maze"
+  Jornal de pesquisa editorial: papel cor de osso, tinta serifada, marca-texto chartreuse.
+  Referência completa em docs/DESIGN.md.
+*/
+
+@theme {
+  /* ---- Cores ---- */
+  --color-bone: #f5f4f0;
+  --color-paper: #ffffff;
+  --color-ink: #1c1c1c;
+  --color-charcoal: #000000;
+  --color-fossil: #706f6c;
+  --color-pebble: #9e9b94;
+  --color-smoke: #3c3c3c;
+  --color-sand: #eae6e1;
+  --color-ash: #d2cec6;
+  --color-chartreuse: #dbf570;
+  --color-olive: #4b5b0a;
+  --color-lavender: #b8a3ff;
+
+  /* Sinal político — usado só em gráficos/legendas, nunca como cor de ação */
+  --color-signal-left: #6f8fd6;
+  --color-signal-center: #b9b2a6;
+  --color-signal-right: #d68a6f;
+  --color-positive: #4b5b0a;
+  --color-negative: #8a3b2f;
+
+  /* ---- Tipografia ---- */
+  --font-display: var(--font-fraunces), "GT Sectra Display", Georgia, serif;
+  --font-body: var(--font-newsreader), "Tiempos Text", Georgia, serif;
+  --font-ui: var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+
+  --text-caption: 12px;
+  --text-body-sm: 14px;
+  --text-body: 17px;
+  --text-heading-sm: 22px;
+  --text-heading: 28px;
+  --text-heading-lg: 46px;
+  --text-display: 58px;
+  --text-display-lg: 90px;
+  --text-hero: 118px;
+
+  /* ---- Espaçamento ---- */
+  --spacing-section: 80px;
+
+  /* ---- Raios ---- */
+  --radius-badge: 4px;
+  --radius-input: 8px;
+  --radius-button: 8px;
+  --radius-card: 12px;
+  --radius-card-lg: 16px;
+
+  /* ---- Layout ---- */
+  --page-max: 1200px;
+}
+
+:root {
+  color-scheme: light;
+  --bg: var(--color-bone);
+  --fg: var(--color-ink);
+}
+
+* {
+  border-color: var(--color-ash);
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  background: var(--color-bone);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  line-height: 1.5;
+  font-feature-settings: "kern" 1, "liga" 1, "calt" 1, "onum" 1;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  font-weight: 300;
+  color: var(--color-ink);
+  line-height: 1.05;
+  text-wrap: balance;
+}
+
+.font-ui {
+  font-family: var(--font-ui);
+}
+
+/* Escala de display com tracking apertado (assinatura Maze) */
+.t-hero {
+  font-family: var(--font-display);
+  font-weight: 300;
+  font-size: clamp(3rem, 9vw, var(--text-hero));
+  line-height: 0.98;
+  letter-spacing: -0.055em;
+}
+.t-display {
+  font-family: var(--font-display);
+  font-weight: 300;
+  font-size: clamp(2.4rem, 6vw, var(--text-display-lg));
+  line-height: 1;
+  letter-spacing: -0.05em;
+}
+.t-heading-lg {
+  font-family: var(--font-display);
+  font-weight: 300;
+  font-size: clamp(2rem, 4vw, var(--text-heading-lg));
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+}
+.t-heading {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: var(--text-heading);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+.t-eyebrow {
+  font-family: var(--font-ui);
+  font-weight: 400;
+  font-size: var(--text-caption);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-fossil);
+}
+
+/* Marca-texto chartreuse — pontuação, nunca fundo largo de UI */
+.mark {
+  background: linear-gradient(transparent 62%, var(--color-chartreuse) 62%);
+  padding: 0 0.06em;
+}
+
+/* Botões — silenciosos, sem sombra, sem gradiente */
+.btn {
+  font-family: var(--font-ui);
+  font-size: var(--text-body-sm);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  border-radius: var(--radius-button);
+  transition: background 150ms ease, color 150ms ease, border-color 150ms ease;
+}
+.btn-primary {
+  background: var(--color-ink);
+  color: var(--color-paper);
+}
+.btn-primary:hover {
+  background: var(--color-smoke);
+}
+.btn-ghost {
+  border: 1px solid var(--color-ink);
+  color: var(--color-ink);
+}
+.btn-ghost:hover {
+  background: var(--color-sand);
+}
+
+/* Cartões — planos, definidos por cor e hairline de 1px */
+.card {
+  background: var(--color-paper);
+  border: 1px solid var(--color-ash);
+  border-radius: var(--radius-card);
+  padding: 24px;
+}
+
+.hairline {
+  border: 0;
+  border-top: 1px solid var(--color-ash);
+}
+
+/* Movimento — fade-and-rise ao entrar no viewport */
+@keyframes rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.rise {
+  animation: rise 220ms ease-out both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .rise { animation: none; }
+}
+
+/* Sublinhado que cresce da esquerda no hover dos links de navegação */
+.nav-link {
+  font-family: var(--font-ui);
+  font-size: 15px;
+  position: relative;
+  color: var(--color-ink);
+}
+.nav-link::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -4px;
+  height: 1px;
+  width: 0;
+  background: var(--color-ink);
+  transition: width 150ms ease;
+}
+.nav-link:hover::after {
+  width: 100%;
+}
