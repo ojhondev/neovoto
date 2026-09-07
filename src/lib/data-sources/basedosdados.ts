@@ -120,7 +120,6 @@ async function query(sql: string, params: Record<string, string | number>): Prom
 export type BddCandidato = {
   sequencial: string;
   ano: number;
-  turno: number;
   cargo: string;
   nome: string;
   nomeUrna: string;
@@ -128,14 +127,17 @@ export type BddCandidato = {
   siglaPartido: string;
   siglaUf: string;
   idMunicipio: string | null; // cargos municipais
-  resultado: string | null;
+  situacao: string | null;
 };
 
-/** Busca candidatos por nome (nome de urna ou nome). Todos os cargos, 2018–2024. */
+/**
+ * Busca candidatos por nome (nome de urna ou nome). Todos os cargos, 2018+.
+ * A tabela `candidatos` não tem `turno` nem resultado da urna — só o cadastro.
+ */
 export async function buscarCandidatos(nome: string): Promise<BddCandidato[]> {
   if (!basedosdadosDisponivel()) return [];
   const rows = await query(
-    `SELECT sequencial, ano, turno, cargo, nome, nome_urna, numero, sigla_partido, sigla_uf, id_municipio, resultado
+    `SELECT sequencial, ano, cargo, nome, nome_urna, numero, sigla_partido, sigla_uf, id_municipio, situacao
      FROM \`${DATASET}.candidatos\`
      WHERE ano >= 2018
        AND (UPPER(nome_urna) LIKE UPPER(@like) OR UPPER(nome) LIKE UPPER(@like))
@@ -146,7 +148,6 @@ export async function buscarCandidatos(nome: string): Promise<BddCandidato[]> {
   return rows.map((r) => ({
     sequencial: r.sequencial ?? "",
     ano: Number(r.ano ?? 0),
-    turno: Number(r.turno ?? 1),
     cargo: (r.cargo ?? "").toLowerCase(),
     nome: r.nome ?? "",
     nomeUrna: r.nome_urna ?? "",
@@ -154,7 +155,7 @@ export async function buscarCandidatos(nome: string): Promise<BddCandidato[]> {
     siglaPartido: r.sigla_partido ?? "",
     siglaUf: r.sigla_uf ?? "",
     idMunicipio: r.id_municipio ?? null,
-    resultado: r.resultado ?? null,
+    situacao: r.situacao ?? null,
   }));
 }
 
@@ -169,7 +170,7 @@ export async function votacaoPorMunicipio(args: {
   const rows = await query(
     `SELECT id_municipio, SUM(votos) AS votos
      FROM \`${DATASET}.resultados_candidato_municipio\`
-     WHERE ano = @ano AND turno = @turno AND sigla_uf = @uf AND sequencial = @seq
+     WHERE ano = @ano AND turno = @turno AND sigla_uf = @uf AND sequencial_candidato = @seq
      GROUP BY id_municipio`,
     { ano: args.ano, turno: args.turno, uf: args.uf, seq: args.sequencial },
   );
