@@ -157,7 +157,12 @@ export default async function PainelHome() {
       {/* ---- Ações prioritárias ---- */}
       {leitura.acoes.length > 0 && (
         <section className="mt-6">
-          <h2 className="t-heading text-[20px]">{t.motor.actions}</h2>
+          <div className="flex flex-wrap items-baseline justify-between gap-2">
+            <h2 className="t-heading text-[20px]">{t.motor.actions}</h2>
+            <Link href="/painel/como-ganhar" className="nav-link inline-flex items-center gap-1 text-[13px]">
+              {t.comoGanhar.title} <ArrowRight size={13} />
+            </Link>
+          </div>
           <p className="font-ui mt-1 text-caption text-pebble">{t.motor.actionsSub}</p>
           <ol className="mt-4 space-y-2">
             {leitura.acoes.map((a) => (

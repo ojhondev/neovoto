@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { useLocalStorageBoolean } from "@/lib/use-local-storage";
 import {
   LayoutDashboard,
+  Trophy,
   PanelLeftClose,
   PanelLeftOpen,
   Menu,
@@ -24,6 +25,7 @@ import { toolPath, type ToolId } from "@/lib/tools";
 
 type Labels = {
   dashboard: string;
+  comoGanhar: string;
   candidate: string;
   collapse: string;
   groupOverview: string;
@@ -45,6 +47,7 @@ function buildGroups(labels: Labels, toolNames: Record<ToolId, string>) {
       title: labels.groupOverview,
       items: [
         { href: "/painel", label: labels.dashboard, icon: LayoutDashboard, exact: true },
+        { href: "/painel/como-ganhar", label: labels.comoGanhar, icon: Trophy },
         { href: "/painel/candidato", label: labels.candidate, icon: UserRound },
       ] as Item[],
     },
