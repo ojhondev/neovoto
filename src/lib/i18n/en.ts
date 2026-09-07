@@ -344,6 +344,54 @@ const en: Dictionary = {
     pending: "Layers coming in the next versions",
     weight0: "weight 0 in this version",
   },
+  radar: {
+    name: "Positioning Radar",
+    tag: "RADAR",
+    intro:
+      "From the Chamber's real agenda (last {dias} days, {n} bills analysed), the themes in the attention cycle — and where {nome} does or doesn't have a position on record.",
+    janela: "in recent months",
+    fieldNote:
+      "Reference field of {partido}: {campo}. It sets whether a theme is friendly or tense terrain. Editable in the methodology sheet.",
+    campoProgressista: "progressive",
+    campoConservador: "conservative",
+    campoTransversal: "centre / flexible",
+    colTheme: "Theme",
+    colHeat: "In cycle",
+    colStatus: "Your position",
+    colAlign: "Terrain",
+    alignAfim: "Friendly",
+    alignTensao: "Tense",
+    alignNeutro: "Cross-cutting",
+    statusAtivo: "{k} bill(s) of yours",
+    statusFrentes: "Follows it through parliamentary fronts",
+    statusSilente: "No position on record",
+    tipoLacuna: "Gap to claim",
+    tipoConsolidar: "Reinforce authorship",
+    tipoExposicao: "Careful entering",
+    tipoMonitorar: "Monitor",
+    recLacuna:
+      "{tema} is rising in the Chamber ({n} bills {janela}) and is friendly terrain for your field. You have no public position — there's room to own the theme before the opponent.",
+    recConsolidar:
+      "{tema} is in the attention cycle ({n} bills) and you already have a position on it. Reinforce authorship and show up as a reference voice while the topic is hot.",
+    recExposicao:
+      "{tema} is rising ({n} bills), but it's tense terrain for your field. If you enter, enter through the practical/local angle, not the partisan one — silence here costs less than a poorly calibrated statement.",
+    recMonitorar:
+      "{tema} is rising ({n} bills) and is cross-cutting — any field can own it. Worth a common-sense position before the opponent sets the framing.",
+    recommendation: "Recommendation",
+    ranking: "Themes in the attention cycle",
+    disclaimer:
+      "Internal support for agenda decisions — not an opinion poll or a vote estimate, and not to be published (Brazil's Law 9.504/1997). Phase 1: legislative-agenda classification via a controlled vocabulary. Press and regional trends arrive in the next phases.",
+    empty: "Not enough legislative agenda to build the radar right now. Try reloading shortly.",
+    fichaTitle: "Technical sheet",
+    version: "Radar version",
+    sources: "Sources",
+    pending: "Layers coming in the next phases",
+    pendingItems: [
+      "Press and headlines by region (Agência Brasil, Google Trends).",
+      "Aggregate social trends by state (topic only, never the person).",
+      "AI-written recommendation and fine alignment to the candidate's axis.",
+    ],
+  },
   toolPage: {
     overview: "Overview",
     howItWorks: "How it works",

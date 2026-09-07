@@ -342,6 +342,54 @@ const pt = {
     pending: "Camadas que entram nas próximas versões",
     weight0: "peso 0 nesta versão",
   },
+  radar: {
+    name: "Radar de Posicionamento",
+    tag: "RADAR",
+    intro:
+      "A partir da agenda real da Câmara (últimos {dias} dias, {n} projetos analisados), os temas que estão no ciclo de atenção — e onde {nome} tem ou não tem posição registrada.",
+    janela: "nos últimos meses",
+    fieldNote:
+      "Campo de referência do {partido}: {campo}. Define se um tema é terreno afim ou de tensão. Editável na ficha metodológica.",
+    campoProgressista: "progressista",
+    campoConservador: "conservador",
+    campoTransversal: "centro / flexível",
+    colTheme: "Tema",
+    colHeat: "No ciclo",
+    colStatus: "Sua posição",
+    colAlign: "Terreno",
+    alignAfim: "Afim",
+    alignTensao: "Tensão",
+    alignNeutro: "Transversal",
+    statusAtivo: "{k} proposição(ões) sua(s)",
+    statusFrentes: "Acompanha via frentes parlamentares",
+    statusSilente: "Sem posição registrada",
+    tipoLacuna: "Lacuna a ocupar",
+    tipoConsolidar: "Reforçar autoria",
+    tipoExposicao: "Cuidado ao entrar",
+    tipoMonitorar: "Monitorar",
+    recLacuna:
+      "{tema} está em alta na Câmara ({n} projetos {janela}) e é terreno afim ao seu campo. Você não tem posição pública — há espaço para pautar o tema antes do adversário.",
+    recConsolidar:
+      "{tema} está no ciclo de atenção ({n} projetos) e você já se posiciona no tema. Reforce a autoria e apareça como voz de referência enquanto o assunto está quente.",
+    recExposicao:
+      "{tema} está em alta ({n} projetos), mas é terreno de tensão para o seu campo. Se entrar, entre pelo lado prático/local, não pelo viés partidário — o silêncio aqui custa menos que uma fala mal calibrada.",
+    recMonitorar:
+      "{tema} está em alta ({n} projetos) e é transversal — qualquer campo pode ocupar. Vale uma posição de bom senso antes que o adversário defina o enquadramento.",
+    recommendation: "Recomendação",
+    ranking: "Temas no ciclo de atenção",
+    disclaimer:
+      "Apoio interno à decisão de agenda — não é pesquisa de opinião nem estimativa de voto e não deve ser divulgado publicamente (Lei 9.504/1997). Fase 1: classificação da agenda legislativa por vocabulário controlado. Imprensa e tendências por região entram nas próximas fases.",
+    empty: "Não há agenda legislativa suficiente para montar o radar agora. Tente recarregar em instantes.",
+    fichaTitle: "Ficha técnica",
+    version: "Versão do radar",
+    sources: "Fontes",
+    pending: "Camadas que entram nas próximas fases",
+    pendingItems: [
+      "Imprensa e manchete por região (Agência Brasil, Google Trends).",
+      "Tendências sociais agregadas por UF (só o tópico, nunca a pessoa).",
+      "Redação da recomendação por IA e alinhamento fino ao eixo do candidato.",
+    ],
+  },
   toolPage: {
     overview: "Visão geral",
     howItWorks: "Como funciona",
