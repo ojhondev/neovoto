@@ -134,7 +134,7 @@ export function TerritoryMap({
   const logMax = Math.log(maxV + 1);
   const colorFor = (code: string) => {
     const raw = valueByCode[code];
-    if (raw == null) return "#dfdbd0";
+    if (raw == null) return "var(--color-ash)";
     if (raw <= 0) return ramp(scale, 0);
     const t = logMax > logMin ? (Math.log(raw + 1) - logMin) / (logMax - logMin) : 0.5;
     return ramp(scale, t);
@@ -161,7 +161,7 @@ export function TerritoryMap({
     : undefined;
 
   return (
-    <div className="relative overflow-hidden rounded-[var(--radius-card)] border border-ash bg-[#efece5]">
+    <div className="relative overflow-hidden rounded-[var(--radius-card)] border border-ash bg-map-bg">
       <svg
         viewBox={`0 0 ${W} ${H}`}
         style={{ width: "100%", height }}
@@ -186,7 +186,7 @@ export function TerritoryMap({
               d={p.d}
               fill={colorFor(p.code)}
               fillOpacity={0.9}
-              stroke="#efece5"
+              stroke="var(--color-map-bg)"
               strokeWidth={0.5 / view.k}
               onMouseEnter={(e) => {
                 const rect = (e.currentTarget.ownerSVGElement as SVGSVGElement).getBoundingClientRect();
@@ -212,7 +212,7 @@ export function TerritoryMap({
             <path
               d={hoverPath}
               fill="none"
-              stroke="#1c1c1c"
+              stroke="var(--color-ink)"
               strokeWidth={1.4 / view.k}
               pointerEvents="none"
             />

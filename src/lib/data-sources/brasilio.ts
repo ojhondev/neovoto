@@ -115,9 +115,9 @@ function normCand(r: Row): BioCandidato {
 }
 
 /**
- * Busca candidatos por nome. UMA requisição por chamada (o cache fica no Neon).
- * O único filtro aceito com segurança pelo brasil.io nessa tabela é `search`;
- * `ano_eleicao` / `descricao_cargo` são filtrados aqui.
+ * Busca candidatos por nome. O cache fica no Neon; aqui gastamos no máximo 2 requisições.
+ * Filtros válidos no brasil.io (`candidatos`): `nome_urna_candidato` (exato, maiúsculo) e
+ * `search` (full-text). `ano_eleicao`/`descricao_cargo` NÃO são filtráveis — filtramos aqui.
  */
 export async function buscarCandidatosPorNome(
   nome: string,
@@ -125,10 +125,45 @@ export async function buscarCandidatosPorNome(
 ): Promise<BioCandidato[]> {
   const termo = nome.trim();
   if (termo.length < 3) return [];
-  const { results } = await page("candidatos", { search: termo, page_size: 200 });
-  return results
-    .map(normCand)
-    .filter((c) => c.sequencial && (anos.length === 0 || anos.includes(c.ano)));
+  const alvo = new Set(anos);
+  const keep = (c: BioCandidato) => c.sequencial && (alvo.size === 0 || alvo.has(c.ano));
+
+  // 1) nome de urna exato (casa candidatos conhecidos: "MARINA SILVA")
+  let rows: Row[] = [];
+  try {
+    rows = (
+      await page("candidatos", {
+        nome_urna_candidato: termo.toUpperCase(),
+        page_size: 100,
+      })
+    ).results;
+  } catch (e) {
+    if (e instanceof BrasilioThrottled) throw e;
+  }
+  let out = rows.map(normCand).filter(keep);
+
+  // 2) fallback full-text quando o nome de urna exato não achou nada
+  if (out.length === 0) {
+    try {
+      const s = (await page("candidatos", { search: termo, page_size: 200 })).results;
+      const n = norm(termo);
+      out = s
+        .map(normCand)
+        .filter(keep)
+        .filter((c) => norm(c.nomeUrna).includes(n) || norm(c.nome).includes(n));
+    } catch (e) {
+      if (e instanceof BrasilioThrottled) throw e;
+    }
+  }
+  return out;
+}
+
+function norm(s: string): string {
+  return s
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .trim();
 }
 
 export type BioVoto = {
@@ -138,9 +173,12 @@ export type BioVoto = {
 };
 
 /**
- * Votação de um candidato por município. Pagina com pausa entre páginas.
- * Pode lançar BrasilioThrottled a qualquer momento — o caller deve gravar o
- * parcial e marcar como "indisponivel" para retomar depois.
+ * Votação de um candidato por município.
+ *
+ * NOTA (2026-09): o brasil.io **desativou a tabela `votacao`** da API (retorna 404
+ * "No Table matches the given query" — eles bloqueiam tabelas grandes iteráveis).
+ * Esta função tenta mesmo assim (caso reativem) e devolve [] se a tabela não existe.
+ * A votação por município real depende da Base dos Dados / BigQuery — ver docs/DADOS-TSE.md.
  */
 export async function votacaoDoCandidato(args: {
   sequencial: string;
@@ -150,13 +188,19 @@ export async function votacaoDoCandidato(args: {
   maxPages?: number;
 }): Promise<BioVoto[]> {
   const acc = new Map<string, { municipio: string; votos: number }>();
-  let res = await page("votacao", {
-    ano_eleicao: args.ano,
-    sigla_uf: args.uf,
-    num_turno: args.turno,
-    sequencial_candidato: args.sequencial,
-    page_size: 10000,
-  });
+  let res: { results: Row[]; next: string | null };
+  try {
+    res = await page("votacao", {
+      ano_eleicao: args.ano,
+      sigla_uf: args.uf,
+      num_turno: args.turno,
+      sequencial_candidato: args.sequencial,
+      page_size: 10000,
+    });
+  } catch (e) {
+    if (e instanceof BrasilioThrottled) throw e;
+    return []; // tabela 404 / indisponível
+  }
   const max = args.maxPages ?? 4;
   for (let i = 0; i < max; i++) {
     for (const r of res.results) {

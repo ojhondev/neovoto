@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Logo } from "@/components/brand/Logo";
 import { LocaleSwitcher } from "@/components/nav/LocaleSwitcher";
+import { ThemeToggle } from "@/components/nav/ThemeToggle";
 import { MobileNav } from "@/components/nav/MobileNav";
 import { getDictionary } from "@/lib/i18n";
 
@@ -29,9 +30,10 @@ export async function SiteHeader() {
           ))}
         </nav>
 
-        <div className="flex shrink-0 items-center gap-3">
+        <div className="flex shrink-0 items-center gap-2">
+          <ThemeToggle />
           <LocaleSwitcher current={locale} />
-          <Link href="/entrar" className="nav-link hidden sm:inline">
+          <Link href="/entrar" className="nav-link ml-1 hidden sm:inline">
             {t.common.enter}
           </Link>
           <div className="hidden sm:block">

@@ -13,7 +13,7 @@ export function HeatGrid({ cols = 14, rows = 8 }: { cols?: number; rows?: number
     return "var(--color-negative)";
   };
   return (
-    <div className="rounded-[var(--radius-card)] border border-ash bg-[#efece5] p-4">
+    <div className="rounded-[var(--radius-card)] border border-ash bg-map-bg p-4">
       <div
         className="grid gap-1"
         style={{ gridTemplateColumns: `repeat(${cols}, minmax(0,1fr))` }}
@@ -54,10 +54,10 @@ export function IdeologyScatter() {
   const px = (x: number) => ((x + 1) / 2) * (W - 60) + 30;
   const py = (y: number) => ((1 - (y + 1) / 2)) * (H - 60) + 30;
   return (
-    <div className="rounded-[var(--radius-card)] border border-ash bg-[#efece5] p-3">
+    <div className="rounded-[var(--radius-card)] border border-ash bg-map-bg p-3">
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full" role="img" aria-label="Matriz ideológica (ilustrativa)">
-        <line x1={W / 2} y1={20} x2={W / 2} y2={H - 20} stroke="#d8d2c6" />
-        <line x1={20} y1={H / 2} x2={W - 20} y2={H / 2} stroke="#d8d2c6" />
+        <line x1={W / 2} y1={20} x2={W / 2} y2={H - 20} stroke="var(--color-ash)" />
+        <line x1={20} y1={H / 2} x2={W - 20} y2={H / 2} stroke="var(--color-ash)" />
         <text x={W - 24} y={H / 2 - 8} textAnchor="end" className="fill-fossil" fontSize="10" fontFamily="var(--font-ui)">
           eixo econômico →
         </text>

@@ -22,8 +22,19 @@ A NeoVoto lê desses espelhos e guarda o recorte do candidato no Neon.
 
 | Fonte | Cobertura | Cargos | Acesso | Papel na NeoVoto |
 |---|---|---|---|---|
-| **brasil.io** — dataset `eleicoes-brasil` | 1996–2022 | **todos** (presidente, governador, senador, dep. federal/estadual/distrital, prefeito, vereador) | REST, **token gratuito** | **Fonte primária** de candidatos + votação por município. `src/lib/data-sources/brasilio.ts` |
-| **Base dos Dados** — `br_tse_eleicoes` (BigQuery) | 1994–2024 (inclui municipais 2024) + votação por **seção** | todos | BigQuery público, **service account GCP grátis** (1 TB/mês) | Escala e granularidade fina; 2024. Fase 2.5 |
+| **brasil.io** — dataset `eleicoes-brasil`, tabela `candidatos` | 1996–2022 | **todos** (presidente, governador, senador, dep. federal/estadual/distrital, prefeito, vereador) | REST, **token gratuito** | Busca de candidato em todos os cargos no onboarding. `src/lib/data-sources/brasilio.ts` |
+| **Base dos Dados** — `br_tse_eleicoes` (BigQuery) | 1994–2024 (inclui municipais 2024) + votação por **seção** | todos | BigQuery público, **service account GCP grátis** (1 TB/mês) | **Votação por município (choropleth do Mapa de Calor).** Fase 2.5 |
+
+> **IMPORTANTE (verificado 2026-09-07):** o brasil.io **desativou a tabela `votacao`** da
+> API (retorna 404 — eles bloqueiam tabelas grandes iteráveis). Só sobrou `candidatos`.
+> Ou seja: o brasil.io serve o **cadastro** do candidato (existiu, cargo, ano, partido,
+> resultado), mas **não** os votos por município. Para o mapa de calor real, o caminho é a
+> **Base dos Dados / BigQuery** (§4). O código já está pronto: `ingestVotacao` tenta o
+> brasil.io, recebe [] e a plataforma segue mostrando a base territorial (população).
+
+Além disso: o rate limit do brasil.io no plano gratuito é **agressivo** (bloqueia após
+poucas requisições, por dezenas de minutos). Por isso a NeoVoto cacheia toda busca no Neon
+(`candidate_search_cache`) e nunca chama o brasil.io no caminho de renderização.
 | **Câmara dos Deputados** — dados abertos | mandato atual | dep. federal | REST, sem chave | Enriquecimento: votações nominais, proposições, despesas de gabinete |
 | **Senado Federal** — dados abertos | mandato atual | senador | REST, sem chave | Enriquecimento: senadores em exercício, matérias, votações |
 | **IBGE** | — | — | REST, sem chave | Malhas territoriais e indicadores socioeconômicos |

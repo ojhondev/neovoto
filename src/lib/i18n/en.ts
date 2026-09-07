@@ -166,9 +166,9 @@ const en: Dictionary = {
     electoralActive:
       "Electoral layer active: {name}'s vote by municipality ({ano}), via brasil.io.",
     electoralPending:
-      "Showing the real territorial base (population, 2022 Census). The vote-by-municipality layer comes in when the candidacy is sourced from the TSE ('all offices' search in the onboarding).",
+      "Showing the real territorial base (population, 2022 Census). The candidate's vote by municipality lands in Phase 2.5 (Base dos Dados ingestion) — see docs/DADOS-TSE.md.",
     electoralThrottled:
-      "This candidate's vote by municipality hasn't loaded yet — brasil.io rate-limited the requests. Showing the territorial base (population). Try reloading in a few minutes.",
+      "This candidate's vote by municipality hasn't loaded yet — the source rate-limited the requests. Showing the territorial base (population). Try reloading in a few minutes.",
     retryVotacao: "Reload the vote",
     topMunicipios: "Largest municipalities",
     interact: "Hover the municipalities; scroll and drag to navigate.",

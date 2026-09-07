@@ -26,15 +26,15 @@ export function InfluenceNetwork({
           : "var(--color-olive)";
 
   return (
-    <div className="relative w-full overflow-hidden rounded-[var(--radius-card)] border border-ash bg-[#efece5]">
+    <div className="relative w-full overflow-hidden rounded-[var(--radius-card)] border border-ash bg-map-bg">
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full" role="img" aria-label="Rede de influência (ilustrativa)">
         {/* malha de fundo */}
         <g opacity="0.5">
           {Array.from({ length: 13 }).map((_, i) => (
-            <line key={`v${i}`} x1={(i * W) / 12} y1={0} x2={(i * W) / 12} y2={H} stroke="#e2ddd3" />
+            <line key={`v${i}`} x1={(i * W) / 12} y1={0} x2={(i * W) / 12} y2={H} stroke="var(--color-ash)" />
           ))}
           {Array.from({ length: 9 }).map((_, i) => (
-            <line key={`h${i}`} x1={0} y1={(i * H) / 8} x2={W} y2={(i * H) / 8} stroke="#e2ddd3" />
+            <line key={`h${i}`} x1={0} y1={(i * H) / 8} x2={W} y2={(i * H) / 8} stroke="var(--color-ash)" />
           ))}
         </g>
 

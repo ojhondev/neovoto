@@ -20,6 +20,7 @@
   --color-chartreuse: #dbf570;
   --color-olive: #4b5b0a;
   --color-lavender: #b8a3ff;
+  --color-map-bg: #efece5;
 
   /* Sinal político — usado só em gráficos/legendas, nunca como cor de ação */
   --color-signal-left: #6f8fd6;
@@ -59,8 +60,80 @@
 
 :root {
   color-scheme: light;
-  --bg: var(--color-bone);
-  --fg: var(--color-ink);
+}
+
+/* ---- Tema escuro: inverte os papéis de cor mantendo o contraste ----
+   Ativado por [data-theme="dark"] (escolha explícita) ou prefers-color-scheme.
+   O bloco é repetido porque CSS puro não permite @media dentro de lista de seletor. */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --color-bone: #17150f;
+  --color-paper: #201d16;
+  --color-ink: #f4f2ea;
+  --color-charcoal: #000000;
+  --color-fossil: #a6a196;
+  --color-pebble: #726d61;
+  --color-smoke: #cec9bd;
+  --color-sand: #2c281f;
+  --color-ash: #3a352b;
+  --color-chartreuse: #dbf570;
+  --color-olive: #afc76a;
+  --color-lavender: #c6b4ff;
+  --color-map-bg: #201d16;
+  --color-signal-left: #8aa6e0;
+  --color-signal-right: #e0a488;
+  --color-positive: #afc76a;
+  --color-negative: #d98a72;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --color-bone: #17150f;
+    --color-paper: #201d16;
+    --color-ink: #f4f2ea;
+    --color-charcoal: #000000;
+    --color-fossil: #a6a196;
+    --color-pebble: #726d61;
+    --color-smoke: #cec9bd;
+    --color-sand: #2c281f;
+    --color-ash: #3a352b;
+    --color-chartreuse: #dbf570;
+    --color-olive: #afc76a;
+    --color-lavender: #c6b4ff;
+    --color-map-bg: #201d16;
+    --color-signal-left: #8aa6e0;
+    --color-signal-right: #e0a488;
+    --color-positive: #afc76a;
+    --color-negative: #d98a72;
+  }
+}
+
+/* Troca de logo / ícone de tema por tema (sem flash, sem JS) */
+.logo-dark,
+.theme-icon-dark {
+  display: none;
+}
+:root[data-theme="dark"] .logo-light,
+:root[data-theme="dark"] .theme-icon-light {
+  display: none;
+}
+:root[data-theme="dark"] .logo-dark {
+  display: block;
+}
+:root[data-theme="dark"] .theme-icon-dark {
+  display: inline;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .logo-light,
+  :root:not([data-theme="light"]) .theme-icon-light {
+    display: none;
+  }
+  :root:not([data-theme="light"]) .logo-dark {
+    display: block;
+  }
+  :root:not([data-theme="light"]) .theme-icon-dark {
+    display: inline;
+  }
 }
 
 * {

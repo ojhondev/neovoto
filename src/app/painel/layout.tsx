@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Sidebar } from "@/components/app/Sidebar";
 import { LocaleSwitcher } from "@/components/nav/LocaleSwitcher";
+import { ThemeToggle } from "@/components/nav/ThemeToggle";
 import { getDictionary } from "@/lib/i18n";
 import { buildToolNames } from "@/lib/tools";
 
@@ -29,6 +30,7 @@ export default async function PainelLayout({
             ← {t.common.backToSite}
           </Link>
           <div className="flex items-center gap-4">
+            <ThemeToggle />
             <LocaleSwitcher current={locale} />
             <span className="font-ui hidden rounded-[4px] bg-sand px-2 py-1 text-caption text-smoke sm:inline">
               {locale === "pt" ? "Ambiente de fundação" : "Foundation environment"}

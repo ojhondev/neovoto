@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import { Fraunces, Newsreader, Inter } from "next/font/google";
 import { getLocale } from "@/lib/i18n";
+import { THEME_COOKIE, isTheme } from "@/lib/theme";
 import "./globals.css";
 
 const fraunces = Fraunces({
@@ -50,9 +52,12 @@ export default async function RootLayout({
   children: React.ReactNode;
 }) {
   const locale = await getLocale();
+  const themeCookie = (await cookies()).get(THEME_COOKIE)?.value;
+  const theme = isTheme(themeCookie) ? themeCookie : undefined;
   return (
     <html
       lang={locale}
+      data-theme={theme}
       className={`${fraunces.variable} ${newsreader.variable} ${inter.variable}`}
     >
       <body>{children}</body>

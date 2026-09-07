@@ -164,9 +164,9 @@ const pt = {
     electoralActive:
       "Camada eleitoral ativa: votação de {name} por município ({ano}), via brasil.io.",
     electoralPending:
-      "Mostrando a base territorial real (população, Censo 2022). A camada de votação por município entra quando a candidatura vier do TSE (busca 'todos os cargos' no onboarding).",
+      "Mostrando a base territorial real (população, Censo 2022). A votação por município do candidato entra na Fase 2.5 (ingestão da Base dos Dados) — ver docs/DADOS-TSE.md.",
     electoralThrottled:
-      "A votação por município deste candidato ainda não foi carregada — o brasil.io limitou as requisições. Mostrando a base territorial (população). Tente recarregar em alguns minutos.",
+      "A votação por município deste candidato ainda não foi carregada — a fonte limitou as requisições. Mostrando a base territorial (população). Tente recarregar em alguns minutos.",
     retryVotacao: "Recarregar a votação",
     topMunicipios: "Maiores municípios",
     interact: "Passe o mouse pelos municípios; role e arraste para navegar.",
