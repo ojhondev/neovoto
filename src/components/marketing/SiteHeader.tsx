@@ -9,14 +9,14 @@ export async function SiteHeader() {
 
   const items = [
     { href: "/#ferramentas", label: t.nav.tools },
-    { href: "/#metodo", label: t.nav.method },
+    { href: "/#manifesto", label: t.nav.method },
     { href: "/etica", label: t.nav.ethics },
     { href: "/fontes", label: t.common.dataSources },
   ];
 
   return (
     <header className="sticky top-0 z-40 border-b border-ash bg-bone/85 backdrop-blur">
-      <div className="mx-auto flex h-16 max-w-[var(--page-max)] items-center justify-between gap-4 px-5">
+      <div className="flex h-16 w-full items-center justify-between gap-4 px-5 sm:px-10 lg:px-20">
         <div className="shrink-0">
           <Logo height={24} />
         </div>

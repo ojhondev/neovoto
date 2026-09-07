@@ -109,10 +109,12 @@ export function PillarsShowcase({
   kicker,
   title,
   pillars,
+  fluid = "w-full px-5 sm:px-10 lg:px-20",
 }: {
   kicker: string;
   title: string;
   pillars: Pillar[];
+  fluid?: string;
 }) {
   const [active, setActive] = useState(0);
   const [paused, setPaused] = useState(false);
@@ -140,7 +142,7 @@ export function PillarsShowcase({
   return (
     <section
       ref={wrapRef}
-      className="mx-auto w-full max-w-[var(--page-max)] px-5 py-24"
+      className={`${fluid} py-24`}
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >

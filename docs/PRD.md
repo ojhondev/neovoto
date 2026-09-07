@@ -88,7 +88,7 @@ Ver `ETICA.md` e `LGPD.md`.
 ### 5.5 Cenários Estatísticos
 - Usuário declara o **objetivo** (ex.: vencer no 1º turno; eleger N cadeiras; ampliar bancada).
 - Motor monta modelo: histórico eleitoral + contexto IBGE + composição de coligações + (quando houver) fundo e tempo de propaganda.
-- Simulação de Monte Carlo variando premissas (comparecimento, transferência de voto, cenário nacional).
+- Simulações internas variando premissas (comparecimento, transferência de voto, cenário nacional).
 - Saída: distribuição de resultado (p10/mediana/p90) por cenário, análise de sensibilidade, comparação objetivo × base. **Cada cenário declara fontes, período e margem.**
 
 ### 5.6 Coligações
@@ -117,4 +117,4 @@ Ver `ETICA.md` e `LGPD.md`.
 ## 8. Roadmap resumido
 
 Ver `ROADMAP.md`. Fundação → ingestão TSE/IBGE → 1 ferramenta ponta-a-ponta (Mapa de
-Influência) → demais ferramentas → auth/multi-tenant → cenários com Monte Carlo → beta com piloto.
+Influência) → demais ferramentas → auth/multi-tenant → cenários probabilísticos → beta com piloto.

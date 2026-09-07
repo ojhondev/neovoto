@@ -2,12 +2,12 @@ import Link from "next/link";
 import { Logo } from "@/components/brand/Logo";
 import { getDictionary } from "@/lib/i18n";
 
-export async function SiteFooter() {
+export async function SiteFooter({ fluid = "w-full px-5 sm:px-10 lg:px-20" }: { fluid?: string }) {
   const { t } = await getDictionary();
   const year = new Date().getFullYear();
   return (
     <footer className="border-t border-ash bg-bone">
-      <div className="mx-auto max-w-[var(--page-max)] px-5 py-16">
+      <div className={`${fluid} py-16`}>
         <div className="flex flex-col gap-8 md:flex-row md:items-start md:justify-between">
           <div className="max-w-sm">
             <Logo />
@@ -21,7 +21,7 @@ export async function SiteFooter() {
               <Link href="/#ferramentas" className="text-fossil hover:text-ink">
                 {t.nav.tools}
               </Link>
-              <Link href="/#metodo" className="text-fossil hover:text-ink">
+              <Link href="/#manifesto" className="text-fossil hover:text-ink">
                 {t.nav.method}
               </Link>
             </div>

@@ -18,7 +18,7 @@ export default async function SourcesPage() {
   return (
     <>
       <SiteHeader />
-      <main className="mx-auto max-w-[var(--page-max)] px-5 py-20">
+      <main className="w-full px-5 py-20 sm:px-10 lg:px-20">
         <p className="t-eyebrow mb-4">{t.common.dataSources}</p>
         <h1 className="t-heading-lg max-w-2xl">
           {locale === "pt"

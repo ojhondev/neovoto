@@ -37,7 +37,7 @@
 
 ## Fase 4 — Cenários Estatísticos
 
-- Motor de simulação (Monte Carlo) parametrizado pelo objetivo.
+- Motor de cenários parametrizado pelo objetivo (método proprietário).
 - Análise de sensibilidade e comparação objetivo × base.
 - Ficha técnica e versionamento de modelo.
 
