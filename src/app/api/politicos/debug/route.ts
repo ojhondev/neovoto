@@ -35,10 +35,12 @@ export async function GET(req: Request) {
   if (!token) return NextResponse.json({ error: "sem BRASILIO_API_TOKEN" }, { status: 400 });
   const q = new URL(req.url).searchParams.get("q") ?? "lula";
 
+  const U = q.toUpperCase();
   const out = [];
-  out.push(await probe("candidatos: search", `/candidatos/data/?search=${encodeURIComponent(q)}&page_size=3`, token));
-  out.push(await probe("votacao: search", `/votacao/data/?search=${encodeURIComponent(q)}&page_size=3`, token));
-  out.push(await probe("votacao: nome+ano+uf", `/votacao/data/?nome_candidato=${encodeURIComponent(q.toUpperCase())}&ano_eleicao=2022&page_size=3`, token));
+  out.push(await probe("cand: nome_urna eq", `/candidatos/data/?nome_urna_candidato=${encodeURIComponent(U)}&page_size=5`, token));
+  out.push(await probe("cand: nome_candidato eq", `/candidatos/data/?nome_candidato=${encodeURIComponent(U)}&page_size=5`, token));
+  out.push(await probe("cand: search + 2022", `/candidatos/data/?search=${encodeURIComponent(q)}&ano_eleicao=2022&page_size=5`, token));
+  out.push(await probe("tables list", `/`, token));
 
-  return NextResponse.json({ q, probes: out });
+  return NextResponse.json({ q, probes: out.map((p) => ({ ...p, first: p.first ? { nome: (p.first as Record<string, unknown>).nome_urna_candidato, ano: (p.first as Record<string, unknown>).ano_eleicao, cargo: (p.first as Record<string, unknown>).descricao_cargo } : null })) });
 }
