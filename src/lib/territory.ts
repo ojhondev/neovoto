@@ -40,6 +40,7 @@ export type IfetResumoUF = {
   eleitoralTotal: number | null;
   nomeByCode: Record<string, string>;
   populacaoByCode: Record<string, number>;
+  pibByCode: Record<string, number>;
 };
 
 /**
@@ -102,6 +103,7 @@ export async function getIfetResumoUF(
     eleitoralTotal,
     nomeByCode,
     populacaoByCode,
+    pibByCode: pib,
   };
 }
 

@@ -15,7 +15,9 @@ import type { Candidacy } from "@/db/schema";
 import type { PerfilPolitico } from "@/lib/politico";
 import { getIfetResumoUF } from "@/lib/territory";
 import { getAgendaCamara } from "@/lib/data-sources/agenda";
+import { getVotacaoPartidoUF } from "@/lib/data-sources/regional";
 import { computeRadar, type RadarResultado } from "@/lib/intel/radar";
+import { computeMatriz, MATRIZ_PLEITO, type MatrizResultado } from "@/lib/intel/matriz";
 import type { IfetResultado } from "@/lib/intel/ifet";
 import { CARGO_LABEL, type Cargo } from "@/lib/cargos";
 
@@ -24,7 +26,7 @@ export const MOTOR_VERSION = "motor-v1";
 export type NivelProntidao = "critico" | "atencao" | "competitivo" | "favoravel";
 
 export type DimensaoLeitura = {
-  chave: "territorio" | "posicionamento" | "base";
+  chave: "territorio" | "posicionamento" | "base" | "ideologia";
   titulo: string;
   valor: string;
   rotulo: string;
@@ -74,9 +76,14 @@ export async function analisarCandidatura(
   const cargoLabel = cargo ? CARGO_LABEL[cargo]?.[locale] ?? cargo : "";
 
   // roda os motores disponíveis em paralelo
-  const [resumo, agenda] = await Promise.all([
+  const [resumo, agenda, votacaoPartido] = await Promise.all([
     uf ? getIfetResumoUF(uf, candidacy.id).catch(() => null) : Promise.resolve(null),
     getAgendaCamara(JANELA_DIAS).catch(() => []),
+    uf
+      ? getVotacaoPartidoUF(MATRIZ_PLEITO.ano, MATRIZ_PLEITO.turno, uf, MATRIZ_PLEITO.cargo).catch(
+          () => [],
+        )
+      : Promise.resolve([]),
   ]);
 
   const radar =
@@ -288,6 +295,42 @@ export async function analisarCandidatura(
         ? "Ainda não há atividade legislativa nem votação carregada para medir o capital político."
         : "No legislative activity or vote loaded yet to measure political capital.",
     });
+  }
+
+  // ---- Alinhamento ideológico (Matriz) ----
+  let matriz: MatrizResultado | null = null;
+  if (resumo && votacaoPartido.length >= 100) {
+    try {
+      matriz = computeMatriz(
+        votacaoPartido,
+        {
+          nomeByCode: resumo.nomeByCode,
+          populacaoByCode: resumo.populacaoByCode,
+          pibByCode: resumo.pibByCode,
+        },
+        perfil.partido,
+      );
+      sinais += matriz.municipios.length;
+      fontes.add(pt ? "TSE / Base dos Dados — votação por partido" : "TSE / Base dos Dados — party vote");
+      const distUf = Math.hypot(
+        matriz.ufMedia.eco - matriz.candidato.eco,
+        matriz.ufMedia.soc - matriz.candidato.soc,
+      );
+      const afins = matriz.maisAfins.slice(0, 3).map((m) => m.nome);
+      dimensoes.push({
+        chave: "ideologia",
+        titulo: pt ? "Alinhamento ideológico" : "Ideological alignment",
+        valor: distUf.toFixed(2),
+        rotulo: pt ? `distância até a média de ${resumo.ufNome}` : `distance to the ${resumo.ufNome} average`,
+        status: distUf > 1.0 ? "atencao" : "ok",
+        href: "/painel/matriz-ideologica",
+        leitura: pt
+          ? `${distUf > 1.0 ? "Distância grande" : "Distância moderada"} entre o seu campo e a média do estado. Suas regiões mais afins: ${afins.join(", ")}. Fora delas, o discurso precisa de tradução.`
+          : `${distUf > 1.0 ? "Large" : "Moderate"} distance between your field and the state average. Your most aligned regions: ${afins.join(", ")}. Elsewhere, the message needs translation.`,
+      });
+    } catch {
+      /* matriz é opcional no painel */
+    }
   }
 
   const prontidaoScore = Math.round(

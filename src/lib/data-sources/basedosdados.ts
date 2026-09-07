@@ -231,6 +231,32 @@ export async function votacaoPartidoPorMunicipio(args: {
 }
 
 /**
+ * Menor total de votos entre os ELEITOS para o cargo na UF — a "barra de
+ * entrada" real de uma eleição proporcional. Usado pelos Cenários.
+ */
+export async function votosCorteEleito(args: {
+  ano: number;
+  turno: number;
+  uf: string;
+  cargo: string;
+}): Promise<number | null> {
+  if (!basedosdadosDisponivel()) return null;
+  const rows = await query(
+    `SELECT MIN(v) AS corte FROM (
+       SELECT sequencial_candidato, SUM(votos) AS v
+       FROM \`${DATASET}.resultados_candidato_municipio\`
+       WHERE ano = @ano AND turno = @turno AND sigla_uf = @uf AND cargo = @cargo
+         AND LOWER(resultado) LIKE '%eleito%'
+         AND LOWER(resultado) NOT LIKE '%nao%'
+       GROUP BY sequencial_candidato
+     )`,
+    { ano: args.ano, turno: args.turno, uf: args.uf, cargo: args.cargo },
+  );
+  const c = Number(rows[0]?.corte ?? 0);
+  return c > 0 ? c : null;
+}
+
+/**
  * Votação do CAMPO POLÍTICO (partido + coligados) por município — usado para o IFET
  * quando não há histórico do próprio candidato naquele território.
  */

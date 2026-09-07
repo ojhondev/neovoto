@@ -190,7 +190,7 @@ export default async function PainelHome() {
       {/* ---- Dimensões ---- */}
       <section className="mt-8">
         <h2 className="t-heading text-[20px]">{t.motor.dimensions}</h2>
-        <div className="mt-4 grid gap-4 md:grid-cols-3">
+        <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {leitura.dimensoes.map((d) => (
             <div key={d.chave} className="card flex flex-col">
               <div className="flex items-center justify-between">
