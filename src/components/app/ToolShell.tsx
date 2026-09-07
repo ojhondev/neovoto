@@ -9,12 +9,14 @@ export async function ToolShell({
   children,
   howItWorks,
   outputs,
+  realData = false,
 }: {
   id: ToolId;
   updatedAt: string;
   children: ReactNode;
   howItWorks: string[];
   outputs: string[];
+  realData?: boolean;
 }) {
   const { t } = await getDictionary();
   const tool = getTool(id);
@@ -32,11 +34,13 @@ export async function ToolShell({
       </div>
       <p className="mt-4 max-w-2xl text-body text-fossil">{meta.desc}</p>
 
-      <div className="mt-8">
-        <MockBanner text={t.toolPage.statusStub} />
-      </div>
+      {!realData && (
+        <div className="mt-8">
+          <MockBanner text={t.toolPage.statusStub} />
+        </div>
+      )}
 
-      <section className="mt-2">{children}</section>
+      <section className="mt-6">{children}</section>
 
       <div className="mt-10 grid gap-6 md:grid-cols-2">
         <div className="card">

@@ -157,6 +157,20 @@ const en: Dictionary = {
         "Compares possible coalitions and federations using broadcast time, party fund, municipal footholds and historical party vote. Shows marginal gain and base overlap.",
     },
   },
+  maps: {
+    needCandidate: "Select a candidate in the onboarding to load their territory.",
+    goOnboarding: "Run the onboarding",
+    layerElectoral: "{ano} votes · {cargo}",
+    layerPopulation: "population — 2022 Census (IBGE)",
+    electoralActive:
+      "Electoral layer active: {name}'s vote by municipality ({ano}), via brasil.io.",
+    electoralPending:
+      "Showing the real territorial base (population, 2022 Census). The vote-by-municipality layer switches on automatically once the electoral source (brasil.io) is configured — see docs/DADOS-TSE.md.",
+    topMunicipios: "Largest municipalities",
+    interact: "Hover the municipalities; scroll and drag to navigate.",
+    inhabitants: "inhab.",
+    votes: "votes",
+  },
   toolPage: {
     overview: "Overview",
     howItWorks: "How it works",

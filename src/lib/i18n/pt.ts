@@ -155,6 +155,20 @@ const pt = {
         "Compara coligações e federações possíveis usando tempo de propaganda, fundo partidário, bases municipais e votação histórica dos partidos. Mostra ganho marginal e sobreposição de bases.",
     },
   },
+  maps: {
+    needCandidate: "Selecione um candidato no onboarding para carregar o território dele.",
+    goOnboarding: "Fazer o onboarding",
+    layerElectoral: "votos {ano} · {cargo}",
+    layerPopulation: "população — Censo 2022 (IBGE)",
+    electoralActive:
+      "Camada eleitoral ativa: votação de {name} por município ({ano}), via brasil.io.",
+    electoralPending:
+      "Mostrando a base territorial real (população, Censo 2022). A camada de votação por município liga automaticamente quando a fonte eleitoral (brasil.io) é configurada — ver docs/DADOS-TSE.md.",
+    topMunicipios: "Maiores municípios",
+    interact: "Passe o mouse pelos municípios; role e arraste para navegar.",
+    inhabitants: "hab.",
+    votes: "votos",
+  },
   toolPage: {
     overview: "Visão geral",
     howItWorks: "Como funciona",
