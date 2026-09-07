@@ -1,0 +1,79 @@
+# Dados eleitorais — como cobrir todos os cargos apesar do bloqueio do TSE
+
+## 1. O problema
+
+O TSE publica dados abertos, mas o **edge (Akamai) bloqueia qualquer requisição de IP
+fora do Brasil** — data centers dos EUA/UE incluídos. Retorno é `403 Access Denied`.
+Confirmado em 2026-09-07 para:
+
+| Host | Uso | Status de servidor |
+|---|---|---|
+| `dadosabertos.tse.jus.br` | arquivos CSV/ZIP (CKAN) | 403 |
+| `divulgacandcontas.tse.jus.br` | API REST de candidatos/contas | 403 |
+| `cepesp.io` | API acadêmica (FGV) sobre o TSE | 403 |
+| `resultados.tse.jus.br` | apuração em tempo real | 403 |
+
+A NeoVoto roda na Vercel (fora do Brasil) → **não dá para falar com o TSE direto**.
+
+## 2. A solução: fontes-espelho acessíveis + camada de ingestão
+
+O TSE é dado **público**; vários projetos o reempacotam em lugares sem bloqueio.
+A NeoVoto lê desses espelhos e guarda o recorte do candidato no Neon.
+
+| Fonte | Cobertura | Cargos | Acesso | Papel na NeoVoto |
+|---|---|---|---|---|
+| **brasil.io** — dataset `eleicoes-brasil` | 1996–2022 | **todos** (presidente, governador, senador, dep. federal/estadual/distrital, prefeito, vereador) | REST, **token gratuito** | **Fonte primária** de candidatos + votação por município. `src/lib/data-sources/brasilio.ts` |
+| **Base dos Dados** — `br_tse_eleicoes` (BigQuery) | 1994–2024 (inclui municipais 2024) + votação por **seção** | todos | BigQuery público, **service account GCP grátis** (1 TB/mês) | Escala e granularidade fina; 2024. Fase 2.5 |
+| **Câmara dos Deputados** — dados abertos | mandato atual | dep. federal | REST, sem chave | Enriquecimento: votações nominais, proposições, despesas de gabinete |
+| **Senado Federal** — dados abertos | mandato atual | senador | REST, sem chave | Enriquecimento: senadores em exercício, matérias, votações |
+| **IBGE** | — | — | REST, sem chave | Malhas territoriais e indicadores socioeconômicos |
+
+> Câmara/Senado **não** têm votação por município nem dados de deputado estadual/prefeito/
+> vereador — por isso o brasil.io (ou Base dos Dados) é obrigatório para cobrir todos os cargos.
+
+### Como a ingestão funciona (sem bloqueio, sem terminal)
+
+1. No onboarding o usuário escolhe o candidato (qualquer cargo) → a busca bate no brasil.io.
+2. Ao confirmar, um Server Action puxa a **votação por município** daquele candidato no
+   brasil.io e grava em cache (Neon + revalidação da fetch).
+3. As ferramentas (Mapa de Calor, Cenários, Matriz Ideológica, Coligações) leem esse cache.
+4. Nada é consultado ao vivo por request de usuário — o request path nunca toca o TSE.
+
+Enquanto o token não está configurado, tudo funciona com **Câmara + Senado + IBGE** e o
+Mapa de Calor mostra a base territorial real (população do Censo 2022). A camada de votação
+**liga sozinha** quando a variável de ambiente aparece.
+
+## 3. Passo a passo — token gratuito do brasil.io
+
+1. Acesse **https://brasil.io/auth/register/** e crie uma conta (e-mail + senha). É grátis.
+2. Confirme o e-mail (link enviado pelo brasil.io).
+3. Entre em **https://brasil.io/auth/tokens-api/** (menu do usuário → “Tokens da API”).
+4. Clique em **“Criar novo token”**. Copie o valor — algo como
+   `a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2`.
+5. Me mande esse token **por aqui** (ou adicione você mesmo no painel da Vercel:
+   projeto `neovoto` → **Settings → Environment Variables** → `Name` = `BRASILIO_API_TOKEN`,
+   `Value` = o token, ambientes Production + Preview + Development → **Save**).
+6. Eu adiciono ao `.env.local` local e à Vercel, faço um redeploy, e a busca por candidato
+   passa a cobrir **todos os cargos** e o Mapa de Calor passa a colorir por **votação real**.
+
+Limites do token grátis: ~1.000 requisições/hora, ~10 mil linhas por página. Suficiente —
+a NeoVoto pagina e cacheia por candidato.
+
+> Referência oficial: https://blog.brasil.io/2020/10/31/nossa-api-sera-obrigatoriamente-autenticada/
+
+## 4. Fase 2.5 — Base dos Dados (BigQuery) para 2024 e seção eleitoral
+
+Quando precisarmos de municipais de 2024 ou de votação por seção:
+
+1. Criar um projeto no Google Cloud (grátis) e uma **service account** com papel
+   `BigQuery Job User`.
+2. Baixar a chave JSON e colocá-la como secret na Vercel (`GCP_SA_KEY`).
+3. `src/lib/data-sources/basedosdados.ts` (a criar) roda `SELECT` no dataset público
+   `basedosdados.br_tse_eleicoes.*` e materializa no Neon.
+4. Custo: consultas somam contra a cota gratuita de 1 TB/mês — as tabelas eleitorais
+   relevantes por UF/ano ficam bem abaixo disso.
+
+## 5. Nunca
+
+- Burlar o bloqueio do TSE com proxy anônimo, VPN de terceiros ou scraping do site logado.
+- Coletar dado de pessoa natural (eleitor). Só candidatos/eleitos e agregados. Ver `LGPD.md`.

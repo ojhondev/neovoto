@@ -39,6 +39,25 @@ export async function getMunicipios(uf: string): Promise<Municipio[]> {
   return get<Municipio[]>(`${LOC}/estados/${uf.toUpperCase()}/municipios?orderBy=nome`);
 }
 
+export type GeoFeatureCollection = {
+  type: "FeatureCollection";
+  features: {
+    type: "Feature";
+    geometry: { type: string; coordinates: unknown };
+    properties: { codarea: string; [k: string]: unknown };
+  }[];
+};
+
+/** GeoJSON da malha municipal de um estado. `qualidade=minima` (~300KB p/ SP). */
+export async function getMalhaMunicipiosUF(
+  ufId: number | string,
+): Promise<GeoFeatureCollection> {
+  return get<GeoFeatureCollection>(
+    `${MALHA}/estados/${ufId}?formato=application/vnd.geo+json&intrarregiao=municipio&qualidade=minima`,
+    60 * 60 * 24 * 30,
+  );
+}
+
 /** GeoJSON da malha de um estado (divisão intramunicipal opcional). */
 export async function getMalhaEstado(
   ufId: number | string,
@@ -47,6 +66,37 @@ export async function getMalhaEstado(
   return get(
     `${MALHA}/estados/${ufId}?formato=application/vnd.geo+json&intrarregiao=${intrarregiao}&qualidade=intermediaria`,
   );
+}
+
+/**
+ * População (Censo 2022, agregado 4709 / variável 93) de todos os municípios de um estado.
+ * Retorna mapa código IBGE (7 dígitos) → { nome, populacao }.
+ */
+export async function getPopulacaoMunicipiosUF(
+  ufId: number | string,
+): Promise<Record<string, { nome: string; populacao: number }>> {
+  type Row = {
+    resultados: {
+      series: {
+        localidade: { id: string; nome: string };
+        serie: Record<string, string>;
+      }[];
+    }[];
+  };
+  const data = await get<Row[]>(
+    `${AGREG}/4709/periodos/2022/variaveis/93?localidades=N6[N3[${ufId}]]`,
+    60 * 60 * 24 * 30,
+  );
+  const out: Record<string, { nome: string; populacao: number }> = {};
+  const series = data?.[0]?.resultados?.[0]?.series ?? [];
+  for (const s of series) {
+    const pop = Number(s.serie["2022"]);
+    out[s.localidade.id] = {
+      nome: s.localidade.nome.replace(/ - [A-Z]{2}$/, ""),
+      populacao: Number.isNaN(pop) ? 0 : pop,
+    };
+  }
+  return out;
 }
 
 export async function getMalhaBrasilUFs(): Promise<unknown> {

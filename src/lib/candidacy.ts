@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { candidacies, type Candidacy } from "@/db/schema";
 import { montarPerfil, type Fonte, type PerfilPolitico } from "@/lib/politico";
+import type { Cargo } from "@/lib/cargos";
 
 export const CANDIDACY_COOKIE = "neovoto_candidacy";
 
@@ -27,6 +28,13 @@ export function perfilFrom(c: Candidacy): PerfilPolitico | null {
   const raw = c.raw as unknown;
   if (raw && typeof raw === "object" && "nome" in raw) return raw as PerfilPolitico;
   return null;
+}
+
+/** Cargo canônico da candidatura (hoje derivado da casa; brasil.io grava o real). */
+export function cargoOf(c: Candidacy): Cargo {
+  const raw = (c.raw ?? {}) as { cargo?: Cargo };
+  if (raw.cargo) return raw.cargo;
+  return c.source === "senado" ? "senador" : "deputado-federal";
 }
 
 /**
