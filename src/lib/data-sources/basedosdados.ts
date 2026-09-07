@@ -77,22 +77,28 @@ async function accessToken(): Promise<string> {
 
 type QueryRow = Record<string, string | null>;
 
+type BqResp = {
+  jobReference?: { jobId: string; location?: string };
+  pageToken?: string;
+  schema?: { fields: { name: string }[] };
+  rows?: { f: { v: string | null }[] }[];
+};
+
 async function query(sql: string, params: Record<string, string | number>): Promise<QueryRow[]> {
   const project = process.env.GCP_PROJECT_ID!;
   const token = await accessToken();
+  const auth = { Authorization: `Bearer ${token}` };
+
   const res = await fetch(
     `https://bigquery.googleapis.com/bigquery/v2/projects/${project}/queries`,
     {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
+      headers: { ...auth, "Content-Type": "application/json" },
       body: JSON.stringify({
         query: sql,
         useLegacySql: false,
         timeoutMs: 25_000,
-        maxResults: 6000,
+        maxResults: 20_000,
         parameterMode: "NAMED",
         queryParameters: Object.entries(params).map(([name, value]) => ({
           name,
@@ -103,12 +109,30 @@ async function query(sql: string, params: Record<string, string | number>): Prom
     },
   );
   if (!res.ok) throw new Error(`BigQuery ${res.status}: ${(await res.text()).slice(0, 300)}`);
-  const j = (await res.json()) as {
-    schema?: { fields: { name: string }[] };
-    rows?: { f: { v: string | null }[] }[];
-  };
-  const fields = j.schema?.fields.map((f) => f.name) ?? [];
-  return (j.rows ?? []).map((r) => {
+  const first = (await res.json()) as BqResp;
+  const fields = first.schema?.fields.map((f) => f.name) ?? [];
+  const rows: BqResp["rows"] = [...(first.rows ?? [])];
+
+  // pagina o resto (agregados por UF podem passar de 20k linhas)
+  let pageToken = first.pageToken;
+  const jobId = first.jobReference?.jobId;
+  const location = first.jobReference?.location;
+  let guard = 0;
+  while (pageToken && jobId && guard++ < 20) {
+    const u = new URL(
+      `https://bigquery.googleapis.com/bigquery/v2/projects/${project}/queries/${jobId}`,
+    );
+    u.searchParams.set("pageToken", pageToken);
+    u.searchParams.set("maxResults", "20000");
+    if (location) u.searchParams.set("location", location);
+    const r = await fetch(u, { headers: auth });
+    if (!r.ok) break;
+    const j = (await r.json()) as BqResp;
+    if (j.rows) rows.push(...j.rows);
+    pageToken = j.pageToken;
+  }
+
+  return rows.map((r) => {
     const o: QueryRow = {};
     r.f.forEach((cell, idx) => {
       o[fields[idx]] = cell.v;
@@ -177,6 +201,33 @@ export async function votacaoPorMunicipio(args: {
   return rows
     .filter((r) => r.id_municipio)
     .map((r) => ({ idMunicipio: r.id_municipio as string, votos: Number(r.votos ?? 0) }));
+}
+
+/**
+ * Votação por PARTIDO por município num pleito (nominais + legenda).
+ * Base da Matriz Ideológica e do módulo de Coligações. `id_municipio` = IBGE.
+ */
+export async function votacaoPartidoPorMunicipio(args: {
+  ano: number;
+  turno: number;
+  uf: string;
+  cargo: string;
+}): Promise<{ idMunicipio: string; sigla: string; votos: number }[]> {
+  if (!basedosdadosDisponivel()) return [];
+  const rows = await query(
+    `SELECT id_municipio, sigla_partido, SUM(COALESCE(votos_nominais,0) + COALESCE(votos_legenda,0)) AS votos
+     FROM \`${DATASET}.resultados_partido_municipio\`
+     WHERE ano = @ano AND turno = @turno AND sigla_uf = @uf AND cargo = @cargo
+     GROUP BY id_municipio, sigla_partido`,
+    { ano: args.ano, turno: args.turno, uf: args.uf, cargo: args.cargo },
+  );
+  return rows
+    .filter((r) => r.id_municipio && r.sigla_partido)
+    .map((r) => ({
+      idMunicipio: r.id_municipio as string,
+      sigla: (r.sigla_partido as string).toUpperCase(),
+      votos: Number(r.votos ?? 0),
+    }));
 }
 
 /**

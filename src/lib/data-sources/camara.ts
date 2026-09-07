@@ -122,6 +122,28 @@ const TIPO_TEMA: Record<string, string> = {
   MPV: "Medidas Provisórias",
 };
 
+/** Composição das bancadas: nº de deputados federais por sigla. Cache 24h. */
+export async function getBancadaCamara(): Promise<Record<string, number>> {
+  const out: Record<string, number> = {};
+  let url = `${BASE}/deputados?ordem=ASC&ordenarPor=nome&itens=100`;
+  for (let i = 0; i < 7 && url; i++) {
+    let data: { dados: { siglaPartido: string }[]; links: { rel: string; href: string }[] };
+    try {
+      const res = await fetch(url, { headers: { Accept: "application/json" }, next: { revalidate: 60 * 60 * 24 } });
+      if (!res.ok) break;
+      data = await res.json();
+    } catch {
+      break;
+    }
+    for (const d of data.dados ?? []) {
+      const s = (d.siglaPartido ?? "").toUpperCase();
+      if (s) out[s] = (out[s] ?? 0) + 1;
+    }
+    url = data.links?.find((l) => l.rel === "next")?.href ?? "";
+  }
+  return out;
+}
+
 export function resumirProposicoes(props: Proposicao[]) {
   const porTipo = new Map<string, number>();
   let comEmenta = 0;
