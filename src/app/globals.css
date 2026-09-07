@@ -217,6 +217,24 @@ h1, h2, h3, h4 {
   padding: 0 0.06em;
 }
 
+/* Ilha sempre-clara: painéis decorativos (previews de produto, colagens) que ficam
+   sobre fundo fixo (chartreuse/lavanda) e não devem inverter no tema escuro. */
+.on-light {
+  --color-paper: #ffffff;
+  --color-bone: #f5f4f0;
+  --color-ink: #1c1c1c;
+  --color-charcoal: #000000;
+  --color-fossil: #706f6c;
+  --color-pebble: #9e9b94;
+  --color-smoke: #3c3c3c;
+  --color-sand: #eae6e1;
+  --color-ash: #d2cec6;
+  --color-olive: #4b5b0a;
+  --color-map-bg: #efece5;
+  --color-negative: #8a3b2f;
+  color: var(--color-ink);
+}
+
 /* Botões — silenciosos, sem sombra, sem gradiente */
 .btn {
   font-family: var(--font-ui);

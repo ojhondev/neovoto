@@ -119,6 +119,141 @@ const en: Dictionary = {
     manifestoCta: "Read the manifesto and the privacy policy",
     ctaTitle: "Ready to decide with evidence?",
     ctaBody: "Book a demo using data from your state or municipality.",
+    testimonialsKicker: "Who uses it",
+    testimonialsTitle: "Decisions that stopped being made in the dark",
+    testimonials: [
+      {
+        quote:
+          "We stopped splitting the budget by gut feeling. The heatmap surfaced three micro-regions nobody had on the radar — and that's where the swing happened.",
+        name: "Campaign coordination",
+        role: "State government · Southeast",
+      },
+      {
+        quote:
+          "Coalition simulation with the real marginal gain changed the negotiating table. We showed up with a number, not a hunch.",
+        name: "Party strategy",
+        role: "State party committee",
+      },
+      {
+        quote:
+          "In the mandate, the proposal map crossing what we promised with what's on the agenda became a fixed item in the Monday meeting.",
+        name: "Chief of staff",
+        role: "Chamber of Deputies",
+      },
+      {
+        quote:
+          "What convinced me was the technical sheet: every figure has a source, a window and a margin. I can defend the decision to the candidate.",
+        name: "Political scientist",
+        role: "Electoral consultancy",
+      },
+    ],
+    testimonialsNote:
+      "Illustrative testimonials from usage profiles during development. Named cases arrive with the launch.",
+    faqKicker: "FAQ",
+    faqTitle: "What people usually ask before starting",
+    faq: [
+      {
+        q: "Where does the data come from?",
+        a: "Only from official open sources: the electoral court (TSE), the statistics bureau (IBGE), the Chamber of Deputies, the Federal Senate and the federal transparency portal. No social-media scraping, no third-party data brokers. Every analysis shows its source and time window.",
+      },
+      {
+        q: "Does NeoVoto profile voters?",
+        a: "No. The smallest unit of analysis is territorial — precinct, zone, neighbourhood, municipality, region. We never model a citizen's personality or behaviour. Political opinion is sensitive data under Brazilian law and the platform processes no sensitive data of private individuals.",
+      },
+      {
+        q: "How is this different from an opinion poll?",
+        a: "NeoVoto is not an opinion poll — it complements one with observable data (ballot results, socioeconomic context, coalition composition). Outputs support internal decision-making and should not be published as voting intention.",
+      },
+      {
+        q: "Do I need to understand statistics to use it?",
+        a: "No. You name the candidate and the objective; the platform returns the map, the ranking and the recommendation. The methodology is the NeoVoto engine's job — every screen ends in a clear decision.",
+      },
+      {
+        q: "Which election and which office does it cover?",
+        a: "IBGE territory and context for all of Brazil. Candidate records for every office (president to councillor) via the TSE mirror. The vote-by-municipality layer and precinct granularity arrive in the next phases.",
+      },
+      {
+        q: "Is it secure? What about privacy law?",
+        a: "Signed-session authentication, operation logging (art. 37), data minimisation and limited retention. Platform users are covered by the contract-performance legal basis, with rights of access, correction and erasure.",
+      },
+    ],
+  },
+  pricing: {
+    kicker: "Plans & packages",
+    title: "Choose by the size of the race",
+    sub: "Pricing to be defined. For now the plans are in evaluation mode — talk to us about a pilot.",
+    perMonth: "/mo",
+    custom: "on request",
+    mock: "Illustrative figures — the pricing policy will be announced at launch.",
+    ctaFree: "Start evaluating",
+    ctaPaid: "Talk to us",
+    ctaEnterprise: "Talk to sales",
+    mostPopular: "Most chosen",
+    plans: [
+      {
+        name: "Listen",
+        price: "R$ 0",
+        for: "For a pre-candidacy mapping the territory before deciding.",
+        includes: [
+          "1 candidate under analysis",
+          "Heatmap (IFET) and territorial profile",
+          "IBGE data and TSE candidate records",
+          "1 user",
+        ],
+      },
+      {
+        name: "Campaign",
+        price: "R$ 2,900",
+        for: "For municipal and state campaigns running the operation.",
+        includes: [
+          "Everything in Listen",
+          "All 6 tools with the candidate's data",
+          "Scenarios and coalition simulation",
+          "Report export with technical sheet",
+          "Up to 5 users",
+        ],
+      },
+      {
+        name: "Majority race",
+        price: "R$ 7,900",
+        for: "For majority races and party coordination.",
+        includes: [
+          "Everything in Campaign",
+          "Multiple candidates and comparison",
+          "Vote-by-municipality and precinct layer",
+          "Priority support and assisted onboarding",
+          "Unlimited users",
+        ],
+      },
+      {
+        name: "Party",
+        price: "on request",
+        for: "For federations and national committees with many candidacies.",
+        includes: [
+          "Everything in Majority race",
+          "Consolidated dashboard by state and by candidacy",
+          "Integration with the party's workflow",
+          "Dedicated contract and SLA",
+        ],
+      },
+    ],
+    compareTitle: "Compare the plans",
+    compareRows: [
+      { feature: "Candidates under analysis", vals: ["1", "1", "several", "unlimited"] },
+      { feature: "Heatmap (IFET)", vals: ["yes", "yes", "yes", "yes"] },
+      { feature: "Influence Map", vals: ["preview", "yes", "yes", "yes"] },
+      { feature: "Ideological Matrix by Region", vals: ["—", "yes", "yes", "yes"] },
+      { feature: "Proposal Map", vals: ["—", "yes", "yes", "yes"] },
+      { feature: "Statistical Scenarios", vals: ["—", "yes", "yes", "yes"] },
+      { feature: "Coalitions", vals: ["—", "yes", "yes", "yes"] },
+      { feature: "Vote by municipality", vals: ["—", "—", "yes", "yes"] },
+      { feature: "Precinct granularity", vals: ["—", "—", "yes", "yes"] },
+      { feature: "Report export", vals: ["—", "yes", "yes", "yes"] },
+      { feature: "Candidate comparison", vals: ["—", "—", "yes", "yes"] },
+      { feature: "Consolidated dashboard by state", vals: ["—", "—", "—", "yes"] },
+      { feature: "Users", vals: ["1", "5", "unlimited", "unlimited"] },
+      { feature: "Support", vals: ["community", "email", "priority", "dedicated SLA"] },
+    ],
   },
   tools: {
     influenceMap: {

@@ -10,7 +10,8 @@ export async function SiteHeader() {
 
   const items = [
     { href: "/#ferramentas", label: t.nav.tools },
-    { href: "/#manifesto", label: t.nav.method },
+    { href: "/planos", label: t.nav.pricing },
+    { href: "/#faq", label: "FAQ" },
     { href: "/etica", label: t.nav.ethics },
     { href: "/fontes", label: t.common.dataSources },
   ];

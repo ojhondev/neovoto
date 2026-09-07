@@ -4,10 +4,10 @@ import { useEffect, useRef } from "react";
 import { WORLD_ROWS, WORLD_COLS, WORLD_LINES } from "@/lib/worldmap";
 
 type P = {
-  sx: number; // espalhamento (fração do viewport)
+  sx: number;
   sy: number;
   size: number;
-  gx: number; // alvo na esfera unitária
+  gx: number;
   gy: number;
   gz: number;
   land: boolean;
@@ -39,7 +39,6 @@ function buildParticles(): P[] {
       drift: Math.random() * Math.PI * 2,
     });
   };
-
   for (let row = 0; row < WORLD_LINES; row++) {
     const line = WORLD_ROWS[row];
     for (let col = 0; col < WORLD_COLS; col++) {
@@ -47,7 +46,6 @@ function buildParticles(): P[] {
       const lon0 = (col / WORLD_COLS) * 360 - 180;
       const lat0 = 90 - (row / (WORLD_LINES - 1)) * 180;
       const step = 360 / WORLD_COLS;
-      // terra: 3 partículas por célula, com jitter; água: 1 a cada 2 células
       const n = land ? 3 : (col + row) % 2 === 0 ? 1 : 0;
       for (let k = 0; k < n; k++) {
         add(
@@ -59,70 +57,76 @@ function buildParticles(): P[] {
       }
     }
   }
-  // quadrados maiores dispersos (eco do hero)
   for (let i = 0; i < 34; i++) {
     add(Math.random() * 360 - 180, (Math.random() - 0.5) * 160, Math.random() > 0.4, 6 + Math.random() * 12);
   }
   return list;
 }
 
-export function ParticleField() {
+/**
+ * Campo de partículas que se aglomeram formando o planeta ao rolar.
+ * Envolve as seções de topo (hero + globo). O canvas é `sticky` DENTRO desse
+ * wrapper — nunca vaza para as seções seguintes (que ficam opacas por cima).
+ */
+export function ParticleField({ children }: { children: React.ReactNode }) {
+  const wrapRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   useEffect(() => {
+    const wrap = wrapRef.current;
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    if (!wrap || !canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const reduce =
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
     const particles = buildParticles();
     let raf = 0;
     let w = 0;
     let h = 0;
-    let dpr = 1;
-    let scrollY = window.scrollY;
 
     const resize = () => {
-      dpr = Math.min(2, window.devicePixelRatio || 1);
-      w = window.innerWidth;
-      h = window.innerHeight;
+      const dpr = Math.min(2, window.devicePixelRatio || 1);
+      w = canvas.clientWidth;
+      h = canvas.clientHeight;
       canvas.width = w * dpr;
       canvas.height = h * dpr;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     };
     resize();
 
-    const onScroll = () => {
-      scrollY = window.scrollY;
+    const progress = () => {
+      const r = wrap.getBoundingClientRect();
+      const span = r.height - window.innerHeight;
+      return span > 0 ? Math.min(1, Math.max(0, -r.top / span)) : 0;
     };
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", resize);
 
     const draw = (time: number) => {
-      // progresso: 0 no topo → 1 depois de ~1.8 telas roladas
-      const p = reduce ? 0.9 : Math.min(1, Math.max(0, scrollY / (h * 1.8)));
-      // aparece assim que começa a rolar
-      const appear = reduce ? 1 : smoothstep(0.0, 0.14, p);
-      // aglomera no globo
-      const formed = easeInOut(smoothstep(0.12, 0.78, p));
+      const p = reduce ? 0.55 : progress();
+      const appear = smoothstep(0.0, 0.16, p);
+      const formed = easeInOut(smoothstep(0.14, 0.66, p));
+      const fade = 1 - smoothstep(0.8, 1.0, p);
+      const visible = appear * fade;
 
       ctx.clearRect(0, 0, w, h);
-      if (appear <= 0.001) {
+      if (visible <= 0.003) {
         raf = requestAnimationFrame(draw);
         return;
       }
 
       const cx = w / 2;
-      const cy = h * 0.52;
+      const cy = h * 0.5;
       const R = Math.min(w, h) * (w < 720 ? 0.44 : 0.4);
-      const rot = (reduce ? 0.5 : p * 2.0) + time * 0.00003;
+      const rot = (reduce ? 0.4 : p * 2) + time * 0.00003;
       const cosR = Math.cos(rot);
       const sinR = Math.sin(rot);
 
       if (formed > 0.06) {
         const g = ctx.createRadialGradient(cx, cy, R * 0.15, cx, cy, R * 1.6);
-        g.addColorStop(0, `rgba(219,245,112,${0.14 * formed})`);
+        g.addColorStop(0, `rgba(219,245,112,${(0.13 * formed * visible).toFixed(3)})`);
         g.addColorStop(1, "rgba(219,245,112,0)");
         ctx.fillStyle = g;
         ctx.fillRect(0, 0, w, h);
@@ -131,11 +135,9 @@ export function ParticleField() {
       for (const pt of particles) {
         const rx = pt.gx * cosR + pt.gz * sinR;
         const rz = -pt.gx * sinR + pt.gz * cosR;
-        const ry = pt.gy;
         const gpx = cx + rx * R;
-        const gpy = cy - ry * R;
+        const gpy = cy - pt.gy * R;
 
-        // espalhamento com leve deriva
         const drift = reduce ? 0 : Math.sin(time * 0.0004 + pt.drift) * 6;
         const spx = pt.sx * w + drift;
         const spy = pt.sy * h + Math.cos(time * 0.0003 + pt.drift) * 6;
@@ -145,29 +147,32 @@ export function ParticleField() {
 
         const depth = (rz + 1) / 2;
         let alpha = pt.land ? 0.4 + depth * 0.55 : 0.14 + depth * 0.26;
-        alpha = (0.16 + (alpha - 0.16) * formed) * appear;
+        alpha = (0.16 + (alpha - 0.16) * formed) * visible;
 
         const s = pt.size * (0.7 + depth * 0.5);
         ctx.fillStyle = `rgba(219,245,112,${alpha.toFixed(3)})`;
         ctx.fillRect(x - s / 2, y - s / 2, s, s);
       }
-
       raf = requestAnimationFrame(draw);
     };
-    raf = requestAnimationFrame(draw);
 
+    window.addEventListener("resize", resize);
+    raf = requestAnimationFrame(draw);
     return () => {
       cancelAnimationFrame(raf);
-      window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", resize);
     };
   }, []);
 
   return (
-    <canvas
-      ref={canvasRef}
-      aria-hidden="true"
-      className="pointer-events-none fixed inset-0 z-0 h-screen w-screen"
-    />
+    <div ref={wrapRef} className="relative">
+      <canvas
+        ref={canvasRef}
+        aria-hidden="true"
+        className="pointer-events-none sticky top-0 left-0 z-0 block h-[100svh] w-full"
+        style={{ marginBottom: "-100svh" }}
+      />
+      <div className="relative z-10">{children}</div>
+    </div>
   );
 }

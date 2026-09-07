@@ -19,7 +19,6 @@ export default async function Page() {
   const territorio =
     candidacy && perfil?.uf ? await getTerritorioUF(perfil.uf, candidacy.id) : null;
 
-  const eleitoral = territorio?.eleitoralByCode ?? null;
 
   return (
     <ToolShell
@@ -58,10 +57,9 @@ export default async function Page() {
       {territorio ? (
         <>
           <p className="font-ui mb-3 text-body-sm text-fossil">
-            {eleitoral
-              {pt
-                ? `Municípios de ${territorio.ufNome} dimensionados pelo IFET — prioridade estratégica de ${perfil!.nome} por território (ver Mapa de Calor para a decomposição).`
-                : `${territorio.ufNome} municipalities sized by IFET — ${perfil!.nome}'s strategic priority by territory (see the Heatmap for the breakdown).`}
+            {pt
+              ? `Municípios de ${territorio.ufNome} dimensionados pelo IFET — prioridade estratégica de ${perfil!.nome} por território (ver Mapa de Calor para a decomposição).`
+              : `${territorio.ufNome} municipalities sized by IFET — ${perfil!.nome}'s strategic priority by territory (see the Heatmap for the breakdown).`}
           </p>
           <TerritoryMap
             geojson={territorio.geojson}

@@ -21,8 +21,11 @@ export async function SiteFooter({ fluid = "w-full px-5 sm:px-10 lg:px-20" }: { 
               <Link href="/#ferramentas" className="text-fossil hover:text-ink">
                 {t.nav.tools}
               </Link>
-              <Link href="/#manifesto" className="text-fossil hover:text-ink">
-                {t.nav.method}
+              <Link href="/planos" className="text-fossil hover:text-ink">
+                {t.nav.pricing}
+              </Link>
+              <Link href="/#faq" className="text-fossil hover:text-ink">
+                FAQ
               </Link>
             </div>
             <div className="flex flex-col gap-2">

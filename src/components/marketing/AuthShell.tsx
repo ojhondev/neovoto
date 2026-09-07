@@ -34,7 +34,7 @@ export async function AuthShell({
 
       {/* Painel chartreuse com colagem de produto */}
       <div
-        className="relative hidden overflow-hidden bg-chartreuse lg:block"
+        className="on-light relative hidden overflow-hidden bg-chartreuse lg:block"
         style={{
           backgroundImage:
             "radial-gradient(rgba(28,28,28,0.10) 1px, transparent 1px)",
@@ -58,10 +58,10 @@ export async function AuthShell({
           </div>
         </div>
         <div className="absolute inset-x-0 bottom-0 p-10">
-          <p className="font-display max-w-md text-[26px] font-light leading-tight tracking-[-0.02em] text-ink">
+          <p className="font-display max-w-md text-[26px] font-light leading-tight tracking-[-0.02em] text-ink-accent">
             {panelHeadline}
           </p>
-          <p className="font-ui mt-4 text-caption uppercase tracking-[0.14em] text-smoke">
+          <p className="font-ui mt-4 text-caption uppercase tracking-[0.14em] text-olive">
             {panelSources}
           </p>
         </div>

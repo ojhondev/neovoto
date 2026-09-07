@@ -9,8 +9,8 @@ export function Marquee({
   rowB: string[];
 }) {
   return (
-    <section className="overflow-hidden bg-chartreuse py-20">
-      <p className="mx-auto max-w-4xl px-5 text-center font-display text-[clamp(1.6rem,4vw,2.6rem)] font-light leading-tight tracking-[-0.03em] text-ink">
+    <section className="relative z-10 overflow-hidden bg-chartreuse py-20">
+      <p className="mx-auto max-w-4xl px-5 text-center font-display text-[clamp(1.6rem,4vw,2.6rem)] font-light leading-tight tracking-[-0.03em] text-ink-accent">
         {line}
       </p>
       <div className="mt-12 space-y-3">
@@ -40,7 +40,7 @@ function MarqueeRow({
         {doubled.map((it, i) => (
           <li
             key={i}
-            className="font-ui whitespace-nowrap rounded-[999px] border border-ink/10 bg-paper px-4 py-2 text-body-sm text-ink"
+            className="font-ui whitespace-nowrap rounded-[999px] border border-black/10 bg-[#fbfaf4] px-4 py-2 text-body-sm text-ink-accent"
           >
             {it}
           </li>
@@ -54,7 +54,7 @@ function MarqueeRow({
         {doubled.map((it, i) => (
           <li
             key={i}
-            className="font-ui whitespace-nowrap rounded-[999px] border border-ink/10 bg-paper px-4 py-2 text-body-sm text-ink"
+            className="font-ui whitespace-nowrap rounded-[999px] border border-black/10 bg-[#fbfaf4] px-4 py-2 text-body-sm text-ink-accent"
           >
             {it}
           </li>

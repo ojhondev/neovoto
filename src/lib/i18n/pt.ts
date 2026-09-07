@@ -117,6 +117,141 @@ const pt = {
     ctaTitle: "Pronto para decidir com evidência?",
     ctaBody:
       "Agende uma demonstração com dados do seu estado ou município.",
+    testimonialsKicker: "Quem usa",
+    testimonialsTitle: "Decisões que deixaram de ser no escuro",
+    testimonials: [
+      {
+        quote:
+          "Paramos de rateio de verba por intuição. O mapa de calor mostrou três microrregiões que ninguém tinha no radar — e foi lá que a virada aconteceu.",
+        name: "Coordenação de campanha",
+        role: "Governo estadual · Sudeste",
+      },
+      {
+        quote:
+          "A simulação de coligação com o ganho marginal real mudou a mesa de negociação. Chegamos com número, não com achismo.",
+        name: "Articulação partidária",
+        role: "Diretório estadual",
+      },
+      {
+        quote:
+          "No mandato, o mapa de propostas cruzando o que prometemos com o que está em pauta virou pauta fixa da reunião de segunda.",
+        name: "Chefia de gabinete",
+        role: "Câmara dos Deputados",
+      },
+      {
+        quote:
+          "O que me convenceu foi a ficha técnica: cada número tem fonte, recorte e margem. Consigo defender a decisão para o candidato.",
+        name: "Cientista político",
+        role: "Consultoria eleitoral",
+      },
+    ],
+    testimonialsNote:
+      "Depoimentos ilustrativos de perfis de uso durante o desenvolvimento. Cases nominais entram com o lançamento.",
+    faqKicker: "Dúvidas frequentes",
+    faqTitle: "O que costumam perguntar antes de começar",
+    faq: [
+      {
+        q: "De onde vêm os dados?",
+        a: "Somente de fontes abertas oficiais: TSE, IBGE, Câmara dos Deputados, Senado Federal e Portal da Transparência. Nada de raspagem de redes sociais nem compra de bases de terceiros. Cada análise mostra a fonte e o recorte de tempo.",
+      },
+      {
+        q: "A NeoVoto faz perfil de eleitor?",
+        a: "Não. A menor unidade de análise é o território — seção, zona, bairro, município, região. Nunca modelamos a personalidade nem o comportamento de um cidadão. Opinião política é dado sensível pela LGPD e a plataforma não trata dado sensível de pessoa natural.",
+      },
+      {
+        q: "Como isso é diferente de uma pesquisa eleitoral?",
+        a: "A NeoVoto não é pesquisa de opinião — complementa com dado observável (resultado de urna, contexto socioeconômico, composição de coligações). Os resultados são de apoio interno à decisão e não devem ser divulgados publicamente como intenção de voto.",
+      },
+      {
+        q: "Preciso entender de estatística para usar?",
+        a: "Não. Você informa o candidato e o objetivo; a plataforma entrega o mapa, o ranking e a recomendação. A metodologia fica por conta do motor da NeoVoto — cada tela termina numa decisão clara.",
+      },
+      {
+        q: "Cobre qual eleição e qual cargo?",
+        a: "Território e contexto do IBGE para todo o Brasil. Cadastro de candidatos de todos os cargos (presidente a vereador) via espelho do TSE. A camada de votação por município e a granularidade de seção entram nas próximas fases.",
+      },
+      {
+        q: "É seguro? E a LGPD?",
+        a: "Autenticação por sessão assinada, registro de operações (art. 37), minimização e retenção limitada. Usuários da plataforma têm base legal de execução de contrato, com direitos de acesso, correção e eliminação.",
+      },
+    ],
+  },
+  pricing: {
+    kicker: "Planos e pacotes",
+    title: "Escolha pelo porte da disputa",
+    sub: "Preços em definição. Por enquanto, os planos estão em modo de avaliação — fale com a gente para um piloto.",
+    perMonth: "/mês",
+    custom: "sob consulta",
+    mock: "Valores ilustrativos — a política de preços será anunciada no lançamento.",
+    ctaFree: "Começar a avaliação",
+    ctaPaid: "Falar com a gente",
+    ctaEnterprise: "Falar com vendas",
+    mostPopular: "Mais escolhido",
+    plans: [
+      {
+        name: "Escuta",
+        price: "R$ 0",
+        for: "Para pré-candidatura mapeando o território antes de decidir.",
+        includes: [
+          "1 candidato em análise",
+          "Mapa de calor (IFET) e perfil territorial",
+          "Dados do IBGE e cadastro do TSE",
+          "1 usuário",
+        ],
+      },
+      {
+        name: "Campanha",
+        price: "R$ 2.900",
+        for: "Para campanhas municipais e estaduais rodando a operação.",
+        includes: [
+          "Tudo do Escuta",
+          "As 6 ferramentas com dados do candidato",
+          "Cenários e simulação de coligações",
+          "Exportação de relatório com ficha técnica",
+          "Até 5 usuários",
+        ],
+      },
+      {
+        name: "Majoritária",
+        price: "R$ 7.900",
+        for: "Para disputas majoritárias e coordenação partidária.",
+        includes: [
+          "Tudo do Campanha",
+          "Múltiplos candidatos e comparação",
+          "Camada de votação por município e seção",
+          "Prioridade de suporte e onboarding assistido",
+          "Usuários ilimitados",
+        ],
+      },
+      {
+        name: "Partido",
+        price: "sob consulta",
+        for: "Para federações e diretórios nacionais com muitas candidaturas.",
+        includes: [
+          "Tudo da Majoritária",
+          "Painel consolidado por UF e por candidatura",
+          "Integração com o fluxo do partido",
+          "Contrato e SLA dedicados",
+        ],
+      },
+    ],
+    compareTitle: "Compare os planos",
+    compareRows: [
+      { feature: "Candidatos em análise", vals: ["1", "1", "vários", "ilimitado"] },
+      { feature: "Mapa de Calor (IFET)", vals: ["sim", "sim", "sim", "sim"] },
+      { feature: "Mapa de Influência", vals: ["prévia", "sim", "sim", "sim"] },
+      { feature: "Matriz Ideológica por Região", vals: ["—", "sim", "sim", "sim"] },
+      { feature: "Mapa de Propostas", vals: ["—", "sim", "sim", "sim"] },
+      { feature: "Cenários Estatísticos", vals: ["—", "sim", "sim", "sim"] },
+      { feature: "Coligações", vals: ["—", "sim", "sim", "sim"] },
+      { feature: "Votação por município", vals: ["—", "—", "sim", "sim"] },
+      { feature: "Granularidade de seção", vals: ["—", "—", "sim", "sim"] },
+      { feature: "Exportação de relatório", vals: ["—", "sim", "sim", "sim"] },
+      { feature: "Comparação entre candidatos", vals: ["—", "—", "sim", "sim"] },
+      { feature: "Painel consolidado por UF", vals: ["—", "—", "—", "sim"] },
+      { feature: "Usuários", vals: ["1", "5", "ilimitado", "ilimitado"] },
+      { feature: "Suporte", vals: ["comunidade", "e-mail", "prioritário", "SLA dedicado"] },
+    ],
   },
   tools: {
     influenceMap: {

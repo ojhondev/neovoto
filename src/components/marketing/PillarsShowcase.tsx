@@ -176,7 +176,7 @@ export function PillarsShowcase({
             </Link>
           </div>
           <div
-            className="flex min-h-[300px] items-center justify-center rounded-[12px] p-8"
+            className="on-light flex min-h-[300px] items-center justify-center rounded-[12px] p-8"
             style={{ background: PANEL_BG[p.panel] }}
           >
             {p.panel === "territorio" && <MiniTerritorio />}

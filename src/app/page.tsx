@@ -3,10 +3,11 @@ import { ArrowRight, ArrowDown } from "lucide-react";
 import { SiteHeader } from "@/components/marketing/SiteHeader";
 import { SiteFooter } from "@/components/marketing/SiteFooter";
 import { Reveal } from "@/components/marketing/Reveal";
-import { PixelGlobe } from "@/components/marketing/PixelGlobe";
 import { ParticleField } from "@/components/marketing/ParticleField";
 import { PillarsShowcase, type Pillar } from "@/components/marketing/PillarsShowcase";
 import { Marquee } from "@/components/marketing/Marquee";
+import { Testimonials } from "@/components/marketing/Testimonials";
+import { Faq } from "@/components/marketing/Faq";
 import { InfluenceNetwork } from "@/components/viz/InfluenceNetwork";
 import { getDictionary } from "@/lib/i18n";
 import { TOOLS, toolPath } from "@/lib/tools";
@@ -24,15 +25,14 @@ export default async function LandingPage() {
 
   return (
     <>
-      <ParticleField />
-
       <div className="relative z-10">
         <div className="bg-charcoal">
-          <p className="font-ui px-5 py-2.5 text-center text-[13px] text-paper">{t.announce}</p>
+          <p className="font-ui px-5 py-2.5 text-center text-[13px] text-white">{t.announce}</p>
         </div>
         <SiteHeader />
 
         <main>
+          <ParticleField>
           {/* HERO — fundo transparente, partículas atrás */}
           <section className={`${FLUID} flex min-h-[86vh] flex-col justify-center py-16`}>
             <div className="grid items-center gap-12 lg:grid-cols-[1.1fr_0.9fr]">
@@ -70,7 +70,7 @@ export default async function LandingPage() {
           </section>
 
           {/* GLOBO — headline sobre as partículas que se aglomeram ao rolar */}
-          <section className="relative flex min-h-[125vh] items-center justify-center px-5 text-center">
+          <section className="relative flex min-h-[110vh] items-center justify-center px-5 text-center">
             <div className="max-w-3xl">
               <h2 className="t-display">
                 {t.landing.globeTitleA}
@@ -80,6 +80,7 @@ export default async function LandingPage() {
               <p className="mx-auto mt-6 max-w-xl text-body text-fossil">{t.landing.globeSub}</p>
             </div>
           </section>
+          </ParticleField>
 
           {/* 3 PILARES */}
           <div className="relative z-10 bg-bone">
@@ -139,29 +140,20 @@ export default async function LandingPage() {
             </div>
           </section>
 
-          {/* MANIFESTO */}
-          <section id="manifesto" className="relative z-10 overflow-hidden bg-chartreuse">
-            <div className="pointer-events-none absolute -right-32 -top-24 opacity-70">
-              <PixelGlobe size={520} />
-            </div>
-            <div className={`${FLUID} relative py-24`}>
-              <h2 className="t-display max-w-3xl text-ink">{t.landing.manifestoTitle}</h2>
-              <p className="mt-4 max-w-xl text-body text-smoke">{t.landing.manifestoSub}</p>
-              <ul className="mt-10 max-w-2xl space-y-3">
-                {t.landing.manifestoPoints.map((p) => (
-                  <li key={p} className="flex gap-3 border-b border-ink/15 pb-3 text-body text-ink">
-                    <span aria-hidden className="font-ui text-fossil">
-                      —
-                    </span>
-                    {p}
-                  </li>
-                ))}
-              </ul>
-              <Link href="/etica" className="btn btn-primary mt-10">
-                {t.landing.manifestoCta} <ArrowRight size={16} />
-              </Link>
-            </div>
-          </section>
+          {/* DEPOIMENTOS */}
+          <Testimonials
+            kicker={t.landing.testimonialsKicker}
+            title={t.landing.testimonialsTitle}
+            items={t.landing.testimonials.map((x) => ({ ...x }))}
+            note={t.landing.testimonialsNote}
+          />
+
+          {/* FAQ */}
+          <Faq
+            kicker={t.landing.faqKicker}
+            title={t.landing.faqTitle}
+            items={t.landing.faq.map((x) => ({ ...x }))}
+          />
 
           {/* CTA */}
           <section id="demo" className={`${FLUID} relative z-10 bg-bone py-24 text-center`}>
