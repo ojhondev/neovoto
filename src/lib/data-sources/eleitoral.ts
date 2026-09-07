@@ -14,11 +14,12 @@ import {
 } from "@/lib/data-sources/brasilio";
 import { cargoFromBio, anoEleicao, type Cargo } from "@/lib/cargos";
 import { getEstadoPorSigla, getPopulacaoMunicipiosUF } from "@/lib/data-sources/ibge";
+import { basedosdadosDisponivel } from "@/lib/data-sources/basedosdados";
 
 export { BrasilioThrottled };
 
 export function eleitoralDisponivel(): boolean {
-  return hasBrasilioToken();
+  return hasBrasilioToken() || basedosdadosDisponivel();
 }
 
 export function norm(s: string): string {
@@ -76,7 +77,7 @@ const CACHE_TTL = 1000 * 60 * 60 * 24 * 30; // 30 dias
  * Lê do cache do Neon; só chama o brasil.io no miss. Pode lançar BrasilioThrottled.
  */
 export async function buscarCandidatosTSE(nome: string): Promise<CandidatoEleitoral[]> {
-  if (!hasBrasilioToken()) return [];
+  if (!hasBrasilioToken() && !basedosdadosDisponivel()) return [];
   const term = norm(nome);
   if (term.length < 3) return [];
 
@@ -98,19 +99,50 @@ export async function buscarCandidatosTSE(nome: string): Promise<CandidatoEleito
     /* segue para a fonte */
   }
 
-  // Busca no brasil.io (nome de urna exato + fallback full-text). Sem filtro de ano:
-  // o usuário escolhe a candidatura certa (o ano aparece no resultado).
-  const raw: BioCandidato[] = await buscarCandidatosPorNome(nome, []);
-
-  const seen = new Set<string>();
   const out: CandidatoEleitoral[] = [];
-  for (const r of raw) {
-    const c = toCandidato(r);
-    if (!c) continue;
-    if (seen.has(c.externalId)) continue;
-    seen.add(c.externalId);
-    out.push(c);
+  const seen = new Set<string>();
+
+  // 1) Base dos Dados (busca por LIKE, mais completa)
+  if (basedosdadosDisponivel()) {
+    try {
+      const bdd = await import("@/lib/data-sources/basedosdados");
+      for (const b of await bdd.buscarCandidatos(nome)) {
+        const cargo = cargoFromBio(0, b.cargo);
+        if (!cargo || !b.sequencial || seen.has(b.sequencial)) continue;
+        seen.add(b.sequencial);
+        out.push({
+          fonte: "tse",
+          externalId: b.sequencial,
+          cargo,
+          ano: b.ano,
+          turno: b.turno,
+          nome: b.nome || b.nomeUrna,
+          nomeUrna: b.nomeUrna || b.nome,
+          partido: b.siglaPartido,
+          uf: b.siglaUf,
+          unidadeEleitoral: b.idMunicipio ?? b.siglaUf,
+          situacao: b.resultado ?? "",
+          nascimento: null,
+          escolaridade: null,
+          ocupacao: null,
+        });
+      }
+    } catch {
+      /* cai para o brasil.io */
+    }
   }
+
+  // 2) brasil.io (fallback)
+  if (out.length === 0 && hasBrasilioToken()) {
+    const raw: BioCandidato[] = await buscarCandidatosPorNome(nome, []);
+    for (const r of raw) {
+      const c = toCandidato(r);
+      if (!c || seen.has(c.externalId)) continue;
+      seen.add(c.externalId);
+      out.push(c);
+    }
+  }
+
   // mais recente + eleito/2º turno primeiro
   out.sort((a, b) => b.ano - a.ano || rank(b.situacao) - rank(a.situacao));
 
@@ -140,9 +172,9 @@ function rank(sit: string): number {
 }
 
 /**
- * Puxa a votação por município de uma candidatura do brasil.io, faz o join com o
- * código IBGE e grava em `electoral_results`. Idempotente (limpa antes de gravar).
- * Retorna o estado final para `candidacies.electoralStatus`.
+ * Puxa a votação por município da candidatura e grava em `electoral_results`.
+ * Prioriza a **Base dos Dados / BigQuery** (id_municipio = código IBGE, join direto);
+ * cai para o brasil.io se aquela não estiver configurada. Idempotente.
  */
 export async function ingestVotacao(candidacyId: string): Promise<"ok" | "indisponivel" | "vazio"> {
   const rows = await db
@@ -151,32 +183,41 @@ export async function ingestVotacao(candidacyId: string): Promise<"ok" | "indisp
     .where(eq(candidacies.id, candidacyId))
     .limit(1);
   const c = rows[0];
-  if (!c || c.source !== "tse" || !c.uf) return "vazio";
+  if (!c || !c.uf) return "vazio";
 
   const raw = (c.raw ?? {}) as { externalId?: string; ano?: number; turno?: number };
-  const sequencial = raw.externalId ?? c.externalId;
   const cargo = (c.cargo as Cargo | null) ?? null;
-  const ano = raw.ano ?? (cargo ? anoEleicao(cargo) : 2022);
+  const ano = raw.ano ?? c.electionYear ?? (cargo ? anoEleicao(cargo) : 2022);
   const turno = raw.turno ?? 1;
-  if (!sequencial) return "vazio";
 
+  // 1) Base dos Dados (preferencial)
+  if (basedosdadosDisponivel()) {
+    try {
+      const rowsBdd = await ingestFromBdd(c, { ano, turno, cargo });
+      if (rowsBdd > 0) return "ok";
+    } catch {
+      /* cai para o brasil.io */
+    }
+  }
+
+  // 2) brasil.io (tabela `votacao` está desativada hoje — mantido para caso reativem)
+  if (c.source !== "tse") return "vazio";
+  const sequencial = raw.externalId ?? c.externalId;
+  if (!sequencial) return "vazio";
   let votos;
   try {
     votos = await votacaoDoCandidato({ sequencial, ano, uf: c.uf, turno });
   } catch (e) {
-    if (e instanceof BrasilioThrottled) return "indisponivel";
-    return "indisponivel";
+    return e instanceof BrasilioThrottled ? "indisponivel" : "indisponivel";
   }
   if (votos.length === 0) return "vazio";
 
-  // TSE → IBGE por nome de município na UF
   const estado = await getEstadoPorSigla(c.uf);
   const nameToIbge = new Map<string, string>();
   if (estado) {
     const pops = await getPopulacaoMunicipiosUF(estado.id).catch(() => ({}));
     for (const [code, v] of Object.entries(pops)) nameToIbge.set(norm(v.nome), code);
   }
-
   await db.delete(electoralResults).where(eq(electoralResults.candidacyId, candidacyId));
   await db.insert(electoralResults).values(
     votos.map((v) => ({
@@ -191,6 +232,62 @@ export async function ingestVotacao(candidacyId: string): Promise<"ok" | "indisp
     })),
   );
   return "ok";
+}
+
+const CARGO_BDD: Record<Cargo, string> = {
+  presidente: "presidente",
+  governador: "governador",
+  senador: "senador",
+  "deputado-federal": "deputado federal",
+  "deputado-estadual": "deputado estadual",
+  "deputado-distrital": "deputado distrital",
+  prefeito: "prefeito",
+  vereador: "vereador",
+};
+
+async function ingestFromBdd(
+  c: typeof candidacies.$inferSelect,
+  opts: { ano: number; turno: number; cargo: Cargo | null },
+): Promise<number> {
+  const bdd = await import("@/lib/data-sources/basedosdados");
+  let sequencial =
+    c.source === "tse" ? ((c.raw as { externalId?: string }).externalId ?? c.externalId) : "";
+
+  // Câmara/Senado: descobre o sequencial na Base dos Dados por nome + UF + cargo
+  if (!sequencial) {
+    const cargoStr = opts.cargo ? CARGO_BDD[opts.cargo] : "";
+    const cands = await bdd.buscarCandidatos(c.name);
+    const hit = cands.find(
+      (x) =>
+        x.siglaUf === c.uf &&
+        (!cargoStr || x.cargo.includes(cargoStr.split(" ")[1] ?? cargoStr)) &&
+        x.ano === opts.ano,
+    );
+    sequencial = hit?.sequencial ?? "";
+  }
+  if (!sequencial || !c.uf) return 0;
+
+  const votos = await bdd.votacaoPorMunicipio({
+    sequencial,
+    ano: opts.ano,
+    turno: opts.turno,
+    uf: c.uf,
+  });
+  if (votos.length === 0) return 0;
+
+  await db.delete(electoralResults).where(eq(electoralResults.candidacyId, c.id));
+  await db.insert(electoralResults).values(
+    votos.map((v) => ({
+      candidacyId: c.id,
+      ano: opts.ano,
+      turno: opts.turno,
+      ufSigla: c.uf!,
+      ibgeCode: v.idMunicipio, // já é código IBGE
+      municipio: v.idMunicipio,
+      votos: v.votos,
+    })),
+  );
+  return votos.length;
 }
 
 /** Votos por código IBGE (lê só do Neon). */

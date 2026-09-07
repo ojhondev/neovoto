@@ -72,17 +72,62 @@ a NeoVoto pagina e cacheia por candidato.
 
 > Referência oficial: https://blog.brasil.io/2020/10/31/nossa-api-sera-obrigatoriamente-autenticada/
 
-## 4. Fase 2.5 — Base dos Dados (BigQuery) para 2024 e seção eleitoral
+## 4. Base dos Dados (BigQuery) — a fonte definitiva de votação por município
 
-Quando precisarmos de municipais de 2024 ou de votação por seção:
+O brasil.io serve só o **cadastro** do candidato (não a votação — a tabela `votacao`
+foi desativada). A **Base dos Dados** tem o espelho **completo** do TSE no BigQuery
+público — votação por município e por seção, receitas/despesas, perfil do eleitorado,
+1945–2024 (inclui municipais de 2024). E o melhor: **`id_municipio` já é o código IBGE**,
+então o join com a malha é direto (sem crosswalk TSE↔IBGE).
 
-1. Criar um projeto no Google Cloud (grátis) e uma **service account** com papel
-   `BigQuery Job User`.
-2. Baixar a chave JSON e colocá-la como secret na Vercel (`GCP_SA_KEY`).
-3. `src/lib/data-sources/basedosdados.ts` (a criar) roda `SELECT` no dataset público
-   `basedosdados.br_tse_eleicoes.*` e materializa no Neon.
-4. Custo: consultas somam contra a cota gratuita de 1 TB/mês — as tabelas eleitorais
-   relevantes por UF/ano ficam bem abaixo disso.
+O cliente já está pronto (`src/lib/data-sources/basedosdados.ts`) — usa a REST API do
+BigQuery com um JWT assinado pelo `node:crypto` (sem SDK, sem grpc). Liga sozinho quando
+as duas env vars aparecerem.
+
+### Passo a passo (uma vez, ~10 minutos)
+
+1. **Conta Google Cloud.** Acesse **https://console.cloud.google.com/** com uma conta
+   Google. Se for a primeira vez, aceite os termos. **Não precisa cadastrar cartão** para
+   consultar dados públicos dentro da cota gratuita (se pedir, pode pular / usar o
+   "sandbox" do BigQuery).
+2. **Criar um projeto.** Topo da tela → seletor de projeto → **"Novo projeto"** → nome
+   ex. `neovoto-dados` → **Criar**. Anote o **ID do projeto** (ex. `neovoto-dados-123456`).
+3. **Ativar a API do BigQuery.** Menu → **APIs e serviços → Biblioteca** → busque
+   **"BigQuery API"** → **Ativar**. (Costuma já vir ativada.)
+4. **Criar a service account.** Menu → **IAM e administrador → Contas de serviço** →
+   **"Criar conta de serviço"** → nome `neovoto-bq` → **Criar e continuar** → em "Conceder
+   acesso", papel **"BigQuery Job User"** (`roles/bigquery.jobUser`) → **Concluir**.
+5. **Gerar a chave JSON.** Na lista de contas de serviço, clique na `neovoto-bq` → aba
+   **Chaves** → **Adicionar chave → Criar nova chave → JSON** → baixa um arquivo `.json`.
+6. **Me mande** o conteúdo desse JSON e o **ID do projeto** (pode colar aqui — eu ponho
+   como secret na Vercel e no `.env.local`, nunca no repositório). **Ou** você mesmo, no
+   painel da Vercel (projeto `neovoto` → **Settings → Environment Variables**):
+   - `GCP_PROJECT_ID` = o ID do projeto
+   - `GCP_SERVICE_ACCOUNT_KEY` = o JSON inteiro (cole numa linha só)
+   - ambientes: Production + Preview + Development → **Save**
+7. Eu faço um redeploy. A partir daí:
+   - a busca de candidato no onboarding cobre **todos os cargos** com dados melhores;
+   - o **Mapa de Calor colore por votação real** do candidato por município;
+   - o **IFET** ganha o pilar de histórico eleitoral (hoje com peso 0);
+   - abre caminho para receitas/despesas, perfil do eleitorado e votação por seção.
+
+### Custo
+
+As queries são cobradas contra a **cota gratuita de 1 TB de processamento por mês** do
+BigQuery. Uma consulta da NeoVoto é filtrada por `ano` + `sigla_uf` + `sequencial` e roda
+sobre partições pequenas — cada candidato consome alguns MB. O resultado é cacheado no
+Neon (`electoral_results`), então a mesma candidatura não repete a query. Fica **muito
+abaixo** da cota gratuita mesmo com dezenas de campanhas.
+
+### Tabelas usadas
+
+| Tabela (`basedosdados.br_tse_eleicoes.*`) | Uso |
+|---|---|
+| `candidatos` | busca por nome, todos os cargos |
+| `resultados_candidato_municipio` | votação por município (choropleth, IFET) |
+| `resultados_candidato_municipio_zona` | votação por zona (Fase 3) |
+| `despesas_candidato` / `receitas_candidato` | fundo e gasto (Coligações, Cenários) |
+| `perfil_eleitorado_municipio` | perfil do eleitorado agregado (Matriz Ideológica) |
 
 ## 5. Nunca
 
