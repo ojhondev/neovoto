@@ -10,6 +10,7 @@ import { getCurrentCandidacy, perfilFrom } from "@/lib/candidacy";
 import { getIfetResumoUF } from "@/lib/territory";
 import { ingestVotacao, getVotosByIbge } from "@/lib/data-sources/eleitoral";
 import { getVotacaoPartidoUF, getVotosCorteEleito } from "@/lib/data-sources/regional";
+import { basePorApoios, type Apoio } from "@/lib/intel/apoios";
 import { computeCenarios, type ResultadoCenario } from "@/lib/intel/cenarios";
 import { URGENCIA_RESULTADO, urgVar } from "@/lib/viz/colors";
 import type { Cargo } from "@/lib/cargos";
@@ -86,7 +87,7 @@ export default async function Page() {
   // histórica do candidato antes de desistir.
   let votosProprios = resumo?.eleitoralByCode ?? null;
   const semHistorico = candidacy.source === "manual";
-  if (resumo && ref.prop && !votosProprios && !semHistorico) {
+  if (resumo && !votosProprios && !semHistorico) {
     try {
       await ingestVotacao(candidacy.id);
       const v = await getVotosByIbge(candidacy.id);
@@ -95,8 +96,17 @@ export default async function Page() {
       /* segue sem histórico próprio */
     }
   }
+  // sem histórico → base pelos apoios declarados (padrinhos)
+  let baseTipo: "propria" | "apoios" | "partido" = votosProprios ? "propria" : "partido";
+  if (resumo && !votosProprios) {
+    const base = await basePorApoios((candidacy.apoios as Apoio[] | null) ?? []).catch(() => null);
+    if (base) {
+      votosProprios = base.byCode;
+      baseTipo = "apoios";
+    }
+  }
 
-  if (!resumo || votacao.length < 100 || (ref.prop && !votosProprios && !semHistorico)) {
+  if (!resumo || votacao.length < 100 || (ref.prop && !votosProprios)) {
     return (
       <ToolShell id="cenarios" updatedAt="—" howItWorks={howItWorks} outputs={outputs}>
         <ModuloRoadmap
@@ -104,16 +114,16 @@ export default async function Page() {
           entrega={
             ref.prop && !votosProprios
               ? pt
-                ? "Numa disputa proporcional, os cenários precisam do histórico de votação do próprio candidato — e ele ainda não foi encontrado. Rode o onboarding pelo espelho do TSE ('todos os cargos') para carregar."
-                : "In a proportional race the scenarios need the candidate's own vote history — not found yet. Run the onboarding through the TSE mirror ('all offices') to load it."
+                ? "Numa disputa proporcional, projetar o voto de um candidato sem histórico e sem apoios é chute. Volte ao onboarding e declare os políticos eleitos que apoiam a campanha — a base é projetada a partir do voto deles nos redutos deles. Enquanto isso, o Mapa de Calor e o Mapa de Propostas já mostram onde está a oportunidade."
+                : "In a proportional race, projecting the vote of a candidate with no history and no backers is a guess. Go back to onboarding and declare the elected officials backing the campaign — the base is projected from their vote in their strongholds. Meanwhile, the Heatmap and Proposal Map already show where the opportunity is."
               : pt
                 ? "Não foi possível carregar a votação de referência para este estado/cargo agora."
                 : "Couldn't load the reference vote for this state/office right now."
           }
           etapas={[
-            { label: pt ? "Votação por partido e município (Base dos Dados)" : "Party vote by municipality (Base dos Dados)", feito: votacao.length >= 100 },
-            { label: "IFET", feito: !!resumo },
-            { label: pt ? "Histórico de votação do candidato" : "Candidate's own vote history", feito: !!votosProprios || !ref.prop },
+            { label: pt ? "Território e temas (IFET, Radar)" : "Territory and themes (IFET, Radar)", feito: !!resumo },
+            { label: pt ? "Histórico de votação do candidato" : "Candidate's own vote history", feito: !!(resumo?.eleitoralByCode) },
+            { label: pt ? "Apoios de políticos eleitos declarados no onboarding" : "Elected backers declared in onboarding", feito: baseTipo === "apoios" },
           ]}
         />
       </ToolShell>
@@ -182,7 +192,13 @@ export default async function Page() {
       </p>
       <p className="font-ui mt-2 text-caption text-pebble">
         {cen.tipoDisputa === "majoritaria" ? t.cenarios.disputaMajoritaria : t.cenarios.disputaProporcional}{" "}
-        {cen.baseProjecao === "votacao-propria" ? t.cenarios.basePropria : t.cenarios.basePartido}
+        {baseTipo === "propria"
+          ? t.cenarios.basePropria
+          : baseTipo === "apoios"
+            ? pt
+              ? "Base: fração transferível do voto dos políticos eleitos que apoiam a campanha."
+              : "Basis: transferable fraction of the vote of the elected officials backing the campaign."
+            : t.cenarios.basePartido}
       </p>
 
       {/* barra + faltam */}

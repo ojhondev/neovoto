@@ -29,6 +29,13 @@
       "when": 1788830418322,
       "tag": "0003_yielding_wolfsbane",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1788831935756,
+      "tag": "0004_shallow_garia",
+      "breakpoints": true
     }
   ]
 }

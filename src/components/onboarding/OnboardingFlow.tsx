@@ -57,6 +57,11 @@ type Dict = {
   change: string;
   cargoTitle: string;
   cargoSub: string;
+  apoiosTitle: string;
+  apoiosSub: string;
+  apoiosPlaceholder: string;
+  apoiosNone: string;
+  apoioAdd: string;
   manualCta: string;
   manualTitle: string;
   manualSub: string;
@@ -85,6 +90,12 @@ export function OnboardingFlow({ dict }: { dict: Dict }) {
   const [cargoAlvo, setCargoAlvo] = useState<string>("");
   const [manualForm, setManualForm] = useState<ManualData>({ nome: "", partido: "", uf: "" });
   const [showManual, setShowManual] = useState(false);
+  const [apoios, setApoios] = useState<
+    { source: string; externalId: string; nome: string; uf: string; cargo: string }[]
+  >([]);
+  const [apq, setApq] = useState("");
+  const [apHits, setApHits] = useState<Record<string, unknown>[]>([]);
+  const [apLoading, setApLoading] = useState(false);
   const abort = useRef<AbortController | null>(null);
 
   const pick = (p: Picked) => {
@@ -152,6 +163,41 @@ export function OnboardingFlow({ dict }: { dict: Dict }) {
     } finally {
       setTseLoading(false);
     }
+  };
+
+  useEffect(() => {
+    const term = apq.trim();
+    const id = setTimeout(async () => {
+      if (term.length < 3) {
+        setApHits([]);
+        return;
+      }
+      setApLoading(true);
+      try {
+        const r = await fetch(`/api/politicos/buscar?tse=1&q=${encodeURIComponent(term)}`);
+        const j = await r.json();
+        setApHits((j.results ?? []).slice(0, 6));
+      } catch {
+        setApHits([]);
+      }
+      setApLoading(false);
+    }, 450);
+    return () => clearTimeout(id);
+  }, [apq]);
+
+  const addApoio = (h: Record<string, unknown>) => {
+    const a = {
+      source: String(h.fonte ?? h.source ?? "tse"),
+      externalId: String(h.externalId ?? ""),
+      nome: String(h.nome ?? ""),
+      uf: String(h.uf ?? ""),
+      cargo: String(h.cargo ?? ""),
+    };
+    if (a.externalId && !apoios.some((x) => x.externalId === a.externalId)) {
+      setApoios((s) => [...s, a].slice(0, 8));
+    }
+    setApq("");
+    setApHits([]);
   };
 
   const step = picked ? 2 : 1;
@@ -359,6 +405,7 @@ export function OnboardingFlow({ dict }: { dict: Dict }) {
           )}
           <input type="hidden" name="objective" value={objective} />
           <input type="hidden" name="cargoAlvo" value={cargoAlvo} />
+          <input type="hidden" name="apoios" value={JSON.stringify(apoios)} />
 
           <div className="flex items-center gap-3 rounded-[12px] border border-ash bg-paper p-3">
             {picked.kind === "fed" && picked.data.foto ? (
@@ -415,6 +462,65 @@ export function OnboardingFlow({ dict }: { dict: Dict }) {
               </label>
             ))}
           </div>
+
+          {/* apoios / padrinhos */}
+          <h2 className="t-heading mt-8">{dict.apoiosTitle}</h2>
+          <p className="mt-2 text-body-sm text-fossil">{dict.apoiosSub}</p>
+          {apoios.length > 0 && (
+            <ul className="mt-3 flex flex-wrap gap-1.5">
+              {apoios.map((a) => (
+                <li
+                  key={a.externalId}
+                  className="font-ui inline-flex items-center gap-1.5 rounded-[4px] bg-sand px-2 py-1 text-caption text-smoke"
+                >
+                  {a.nome}
+                  {a.uf ? ` (${a.uf})` : ""}
+                  <button
+                    type="button"
+                    onClick={() => setApoios((s) => s.filter((x) => x.externalId !== a.externalId))}
+                    className="text-pebble hover:text-ink"
+                  >
+                    ×
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+          <div className="mt-3 flex items-center gap-2 rounded-[8px] border border-ash bg-paper px-3">
+            <Search size={15} className="text-fossil" />
+            <input
+              value={apq}
+              onChange={(e) => setApq(e.target.value)}
+              placeholder={dict.apoiosPlaceholder}
+              className="font-ui w-full bg-transparent py-2.5 text-body-sm outline-none"
+            />
+            {apLoading && <Loader2 size={14} className="animate-spin text-fossil" />}
+          </div>
+          {apHits.length > 0 && (
+            <ul className="mt-2 divide-y divide-ash overflow-hidden rounded-[8px] border border-ash">
+              {apHits.map((h, i) => (
+                <li key={i}>
+                  <button
+                    type="button"
+                    onClick={() => addApoio(h)}
+                    className="font-ui flex w-full items-center justify-between gap-2 bg-paper px-3 py-2 text-left text-body-sm hover:bg-bone"
+                  >
+                    <span className="min-w-0">
+                      <span className="block truncate text-ink">{String(h.nome)}</span>
+                      <span className="block truncate text-caption text-pebble">
+                        {String(h.partido ?? "")}
+                        {h.uf ? `-${String(h.uf)}` : ""} · {String(h.casa ?? h.cargo ?? "")}
+                      </span>
+                    </span>
+                    <span className="shrink-0 text-caption text-fossil">{dict.apoioAdd}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+          {apoios.length === 0 && (
+            <p className="font-ui mt-2 text-caption text-pebble">{dict.apoiosNone}</p>
+          )}
 
           <h2 className="t-heading mt-8">{dict.objectiveTitle}</h2>
           <p className="mt-2 text-body-sm text-fossil">{dict.objectiveSub}</p>

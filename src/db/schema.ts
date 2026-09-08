@@ -88,6 +88,9 @@ export const candidacies = pgTable(
     party: text("party"),
     uf: text("uf"),
     cargo: text("cargo"), // presidente | governador | senador | deputado-* | prefeito | vereador
+    apoios: jsonb("apoios")
+      .$type<{ source: string; externalId: string; nome: string; uf: string; cargo: string }[]>()
+      .default([]),
     electionYear: integer("election_year"),
     photoUrl: text("photo_url"),
     email: text("email"),

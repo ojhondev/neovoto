@@ -10,6 +10,7 @@ import type { Cargo } from "@/lib/cargos";
 import { getIfetResumoUF } from "@/lib/territory";
 import { ingestVotacao, getVotosByIbge } from "@/lib/data-sources/eleitoral";
 import { getVotacaoPartidoUF, getVotosCorteEleito } from "@/lib/data-sources/regional";
+import { basePorApoios, type Apoio } from "@/lib/intel/apoios";
 import { computeCenarios, type CenariosResultado } from "@/lib/intel/cenarios";
 
 export const CARGO_REF: Record<Cargo, { ano: number; turno: number; cargo: string; prop: boolean }> = {
@@ -24,8 +25,8 @@ export const CARGO_REF: Record<Cargo, { ano: number; turno: number; cargo: strin
 };
 
 export type CenariosCarregado =
-  | { ok: true; cenarios: CenariosResultado }
-  | { ok: false; motivo: "sem-recorte" | "sem-dados" | "sem-historico-proprio" };
+  | { ok: true; cenarios: CenariosResultado; baseTipo: "propria" | "apoios" | "partido" }
+  | { ok: false; motivo: "sem-recorte" | "sem-dados" | "sem-historico-proprio" | "sem-base" };
 
 export async function carregarCenarios(
   candidacy: Candidacy,
@@ -46,7 +47,7 @@ export async function carregarCenarios(
 
   const semHistorico = candidacy.source === "manual";
   let votosProprios = resumo.eleitoralByCode ?? null;
-  if (ref.prop && !votosProprios && !semHistorico) {
+  if (!votosProprios && !semHistorico) {
     try {
       await ingestVotacao(candidacy.id);
       const v = await getVotosByIbge(candidacy.id);
@@ -54,8 +55,21 @@ export async function carregarCenarios(
     } catch {
       /* segue */
     }
-    if (!votosProprios) return { ok: false, motivo: "sem-historico-proprio" };
   }
+
+  // sem histórico próprio → tenta a base pelos APOIOS declarados (padrinhos)
+  let baseTipo: "propria" | "apoios" | "partido" = votosProprios ? "propria" : "partido";
+  if (!votosProprios) {
+    const apoios = (candidacy.apoios as Apoio[] | null) ?? [];
+    const base = await basePorApoios(apoios).catch(() => null);
+    if (base) {
+      votosProprios = base.byCode;
+      baseTipo = "apoios";
+    }
+  }
+
+  // proporcional + sem histórico + sem apoios → não dá pra projetar voto com honestidade
+  if (ref.prop && !votosProprios) return { ok: false, motivo: "sem-base" };
 
   const cenarios = computeCenarios(
     {
@@ -84,5 +98,5 @@ export async function carregarCenarios(
       fatorLacunas: t.cenarios.fatorLacunas,
     },
   );
-  return { ok: true, cenarios };
+  return { ok: true, cenarios, baseTipo };
 }

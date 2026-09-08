@@ -17,11 +17,17 @@ export async function finalizarOnboarding(
   const source = String(formData.get("source") ?? "");
   const objective = String(formData.get("objective") ?? "avaliando");
   const cargoAlvo = String(formData.get("cargoAlvo") ?? "");
+  let apoios: { source: string; externalId: string; nome: string; uf: string; cargo: string }[] = [];
+  try {
+    apoios = JSON.parse(String(formData.get("apoios") ?? "[]")).slice(0, 8);
+  } catch {
+    apoios = [];
+  }
 
   if (source === "camara" || source === "senado") {
     const externalId = String(formData.get("externalId") ?? "");
     if (!externalId) return { error: "Seleção inválida." };
-    const res = await selectCandidacy(source, externalId, objective, cargoAlvo);
+    const res = await selectCandidacy(source, externalId, objective, cargoAlvo, apoios);
     if (!res.ok) return { error: res.error };
     redirect("/painel");
   }
@@ -34,7 +40,7 @@ export async function finalizarOnboarding(
       return { error: "Seleção inválida." };
     }
     if (!cand?.externalId || !cand?.cargo) return { error: "Seleção inválida." };
-    const res = await selectCandidacyTSE(cand, objective, cargoAlvo);
+    const res = await selectCandidacyTSE(cand, objective, cargoAlvo, apoios);
     if (!res.ok) return { error: res.error };
     redirect("/painel");
   }
@@ -48,6 +54,7 @@ export async function finalizarOnboarding(
         cargo: cargoAlvo || "deputado-estadual",
       },
       objective,
+      apoios,
     );
     if (!res.ok) return { error: res.error };
     redirect("/painel");

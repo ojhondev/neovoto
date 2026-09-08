@@ -72,12 +72,14 @@ export function cargoOf(c: Candidacy): Cargo {
   return c.source === "senado" ? "senador" : "deputado-federal";
 }
 
+type Apoio = { source: string; externalId: string; nome: string; uf: string; cargo: string };
+
 async function persist(
   perfil: PerfilPolitico,
   source: Fonte,
   externalId: string,
   objective: string,
-  extra: { cargo?: string; electionYear?: number; electoralStatus: string },
+  extra: { cargo?: string; electionYear?: number; electoralStatus: string; apoios?: Apoio[] },
   opts: { setCookie?: boolean } = {},
 ): Promise<string> {
   const existing = await db
@@ -93,6 +95,7 @@ async function persist(
     house: source,
     cargo: extra.cargo ?? null,
     electionYear: extra.electionYear ?? null,
+    apoios: extra.apoios ?? [],
     photoUrl: perfil.foto || null,
     email: perfil.email,
     objective,
@@ -126,6 +129,7 @@ export async function selectCandidacy(
   externalId: string,
   objective: string,
   cargoAlvo?: string,
+  apoios?: Apoio[],
 ): Promise<{ ok: true; id: string } | { ok: false; error: string }> {
   const perfil = await montarPerfil(source, externalId);
   if (!perfil) return { ok: false, error: "Não foi possível carregar o perfil oficial." };
@@ -133,6 +137,7 @@ export async function selectCandidacy(
     const id = await persist(perfil, source, externalId, objective, {
       cargo: cargoAlvo || perfil.cargo,
       electoralStatus: "na",
+      apoios,
     });
     return { ok: true, id };
   } catch {
@@ -144,6 +149,7 @@ export async function selectCandidacy(
 export async function selectCandidacyManual(
   input: { nome: string; partido: string; uf: string; cargo: string },
   objective: string,
+  apoios?: Apoio[],
 ): Promise<{ ok: true; id: string } | { ok: false; error: string }> {
   const { perfilManual } = await import("@/lib/politico");
   if (!input.nome.trim() || !input.partido.trim() || !input.uf.trim()) {
@@ -161,6 +167,7 @@ export async function selectCandidacyManual(
       cargo: input.cargo,
       electionYear: 2026,
       electoralStatus: "na",
+      apoios,
     });
     return { ok: true, id };
   } catch {
@@ -173,6 +180,7 @@ export async function selectCandidacyTSE(
   cand: CandidatoEleitoral,
   objective: string,
   cargoAlvo?: string,
+  apoios?: Apoio[],
 ): Promise<{ ok: true; id: string; electoral: string } | { ok: false; error: string }> {
   try {
     const perfil = await perfilFromCandidatoEleitoral(cand);
@@ -180,6 +188,7 @@ export async function selectCandidacyTSE(
       cargo: cargoAlvo || cand.cargo,
       electionYear: cand.ano,
       electoralStatus: "pendente",
+      apoios,
     });
     // ingestão da votação (uma vez, cacheada). Pode falhar por rate limit.
     let electoral = "pendente";
