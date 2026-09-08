@@ -132,7 +132,7 @@ export default async function PainelHome() {
             </p>
             <div className="mt-3 h-2 rounded-[2px] bg-sand">
               <div
-                className="h-full rounded-[2px]"
+                className="bar-grow h-full rounded-[2px]"
                 style={{ width: `${leitura.prontidao.score}%`, background: scoreCor }}
               />
             </div>
@@ -211,7 +211,7 @@ export default async function PainelHome() {
                       <span className="w-24 shrink-0 truncate text-pebble">{b.label}</span>
                       <span className="h-1.5 flex-1 rounded-[2px] bg-sand">
                         <span
-                          className="block h-full rounded-[2px]"
+                          className="bar-grow block h-full rounded-[2px]"
                           style={{
                             width: `${Math.round(b.v * 100)}%`,
                             background: `var(--color-cat-${(bi % 6) + 1})`,

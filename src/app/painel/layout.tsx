@@ -20,6 +20,7 @@ export default async function PainelLayout({
           dashboard: t.common.dashboard,
           comoGanhar: t.comoGanhar.navLabel,
           concorrentes: t.concorrentes.navLabel,
+          partidos: t.partidos.navLabel,
           candidate: locale === "pt" ? "Candidato" : "Candidate",
           collapse: locale === "pt" ? "Recolher" : "Collapse",
           groupOverview: t.nav.groupOverview,

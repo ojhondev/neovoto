@@ -33,6 +33,15 @@ export type MunicipioAlvo = {
   ifet: number;
 };
 
+export type PontoDispersao = {
+  code: string;
+  nome: string;
+  share: number; // 0–1 — voto do candidato / total do município
+  ifet: number; // 0–100
+  gap: number; // votos a capturar
+  alvo: boolean;
+};
+
 export type CenariosResultado = {
   version: string;
   tipoDisputa: "majoritaria" | "proporcional";
@@ -42,6 +51,7 @@ export type CenariosResultado = {
   faltam: number; // >0 falta, <0 folga (no cenário base)
   cenarios: Cenario[];
   municipiosAlvo: MunicipioAlvo[];
+  dispersao: PontoDispersao[];
   sensibilidade: { fator: string; impacto: number }[];
   fontes: string[];
 };
@@ -124,6 +134,7 @@ export function computeCenarios(
   let votosBase = 0;
   let ganhoLacunas = 0; // Σ gap × ifet (potencial ponderado)
   const alvos: MunicipioAlvo[] = [];
+  const dispersao: PontoDispersao[] = [];
   for (const code of totalMun.keys()) {
     const atual = candVotos(code);
     votosBase += atual;
@@ -132,6 +143,17 @@ export function computeCenarios(
     const ifet = args.ifetByCode[code] ?? 0;
     const ponderado = gap * (ifet / 100);
     ganhoLacunas += ponderado;
+    const tot = totalMun.get(code) ?? 0;
+    if (tot > 800) {
+      dispersao.push({
+        code,
+        nome: args.nomeByCode[code] ?? code,
+        share: tot > 0 ? atual / tot : 0,
+        ifet: Math.round(ifet),
+        gap: Math.round(gap),
+        alvo: false,
+      });
+    }
     if (gap > 30) {
       alvos.push({
         code,
@@ -142,6 +164,8 @@ export function computeCenarios(
     }
   }
   alvos.sort((a, b) => b.ganhoPotencial * (b.ifet / 100) - a.ganhoPotencial * (a.ifet / 100));
+  const alvoSet = new Set(alvos.slice(0, 6).map((a) => a.code));
+  for (const p of dispersao) p.alvo = alvoSet.has(p.code);
 
   const totalValidos = [...totalMun.values()].reduce((s, v) => s + v, 0);
   const eleitoradoAprox =
@@ -215,6 +239,7 @@ export function computeCenarios(
     faltam: votosNecessarios - cenBase,
     cenarios,
     municipiosAlvo: alvos.slice(0, 6),
+    dispersao: dispersao.sort((a, b) => b.gap - a.gap).slice(0, 120),
     sensibilidade,
     fontes: [
       temVotoProprio

@@ -4,6 +4,7 @@ import { ArrowRight } from "lucide-react";
 import { ToolShell } from "@/components/app/ToolShell";
 import { Info } from "@/components/app/Info";
 import { ModuloRoadmap } from "@/components/app/ModuloRoadmap";
+import { CenariosScatter } from "@/components/app/CenariosScatter";
 import { getDictionary } from "@/lib/i18n";
 import { getCurrentCandidacy, perfilFrom } from "@/lib/candidacy";
 import { getIfetResumoUF } from "@/lib/territory";
@@ -258,6 +259,20 @@ export default async function Page() {
           ))}
         </div>
       </div>
+
+      {/* dispersão */}
+      {cen.dispersao.length > 5 && (
+        <div className="card mt-6">
+          <h3 className="t-heading text-[20px]">{t.cenarios.scatterTitle}</h3>
+          <div className="mt-3">
+            <CenariosScatter
+              pontos={cen.dispersao}
+              labels={{ x: t.cenarios.scatterX, y: t.cenarios.scatterY, alvo: t.cenarios.scatterAlvo }}
+              locale={locale}
+            />
+          </div>
+        </div>
+      )}
 
       {/* municípios-alvo */}
       {cen.municipiosAlvo.length > 0 && (

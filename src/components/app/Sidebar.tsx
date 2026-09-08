@@ -19,6 +19,7 @@ import {
   LayoutGrid,
   Sigma,
   Handshake,
+  Landmark,
   type LucideIcon,
 } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
@@ -30,6 +31,7 @@ type Labels = {
   concorrentes: string;
   candidate: string;
   collapse: string;
+  partidos: string;
   groupOverview: string;
   groupTerritory: string;
   groupPositioning: string;
@@ -60,7 +62,11 @@ function buildGroups(labels: Labels, toolNames: Record<ToolId, string>) {
     },
     {
       title: labels.groupPositioning,
-      items: [tool("mapa-de-propostas", MessageSquareText), tool("matriz-ideologica", LayoutGrid)],
+      items: [
+        tool("mapa-de-propostas", MessageSquareText),
+        tool("matriz-ideologica", LayoutGrid),
+        { href: "/painel/partidos", label: labels.partidos, icon: Landmark },
+      ],
     },
     {
       title: labels.groupProjection,

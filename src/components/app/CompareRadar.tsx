@@ -54,6 +54,7 @@ export function CompareRadar({
           return (
             <polygon
               key={c.id}
+              className="poly-in"
               points={pts}
               fill={c.cor}
               fillOpacity={0.14}

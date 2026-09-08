@@ -3,7 +3,7 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { ToolShell } from "@/components/app/ToolShell";
 import { Info } from "@/components/app/Info";
-import { IdeologyMatrix } from "@/components/app/IdeologyMatrix";
+import { MatrizViews } from "@/components/app/MatrizViews";
 import { ModuloRoadmap } from "@/components/app/ModuloRoadmap";
 import { getDictionary } from "@/lib/i18n";
 import { getCurrentCandidacy, perfilFrom } from "@/lib/candidacy";
@@ -124,11 +124,12 @@ export default async function Page() {
       </p>
 
       <div className="mt-6">
-        <IdeologyMatrix
+        <MatrizViews
           municipios={matriz.municipios}
           candidato={matriz.candidato}
           ufMedia={matriz.ufMedia}
           nomeYou={nomeYou}
+          quadLabels={t.matriz.quadrants}
           labels={{
             axisEcoLeft: t.matriz.axisEcoLeft,
             axisEcoRight: t.matriz.axisEcoRight,
