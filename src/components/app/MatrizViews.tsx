@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { IdeologyMatrix } from "@/components/app/IdeologyMatrix";
-import { Treemap, type TreeGroup } from "@/components/app/Treemap";
+import { Treemap, type TreeGroup, type TreeNode } from "@/components/app/Treemap";
+import { MatrizRecomendacao } from "@/components/app/MatrizRecomendacao";
 import type { MunicipioMatriz } from "@/lib/intel/matriz";
 import { lerpHex } from "@/lib/viz/colors";
 
@@ -28,7 +29,10 @@ export function MatrizViews({
   locale: string;
   quadLabels: { pp: string; pl: string; lp: string; ll: string };
 }) {
+  const pt = locale === "pt";
   const [view, setView] = useState<"scatter" | "treemap">("scatter");
+  const [selCode, setSelCode] = useState<string | null>(null);
+  const selMun = municipios.find((m) => m.code === selCode) ?? null;
 
   const grupos: TreeGroup[] = [
     { key: "pp", test: (m: MunicipioMatriz) => m.eco < 0 && m.soc >= 0, label: quadLabels.pp },
@@ -42,6 +46,7 @@ export function MatrizViews({
       .sort((a, b) => b.populacao - a.populacao)
       .slice(0, 60)
       .map((m) => ({
+        id: m.code,
         label: m.nome,
         value: m.populacao,
         color: corCampo(m),
@@ -62,11 +67,7 @@ export function MatrizViews({
               (view === v ? "bg-ink text-paper" : "text-fossil hover:text-ink")
             }
           >
-            {v === "scatter"
-              ? locale === "pt"
-                ? "Dispersão"
-                : "Scatter"
-              : "Treemap"}
+            {v === "scatter" ? (pt ? "Dispersão" : "Scatter") : "Treemap"}
           </button>
         ))}
       </div>
@@ -81,7 +82,27 @@ export function MatrizViews({
           locale={locale}
         />
       ) : (
-        <Treemap groups={grupos} locale={locale} />
+        <>
+          <Treemap
+            groups={grupos}
+            locale={locale}
+            selectedId={selCode}
+            onSelect={(n: TreeNode) => setSelCode(n.id === selCode ? null : n.id ?? null)}
+            hint={
+              pt
+                ? "Cada retângulo é um município; o tamanho é a população. Clique para a recomendação de agenda ali."
+                : "Each rectangle is a municipality; size is population. Click for the agenda recommendation there."
+            }
+          />
+          {selMun && (
+            <MatrizRecomendacao
+              m={selMun}
+              candidato={candidato}
+              locale={locale}
+              distanceLabel={labels.distance}
+            />
+          )}
+        </>
       )}
     </div>
   );

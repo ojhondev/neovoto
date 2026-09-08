@@ -448,7 +448,7 @@ const en: Dictionary = {
     version: "Version",
     sources: "Sources",
     method:
-      "Municipality position = vote-weighted average of party positions, with a light GDP-per-capita adjustment. The party scale is an editable calibration, not TSE data.",
+      "Municipality position = vote-weighted average of party positions, with a light GDP-per-capita adjustment. The party scale is calibrated against the Bolognesi, Ribeiro & Codato expert survey (2022 round, 0–10) — max divergence 0.1 point. It's editable, not TSE data.",
     pending: "Next phases: specific thematic axes (safety, environment), historical series, region clustering.",
     quadrants: {
       pp: "Statist + conservative",

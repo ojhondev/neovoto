@@ -156,58 +156,96 @@ export function computeMatriz(
     fontes: [
       "TSE / Base dos Dados — votação por partido e município",
       "IBGE — PIB dos Municípios (ajuste de contexto)",
-      "NeoVoto — escala ideológica de partido (editável)",
+      "Bolognesi, Ribeiro & Codato (2022) — survey de especialistas (escala ideológica)",
     ],
   };
 }
 
-/** Traduz a posição de um município em recomendação de agenda. Pura, sem I/O. */
+export type RecomendacaoMatriz = {
+  /** classificação em linguagem simples ("centro-direita, mais conservador nos costumes") */
+  classe: string;
+  /** o que o eleitorado dali quer ouvir (temas concretos) */
+  agenda: string;
+  /** como tratar pautas de costumes ali ("" quando não há alerta) */
+  tom: string;
+  /** leitura da distância até o candidato */
+  ressonancia: string;
+  /** tudo junto, para o recorte do relatório */
+  texto: string;
+};
+
+function classeEco(eco: number, pt: boolean): string {
+  if (eco <= -0.5) return pt ? "à esquerda no eixo econômico (Estado, redistribuição)" : "economically left (state, redistribution)";
+  if (eco <= -0.15) return pt ? "de centro-esquerda no eixo econômico" : "economically centre-left";
+  if (eco < 0.15) return pt ? "de centro no eixo econômico" : "economically centrist";
+  if (eco < 0.5) return pt ? "de centro-direita no eixo econômico (mercado)" : "economically centre-right (market)";
+  return pt ? "à direita no eixo econômico (mercado, liberalismo)" : "economically right (market, liberalism)";
+}
+function classeSoc(soc: number, pt: boolean): string {
+  if (soc <= -0.2) return pt ? "liberal nos costumes" : "socially liberal";
+  if (soc < 0.2) return pt ? "moderado nos costumes" : "moderate on social values";
+  return pt ? "conservador nos costumes" : "socially conservative";
+}
+
+/**
+ * Traduz a posição ideológica de um município/UF em recomendação de agenda
+ * acionável, em linguagem de campanha. Pura, sem I/O.
+ */
 export function recomendaMunicipio(
   m: { nome: string; eco: number; soc: number; distancia: number },
   cand: { eco: number; soc: number; conhecido: boolean },
   locale: "pt" | "en",
-): string {
+): RecomendacaoMatriz {
   const pt = locale === "pt";
-  const temasEco =
+
+  const classe = `${classeEco(m.eco, pt)}, ${classeSoc(m.soc, pt)}`;
+
+  const agenda =
     m.eco <= -0.15
       ? pt
-        ? "trabalho e geração de emprego, saúde pública, apoio a quem tem menos"
-        : "jobs, public healthcare, support for those who have less"
+        ? `Aborde trabalho e geração de emprego, saúde pública (SUS), custo de vida e apoio a quem tem menos. Fale em concreto — obra, posto, vaga — não em ideologia.`
+        : `Address jobs, public healthcare, cost of living and support for those who have less. Talk concretely — works, clinics, jobs.`
       : m.eco >= 0.15
         ? pt
-          ? "custo de vida, pequeno negócio e desburocratização, segurança"
-          : "cost of living, small business and deregulation, safety"
+          ? `Aborde custo de vida, apoio ao pequeno negócio e desburocratização, segurança pública e eficiência do gasto. Linguagem de resultado, não de bandeira.`
+          : `Address cost of living, small business support and deregulation, public safety and spending efficiency.`
         : pt
-          ? "infraestrutura, saúde e educação — pautas de consenso"
-          : "infrastructure, health and education — consensus themes";
-  const tomSoc =
+          ? `Terreno de consenso: infraestrutura, saúde, educação e emprego rendem sem dividir. Evite temas polarizadores.`
+          : `Consensus ground: infrastructure, health, education and jobs pay off without dividing.`;
+
+  const tom =
     m.soc >= 0.2
       ? pt
-        ? " Evite pautas de costumes na ofensiva; se o tema surgir, responda pelo lado da segurança e da ordem."
-        : " Avoid pushing social-values themes; if raised, answer via safety and order."
+        ? `Não leve pautas de costumes na ofensiva. Se o tema vier, responda pelo lado da segurança, da família e da ordem.`
+        : `Don't push social-values themes. If raised, answer via safety, family and order.`
       : m.soc <= -0.2
         ? pt
-          ? " Há espaço para pautas de direitos e meio ambiente sem custo."
-          : " There's room for rights and environment themes at no cost."
+          ? `Há espaço para pautas de direitos e meio ambiente sem custo eleitoral.`
+          : `There's room for rights and environment themes at no electoral cost.`
         : "";
-  const dist =
-    m.distancia <= 0.55
+
+  const ressonancia =
+    !cand.conhecido
       ? pt
-        ? `Seu discurso já ressoa em ${m.nome} — reforce presença e mobilização.`
-        : `Your message already resonates in ${m.nome} — reinforce presence.`
-      : m.distancia >= 1.0
+        ? `O partido do candidato não está na escala calibrada — a distância não pôde ser medida.`
+        : `The candidate's party isn't in the calibrated scale — distance couldn't be measured.`
+      : m.distancia <= 0.55
         ? pt
-          ? `${m.nome} está longe do seu eixo (${m.distancia.toFixed(2)}): o discurso precisa de tradução, não de confronto ideológico.`
-          : `${m.nome} is far from your axis (${m.distancia.toFixed(2)}): the message needs translation, not ideological confrontation.`
-        : pt
-          ? `${m.nome} é terreno intermediário — dá para crescer com a agenda certa.`
-          : `${m.nome} is middle ground — you can grow with the right agenda.`;
-  const eixoTxt = pt
-    ? `${m.eco <= -0.15 ? "à esquerda no eixo econômico" : m.eco >= 0.15 ? "à direita no eixo econômico" : "no centro econômico"}`
-    : `${m.eco <= -0.15 ? "left on the economic axis" : m.eco >= 0.15 ? "right on the economic axis" : "economically centrist"}`;
-  return pt
-    ? `${dist} O eleitorado ali é ${eixoTxt}: aborde ${temasEco}.${tomSoc}`
-    : `${dist} The electorate there is ${eixoTxt}: address ${temasEco}.${tomSoc}`;
+          ? `O discurso do candidato já ressoa em ${m.nome} (distância ${m.distancia.toFixed(2)}). Aqui o jogo é presença e mobilização, não convencimento.`
+          : `The candidate's message already resonates in ${m.nome} (distance ${m.distancia.toFixed(2)}). Here it's presence and turnout, not persuasion.`
+        : m.distancia >= 1.0
+          ? pt
+            ? `${m.nome} está longe do eixo do candidato (distância ${m.distancia.toFixed(2)}): traduza a mensagem para a linguagem local — nunca entre por confronto ideológico.`
+            : `${m.nome} is far from the candidate's axis (distance ${m.distancia.toFixed(2)}): translate the message locally — never enter via ideological confrontation.`
+          : pt
+            ? `${m.nome} é terreno intermediário (distância ${m.distancia.toFixed(2)}): dá para crescer com a agenda certa e sem estridência.`
+            : `${m.nome} is middle ground (distance ${m.distancia.toFixed(2)}): you can grow with the right agenda.`;
+
+  const texto = pt
+    ? `Em ${m.nome}, o eleitorado é ${classe}. ${agenda}${tom ? " " + tom : ""} ${ressonancia}`
+    : `In ${m.nome}, the electorate is ${classe}. ${agenda}${tom ? " " + tom : ""} ${ressonancia}`;
+
+  return { classe, agenda, tom, ressonancia, texto };
 }
 
 function mediana(xs: number[]): number {

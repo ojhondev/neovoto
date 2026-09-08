@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { recomendaMunicipio, type MunicipioMatriz } from "@/lib/intel/matriz";
-import { ClipButton } from "@/components/app/ClipButton";
+import { type MunicipioMatriz } from "@/lib/intel/matriz";
+import { MatrizRecomendacao } from "@/components/app/MatrizRecomendacao";
 
 type Labels = {
   axisEcoLeft: string;
@@ -47,9 +47,6 @@ export function IdeologyMatrix({
   const [hover, setHover] = useState<MunicipioMatriz | null>(null);
   const [sel, setSel] = useState<MunicipioMatriz | null>(null);
   const loc = locale === "pt" ? "pt" : "en";
-  const rec = sel
-    ? recomendaMunicipio(sel, { eco: candidato.eco, soc: candidato.soc, conhecido: candidato.conhecido ?? true }, loc)
-    : null;
 
   const maxPop = Math.max(...municipios.map((m) => m.populacao), 1);
   const rOf = (pop: number) => 2.5 + Math.sqrt(pop / maxPop) * 12;
@@ -62,6 +59,7 @@ export function IdeologyMatrix({
   };
 
   return (
+    <>
     <div className="grid gap-5 lg:grid-cols-[1fr_260px]">
       <div className="overflow-x-auto rounded-[var(--radius-card)] border border-ash bg-map-bg p-2">
         <svg viewBox={`0 0 ${W} ${H}`} className="w-full min-w-[440px]" role="img">
@@ -153,28 +151,17 @@ export function IdeologyMatrix({
         </div>
       </div>
 
-      {/* recomendação acionável do município selecionado */}
-      {sel && rec && (
-        <div className="mt-4 rounded-[var(--radius-card)] border-l-2 border-olive bg-paper p-4 sm:col-span-2 lg:col-span-2">
-          <div className="flex items-start justify-between gap-3">
-            <p className="t-eyebrow mb-1">
-              {loc === "pt" ? "O que fazer em" : "What to do in"} {sel.nome}
-            </p>
-            <ClipButton
-              item={{
-                modulo: loc === "pt" ? "Matriz Ideológica" : "Ideological Matrix",
-                titulo: `${loc === "pt" ? "Agenda para" : "Agenda for"} ${sel.nome}`,
-                texto: rec,
-              }}
-            />
-          </div>
-          <p className="text-body-sm text-ink">{rec}</p>
-          <p className="font-ui mt-2 text-caption text-pebble">
-            eco {sel.eco} · soc {sel.soc} · {labels.distance} {sel.distancia} ·{" "}
-            {sel.populacao.toLocaleString(locale)} {loc === "pt" ? "hab." : "inhab."}
-          </p>
-        </div>
-      )}
     </div>
+
+      {/* recomendação acionável do município selecionado */}
+      {sel && (
+        <MatrizRecomendacao
+          m={sel}
+          candidato={candidato}
+          locale={locale}
+          distanceLabel={labels.distance}
+        />
+      )}
+    </>
   );
 }

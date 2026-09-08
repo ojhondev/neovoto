@@ -446,7 +446,7 @@ const pt = {
     version: "Versão",
     sources: "Fontes",
     method:
-      "Posição do município = média das posições dos partidos ponderada pelo voto, com ajuste leve pelo PIB per capita. A escala de partido é uma calibração editável, não um dado do TSE.",
+      "Posição do município = média das posições dos partidos ponderada pelo voto, com ajuste leve pelo PIB per capita. A escala de partido é calibrada pelo survey de especialistas de Bolognesi, Ribeiro & Codato (rodada 2022, 0–10) — divergência máxima de 0,1 ponto. É editável, não é um dado do TSE.",
     pending: "Nas próximas fases: eixos temáticos específicos (segurança, meio ambiente), série histórica e agrupamento de regiões.",
     quadrants: {
       pp: "Estatista + conservador",

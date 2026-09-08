@@ -7,6 +7,8 @@ export type TreeNode = {
   value: number;
   color: string;
   sub?: string;
+  /** id opaco (ex.: código do município) devolvido no onSelect */
+  id?: string;
 };
 
 export type TreeGroup = {
@@ -69,11 +71,17 @@ export function Treemap({
   width = 720,
   height = 460,
   locale,
+  onSelect,
+  selectedId,
+  hint,
 }: {
   groups: TreeGroup[];
   width?: number;
   height?: number;
   locale: string;
+  onSelect?: (node: TreeNode) => void;
+  selectedId?: string | null;
+  hint?: string;
 }) {
   const [hover, setHover] = useState<(TreeNode & { grupo: string }) | null>(null);
 
@@ -104,6 +112,8 @@ export function Treemap({
                       key={nn.label + ni}
                       onMouseEnter={() => setHover({ ...nn, grupo: g.label })}
                       onMouseLeave={() => setHover(null)}
+                      onClick={() => onSelect?.(nn)}
+                      style={{ cursor: onSelect ? "pointer" : "default" }}
                     >
                       <rect
                         x={c.x}
@@ -112,6 +122,12 @@ export function Treemap({
                         height={Math.max(0, c.h - 0.7)}
                         fill={nn.color}
                         fillOpacity={hover?.label === nn.label ? 1 : 0.82}
+                        stroke={
+                          selectedId != null && nn.id === selectedId
+                            ? "var(--color-ink)"
+                            : "transparent"
+                        }
+                        strokeWidth={1.5}
                       />
                       {c.w > 44 && c.h > 16 && (
                         <text x={c.x + 3} y={c.y + 11} className="fill-white" style={{ fontSize: 9 }}>
@@ -136,9 +152,10 @@ export function Treemap({
           </div>
         ) : (
           <p className="text-caption text-pebble">
-            {locale === "pt"
-              ? "Cada retângulo é um município; o tamanho é a população. Passe o mouse para ver."
-              : "Each rectangle is a municipality; size is population. Hover to see."}
+            {hint ??
+              (locale === "pt"
+                ? "Cada retângulo é um município; o tamanho é a população. Passe o mouse para ver."
+                : "Each rectangle is a municipality; size is population. Hover to see.")}
           </p>
         )}
       </div>
