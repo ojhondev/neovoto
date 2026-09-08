@@ -4,16 +4,18 @@ import { ArrowRight } from "lucide-react";
 import { ToolShell } from "@/components/app/ToolShell";
 import { Info } from "@/components/app/Info";
 import { InfluenceGraph } from "@/components/app/InfluenceGraph";
+import { RedePessoasGraph } from "@/components/app/RedePessoasGraph";
 import { ModuloRoadmap } from "@/components/app/ModuloRoadmap";
 import { getDictionary } from "@/lib/i18n";
 import { getCurrentCandidacy, perfilFrom } from "@/lib/candidacy";
 import { getIfetResumoUF, getIfetResumoNacional } from "@/lib/territory";
-import { getVotacaoPartidoUF, getVotacaoPartidoNacional } from "@/lib/data-sources/regional";
+import { getVotacaoPartidoUF, getVotacaoPartidoNacional, getRollCallCamara } from "@/lib/data-sources/regional";
 import { getBancadaCamara } from "@/lib/data-sources/camara";
 import { getEstadoPorSigla } from "@/lib/data-sources/ibge";
 import { escopoNacional, PLEITO_NACIONAL } from "@/lib/escopo";
 import type { Cargo } from "@/lib/cargos";
 import { computeInfluencia, INFLUENCIA_PLEITO } from "@/lib/intel/influencia";
+import { computeRedePessoas } from "@/lib/intel/rede-pessoas";
 
 export const metadata: Metadata = { title: "Mapa de Influência" };
 
@@ -29,20 +31,20 @@ export default async function Page() {
 
   const howItWorks = pt
     ? [
-        "Puxa a votação por partido e município no último pleito proporcional (Base dos Dados).",
-        "Dimensiona cada partido pelo voto e posiciona pelo eixo ideológico.",
-        "Liga dois partidos quando disputam os mesmos eleitores nos mesmos municípios.",
+        "Monta a rede de mandatos: cada deputado federal da UF, posicionado pelo ponto ideal das votações nominais recentes do plenário (Câmara).",
+        "Liga dois deputados quando votam junto em ≥ 75% das votações; deriva quem é aliado sólido, aliado só por partido e o bloco adversário (e o quão coeso ele é).",
+        "Como contexto, a rede de partidos no estado: voto no último pleito proporcional, eixo ideológico e sobreposição de base geográfica.",
         "Deriva os blocos aliado / adversário / neutro e a dependência territorial.",
       ]
     : [
-        "Pulls party vote by municipality in the last proportional election (Base dos Dados).",
-        "Sizes each party by vote and positions it by ideological axis.",
-        "Links two parties when they compete for the same voters in the same municipalities.",
+        "Builds the mandate network: each federal deputy of the state, placed by their ideal point over recent nominal floor votes (Chamber).",
+        "Links two deputies who vote together ≥ 75% of the time; derives solid allies, party-only allies and the opponent bloc (and how cohesive it is).",
+        "As context, the party network in the state: vote in the last proportional election, ideological axis and geographic base overlap.",
         "Derives the ally / opponent / neutral blocs and the territorial dependency.",
       ];
   const outputs = pt
-    ? ["Rede de partidos por voto, ideologia e sobreposição de base.", "Peso do seu campo vs. o do adversário.", "Onde o adversário é frágil e de quem o seu voto depende."]
-    : ["Party network by vote, ideology and base overlap.", "Weight of your field vs. the opponent's.", "Where the opponent is fragile and who your vote depends on."];
+    ? ["Rede de mandatos da bancada federal por votação nominal conjunta.", "Aliados sólidos vs. aliados só de partido; coesão do bloco adversário.", "Rede de partidos no estado, peso do seu campo e fragilidades territoriais do adversário."]
+    : ["Federal delegation network by joint nominal votes.", "Solid allies vs. party-only allies; opponent-bloc cohesion.", "Party network in the state, weight of your field and the opponent's territorial fragilities."];
 
   const cargo = (candidacy?.cargo as Cargo | null) ?? perfil?.cargo ?? null;
   const nacional = escopoNacional(cargo);
@@ -88,6 +90,12 @@ export default async function Page() {
   const inf = computeInfluencia(votacao, perfil.partido, bancada, resumo.nomeByCode);
   const ufNome = nacional ? "Brasil" : (estado?.nome ?? perfil.uf);
 
+  const rede = nacional
+    ? null
+    : await getRollCallCamara(6)
+        .then((rc) => (rc.votacoes.length >= 8 ? computeRedePessoas(rc, perfil.uf!, perfil.partido) : null))
+        .catch(() => null);
+
   const base = resumo.base;
   const alcanceContexto = base?.modo === "contexto";
   const topAlcance = base
@@ -104,9 +112,15 @@ export default async function Page() {
       ? "deputado federal 2022"
       : "federal deputy 2022";
 
+  const redeTxt =
+    rede && rede.aliadosSolidos.length > 0
+      ? pt
+        ? `Na bancada federal de ${ufNome}, seus aliados de voto mais firmes são ${rede.aliadosSolidos.slice(0, 3).map((n) => n.nome).join(", ")}${rede.aliadosPorCortesia[0] ? ` — mas ${rede.aliadosPorCortesia[0].nome} (${rede.aliadosPorCortesia[0].partido}) vota bem menos com o campo` : ""}. O bloco adversário tem ${Math.round(rede.coesaoAdversario * 100)}% de coesão. `
+        : `In ${ufNome}'s federal delegation, your firmest voting allies are ${rede.aliadosSolidos.slice(0, 3).map((n) => n.nome).join(", ")}. The opponent bloc votes together ${Math.round(rede.coesaoAdversario * 100)}% of the time. `
+      : "";
   const conclusao = pt
-    ? `Seu campo soma ${Math.round(inf.aliado.share * 100)}% do voto de ${ufNome} (${inf.aliado.bancada} deputados); o campo adversário, ${Math.round(inf.adversario.share * 100)}%. ${inf.dependencias[0] ? `O seu voto em ${inf.dependencias[0].nome} depende do ${inf.dependencias[0].principal}. ` : ""}${inf.fragilidades[0] ? `O adversário está vulnerável em ${inf.fragilidades.slice(0, 3).map((f) => f.nome).join(", ")}.` : ""}`
-    : `Your field holds ${Math.round(inf.aliado.share * 100)}% of ${ufNome}'s vote (${inf.aliado.bancada} deputies); the opponent field, ${Math.round(inf.adversario.share * 100)}%. ${inf.dependencias[0] ? `Your vote in ${inf.dependencias[0].nome} depends on ${inf.dependencias[0].principal}. ` : ""}${inf.fragilidades[0] ? `The opponent is vulnerable in ${inf.fragilidades.slice(0, 3).map((f) => f.nome).join(", ")}.` : ""}`;
+    ? `${redeTxt}Seu campo soma ${Math.round(inf.aliado.share * 100)}% do voto de ${ufNome} (${inf.aliado.bancada} deputados); o campo adversário, ${Math.round(inf.adversario.share * 100)}%. ${inf.fragilidades[0] ? `O adversário está vulnerável em ${inf.fragilidades.slice(0, 3).map((f) => f.nome).join(", ")}.` : ""}`
+    : `${redeTxt}Your field holds ${Math.round(inf.aliado.share * 100)}% of ${ufNome}'s vote (${inf.aliado.bancada} deputies); the opponent field, ${Math.round(inf.adversario.share * 100)}%. ${inf.fragilidades[0] ? `The opponent is vulnerable in ${inf.fragilidades.slice(0, 3).map((f) => f.nome).join(", ")}.` : ""}`;
 
   const blocos = [
     { info: t.influencia.blocAlly, b: inf.aliado, cor: "var(--color-urg-low)" },
@@ -160,7 +174,61 @@ export default async function Page() {
         )}
       </div>
 
+      {rede && rede.nos.length >= 3 && (
+        <div className="card mt-6">
+          <h3 className="t-heading flex items-center text-[20px]">
+            {pt ? "Rede de mandatos — bancada federal de " : "Mandate network — federal delegation of "}
+            {ufNome}
+          </h3>
+          <p className="font-ui mt-1 max-w-2xl text-caption text-pebble">
+            {pt
+              ? `Cada ponto é um deputado federal. Posição = ponto ideal das ${rede.nVotacoes} votações nominais mais recentes do plenário (quem vota parecido fica junto). Linha = concordância de voto ≥ 75%.`
+              : `Each dot is a federal deputy. Position = ideal point over the ${rede.nVotacoes} most recent nominal floor votes. A line = vote agreement ≥ 75%.`}
+          </p>
+          <div className="mt-4">
+            <RedePessoasGraph
+              nos={rede.nos}
+              arestas={rede.arestas}
+              labels={{
+                x: pt ? "ponto ideal (votação nominal)" : "ideal point (roll-call)",
+                y: pt ? "vota com o seu campo" : "votes with your field",
+                ally: t.influencia.ally,
+                foe: t.influencia.foe,
+                neutral: t.influencia.neutral,
+              }}
+            />
+          </div>
+
+          <div className="mt-5 grid gap-4 md:grid-cols-3">
+            {[
+              { t: pt ? "Aliados sólidos" : "Solid allies", s: pt ? "campo afim e votam junto" : "same field, vote together", l: rede.aliadosSolidos, c: "var(--color-urg-low)" },
+              { t: pt ? "Aliados por cortesia" : "Nominal allies", s: pt ? "partido afim, voto independente" : "same field, independent vote", l: rede.aliadosPorCortesia, c: "var(--color-urg-med)" },
+              { t: pt ? "Bloco adversário" : "Opponent bloc", s: pt ? `coesão ${Math.round(rede.coesaoAdversario * 100)}%` : `cohesion ${Math.round(rede.coesaoAdversario * 100)}%`, l: rede.adversarios, c: "var(--color-urg-crit)" },
+            ].map((col) => (
+              <div key={col.t}>
+                <p className="t-eyebrow" style={{ color: col.c }}>{col.t}</p>
+                <p className="font-ui text-[11px] text-pebble">{col.s}</p>
+                <ul className="font-ui mt-2 divide-y divide-ash text-body-sm">
+                  {col.l.map((n) => (
+                    <li key={n.id} className="flex items-center justify-between gap-2 py-1.5">
+                      <span className="min-w-0 truncate text-smoke">
+                        {n.nome} <span className="text-pebble">({n.partido})</span>
+                      </span>
+                      <span className="shrink-0 text-caption text-fossil">
+                        {Math.round(n.concordanciaComCampo * 100)}%
+                      </span>
+                    </li>
+                  ))}
+                  {col.l.length === 0 && <li className="py-1.5 text-pebble">—</li>}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="mt-6">
+        <p className="t-eyebrow mb-2">{pt ? "Contexto: o campo por partido no estado" : "Context: the field by party in the state"}</p>
         <InfluenceGraph
           nos={inf.nos}
           arestas={inf.arestas}

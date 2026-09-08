@@ -144,6 +144,119 @@ export async function getBancadaCamara(): Promise<Record<string, number>> {
   return out;
 }
 
+// ---------- Votações nominais (roll-call) ----------
+
+export type VotoNominal = 1 | -1 | 0; // Sim / Não / outro
+
+export type RollCall = {
+  votacoes: { id: string; descricao: string; data: string }[];
+  /** deputadoId → perfil + vetor de votos alinhado a `votacoes` */
+  byDeputado: Record<string, { nome: string; partido: string; uf: string; votos: VotoNominal[] }>;
+};
+
+function classificaVoto(tipo: string): VotoNominal {
+  const t = (tipo || "").trim().toLowerCase();
+  if (t === "sim") return 1;
+  if (t === "não" || t === "nao") return -1;
+  return 0;
+}
+
+type VotacaoLista = { id: string; siglaOrgao: string; descricao: string; data: string };
+
+async function listarVotacoesJanela(ini: string, fim: string): Promise<VotacaoLista[]> {
+  const out: VotacaoLista[] = [];
+  let url: string | null =
+    `${BASE}/votacoes?dataInicio=${ini}&dataFim=${fim}&itens=100&ordenarPor=dataHoraRegistro&ordem=DESC`;
+  for (let p = 0; p < 12 && url; p++) {
+    try {
+      const res: Response = await fetch(url, {
+        headers: { Accept: "application/json" },
+        next: { revalidate: 60 * 60 * 24 },
+      });
+      if (!res.ok) break;
+      const j: { dados?: VotacaoLista[]; links?: { rel: string; href: string }[] } = await res.json();
+      out.push(...(j.dados ?? []));
+      url = j.links?.find((l) => l.rel === "next")?.href ?? null;
+    } catch {
+      break;
+    }
+  }
+  return out;
+}
+
+/** Votações nominais do plenário (janela longa — ano eleitoral tem poucas), com o
+ *  voto de cada deputado. Cache 24h. */
+export async function getRollCall(meses = 18): Promise<RollCall> {
+  const hoje = new Date();
+  const janelas: [string, string][] = [];
+  for (let i = 0; i < Math.ceil(meses / 3); i++) {
+    const fim = new Date(hoje);
+    fim.setMonth(fim.getMonth() - i * 3);
+    const ini = new Date(fim);
+    ini.setMonth(ini.getMonth() - 3);
+    janelas.push([ini.toISOString().slice(0, 10), fim.toISOString().slice(0, 10)]);
+  }
+
+  const listas = await Promise.all(janelas.map((j) => listarVotacoesJanela(j[0], j[1])));
+  // pré-filtro barato: a descrição de uma votação nominal registrada traz
+  // "Sim: N; Não: M; ...". As demais são simbólicas / procedimentais.
+  const RE_NOMINAL = /sim:\s*\d+;\s*n[ãa]o:\s*\d+/i;
+  const plen = listas
+    .flat()
+    .filter((v) => v.siglaOrgao === "PLEN" && RE_NOMINAL.test(v.descricao))
+    .slice(0, 44);
+
+  type VotoRow = { tipoVoto: string; deputado_: { id: number; nome: string; siglaPartido: string; siglaUf: string } };
+  const brutos = await Promise.all(
+    plen.map(async (v) => {
+      try {
+        const r = await get<{ dados: VotoRow[] }>(`/votacoes/${v.id}/votos`, 60 * 60 * 24 * 7);
+        return { v, votos: r.dados ?? [] };
+      } catch {
+        return { v, votos: [] as VotoRow[] };
+      }
+    }),
+  );
+
+  const validos = brutos.filter((b) => b.votos.length >= 150);
+  const votacoes: RollCall["votacoes"] = validos.map((b) => ({
+    id: b.v.id,
+    descricao: b.v.descricao,
+    data: b.v.data,
+  }));
+  const n = votacoes.length;
+  const byDeputado: RollCall["byDeputado"] = {};
+
+  validos.forEach((b, col) => {
+    for (const x of b.votos) {
+      const id = String(x.deputado_.id);
+      if (!byDeputado[id]) {
+        byDeputado[id] = {
+          nome: x.deputado_.nome,
+          partido: (x.deputado_.siglaPartido ?? "").toUpperCase(),
+          uf: x.deputado_.siglaUf ?? "",
+          votos: new Array(n).fill(0),
+        };
+      }
+      byDeputado[id].votos[col] = classificaVoto(x.tipoVoto);
+    }
+  });
+
+  return { votacoes, byDeputado };
+}
+
+/** Federações partidárias de 2022 (para agrupar no grafo). */
+export const FEDERACOES_2022: Record<string, string> = {
+  PT: "FE Brasil da Esperança",
+  PCDOB: "FE Brasil da Esperança",
+  "PC DO B": "FE Brasil da Esperança",
+  PV: "FE Brasil da Esperança",
+  PSDB: "Federação PSDB Cidadania",
+  CIDADANIA: "Federação PSDB Cidadania",
+  PSOL: "Federação PSOL Rede",
+  REDE: "Federação PSOL Rede",
+};
+
 export function resumirProposicoes(props: Proposicao[]) {
   const porTipo = new Map<string, number>();
   let comEmenta = 0;

@@ -71,3 +71,13 @@ export const getVotacaoPorZona = unstable_cache(
   ["votacao-por-zona-v1"],
   { revalidate: 60 * 60 * 24 * 30 },
 );
+
+/** Votações nominais recentes do plenário da Câmara + voto de cada deputado. */
+export const getRollCallCamara = unstable_cache(
+  async (meses: number) => {
+    const { getRollCall } = await import("@/lib/data-sources/camara");
+    return getRollCall(meses);
+  },
+  ["roll-call-camara-v2"],
+  { revalidate: 60 * 60 * 24 },
+);
