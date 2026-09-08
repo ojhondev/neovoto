@@ -13,9 +13,10 @@
 import type { Dictionary } from "@/lib/i18n";
 import type { Candidacy } from "@/db/schema";
 import type { PerfilPolitico } from "@/lib/politico";
-import { getIfetResumoUF } from "@/lib/territory";
+import { getIfetResumoUF, getIfetResumoNacional } from "@/lib/territory";
 import { getAgendaCamara } from "@/lib/data-sources/agenda";
-import { getVotacaoPartidoUF } from "@/lib/data-sources/regional";
+import { getVotacaoPartidoUF, getVotacaoPartidoNacional } from "@/lib/data-sources/regional";
+import { escopoNacional, PLEITO_NACIONAL } from "@/lib/escopo";
 import { computeRadar, type RadarResultado } from "@/lib/intel/radar";
 import { computeMatriz, MATRIZ_PLEITO, type MatrizResultado } from "@/lib/intel/matriz";
 import type { IfetResultado } from "@/lib/intel/ifet";
@@ -74,16 +75,23 @@ export async function analisarCandidatura(
   const uf = perfil.uf || candidacy.uf || "";
   const cargo = (candidacy.cargo as Cargo | null) ?? perfil.cargo ?? null;
   const cargoLabel = cargo ? CARGO_LABEL[cargo]?.[locale] ?? cargo : "";
+  const nacional = escopoNacional(cargo);
 
   // roda os motores disponíveis em paralelo
   const [resumo, agenda, votacaoPartido] = await Promise.all([
-    uf ? getIfetResumoUF(uf, candidacy.id).catch(() => null) : Promise.resolve(null),
+    nacional
+      ? getIfetResumoNacional(candidacy.id).catch(() => null)
+      : uf
+        ? getIfetResumoUF(uf, candidacy.id).catch(() => null)
+        : Promise.resolve(null),
     getAgendaCamara(JANELA_DIAS).catch(() => []),
-    uf
-      ? getVotacaoPartidoUF(MATRIZ_PLEITO.ano, MATRIZ_PLEITO.turno, uf, MATRIZ_PLEITO.cargo).catch(
-          () => [],
-        )
-      : Promise.resolve([]),
+    nacional
+      ? getVotacaoPartidoNacional(PLEITO_NACIONAL.ano, PLEITO_NACIONAL.turno, PLEITO_NACIONAL.cargo).catch(() => [])
+      : uf
+        ? getVotacaoPartidoUF(MATRIZ_PLEITO.ano, MATRIZ_PLEITO.turno, uf, MATRIZ_PLEITO.cargo).catch(
+            () => [],
+          )
+        : Promise.resolve([]),
   ]);
 
   const radar =
@@ -123,6 +131,9 @@ export async function analisarCandidatura(
     const topNomes = prioridade.slice(0, 3).map((m) => m.nome);
     const temVoto = !!resumo.eleitoralByCode;
     const concentracao = concentracaoTop(ifet, 5); // % do "peso" nos 5 maiores
+    const un = nacional
+      ? { s: pt ? "UF" : "state", p: pt ? "UFs" : "states", por: pt ? "UF" : "state" }
+      : { s: pt ? "município" : "municipality", p: pt ? "municípios" : "municipalities", por: pt ? "município" : "municipality" };
 
     territorioScore = Math.round(
       40 + concentracao * 40 + (temVoto ? 20 : 0),
@@ -132,19 +143,19 @@ export async function analisarCandidatura(
       chave: "territorio",
       titulo: pt ? "Território" : "Territory",
       valor: String(prioridade.length),
-      rotulo: pt ? "municípios prioridade máxima" : "top-priority municipalities",
+      rotulo: pt ? `${un.p} prioridade máxima` : `top-priority ${un.p}`,
       status: temVoto ? "ok" : "atencao",
       href: "/painel/mapa-de-calor",
       leitura: pt
-        ? `Sua força se concentra em ${prioridade.length} ${prioridade.length === 1 ? "município" : "municípios"} de prioridade máxima${topNomes.length ? ` (${topNomes.join(", ")})` : ""}. ${
+        ? `Sua força se concentra em ${prioridade.length} ${prioridade.length === 1 ? un.s : un.p} de prioridade máxima${topNomes.length ? ` (${topNomes.join(", ")})` : ""}. ${
             temVoto
-              ? `A votação real por município está carregada (${resumo.eleitoralTotal?.toLocaleString(locale)} votos em ${resumo.eleitoralAno}).`
-              : "A votação real por município ainda não foi carregada — o IFET está usando só o contexto territorial."
+              ? `A votação real por ${un.por} está carregada (${resumo.eleitoralTotal?.toLocaleString(locale)} votos em ${resumo.eleitoralAno}).`
+              : `A votação real por ${un.por} ainda não foi carregada — o IFET está usando só o contexto territorial.`
           }`
-        : `Your strength concentrates in ${prioridade.length} top-priority ${prioridade.length === 1 ? "municipality" : "municipalities"}${topNomes.length ? ` (${topNomes.join(", ")})` : ""}. ${
+        : `Your strength concentrates in ${prioridade.length} top-priority ${prioridade.length === 1 ? un.s : un.p}${topNomes.length ? ` (${topNomes.join(", ")})` : ""}. ${
             temVoto
-              ? `Real vote by municipality is loaded (${resumo.eleitoralTotal?.toLocaleString(locale)} votes in ${resumo.eleitoralAno}).`
-              : "Real vote by municipality isn't loaded yet — IFET is using territorial context only."
+              ? `Real vote by ${un.por} is loaded (${resumo.eleitoralTotal?.toLocaleString(locale)} votes in ${resumo.eleitoralAno}).`
+              : `Real vote by ${un.por} isn't loaded yet — IFET is using territorial context only.`
           }`,
       barras: quadranteBarras(ifet, pt),
     });
@@ -156,12 +167,12 @@ export async function analisarCandidatura(
           ? `Concentrar agenda e recurso em ${topNomes.slice(0, 3).join(", ")}`
           : `Concentrate agenda and budget on ${topNomes.slice(0, 3).join(", ")}`,
         porque: pt
-          ? `São os municípios com mais voto em jogo e eleitorado conquistável para ${cargoLabel || "a disputa"}.`
+          ? `São ${nacional ? "as UFs" : "os municípios"} com mais voto em jogo e eleitorado conquistável para ${cargoLabel || "a disputa"}.`
           : `They hold the most votes at stake and the most persuadable electorate.`,
         href: "/painel/mapa-de-calor",
       });
     }
-    if (!resumo.eleitoralByCode && candidacy.source === "tse") {
+    if (!resumo.eleitoralByCode && candidacy.source === "tse" && !nacional) {
       acoes.push({
         ordem: 5,
         titulo: pt ? "Carregar a votação por município do candidato" : "Load the candidate's vote by municipality",
@@ -325,8 +336,8 @@ export async function analisarCandidatura(
         status: distUf > 1.0 ? "atencao" : "ok",
         href: "/painel/matriz-ideologica",
         leitura: pt
-          ? `${distUf > 1.0 ? "Distância grande" : "Distância moderada"} entre o seu campo e a média do estado. Suas regiões mais afins: ${afins.join(", ")}. Fora delas, o discurso precisa de tradução.`
-          : `${distUf > 1.0 ? "Large" : "Moderate"} distance between your field and the state average. Your most aligned regions: ${afins.join(", ")}. Elsewhere, the message needs translation.`,
+          ? `${distUf > 1.0 ? "Distância grande" : "Distância moderada"} entre o seu campo e a média ${nacional ? "nacional" : "do estado"}. Suas ${nacional ? "UFs" : "regiões"} mais afins: ${afins.join(", ")}. Fora delas, o discurso precisa de tradução.`
+          : `${distUf > 1.0 ? "Large" : "Moderate"} distance between your field and the ${nacional ? "national" : "state"} average. Your most aligned ${nacional ? "states" : "regions"}: ${afins.join(", ")}. Elsewhere, the message needs translation.`,
       });
     } catch {
       /* matriz é opcional no painel */

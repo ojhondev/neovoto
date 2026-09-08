@@ -11,9 +11,10 @@ import type { Dictionary } from "@/lib/i18n";
 import { CARGO_LABEL, type Cargo } from "@/lib/cargos";
 import { computePlano } from "@/lib/intel/plano";
 import { carregarCenarios } from "@/lib/intel/cenarios-load";
-import { getIfetResumoUF } from "@/lib/territory";
+import { getIfetResumoUF, getIfetResumoNacional } from "@/lib/territory";
 import { getAgendaCamara } from "@/lib/data-sources/agenda";
-import { getVotacaoPartidoUF } from "@/lib/data-sources/regional";
+import { getVotacaoPartidoUF, getVotacaoPartidoNacional } from "@/lib/data-sources/regional";
+import { escopoNacional, PLEITO_NACIONAL } from "@/lib/escopo";
 import { computeRadar } from "@/lib/intel/radar";
 import { computeMatriz, MATRIZ_PLEITO } from "@/lib/intel/matriz";
 
@@ -55,14 +56,21 @@ export async function computeRelatorio(
     candidacy.objective ??
     "";
 
+  const nacional = escopoNacional(cargo);
   const [plano, cenLoad, resumo, agenda, votacaoPartido] = await Promise.all([
     computePlano(candidacy, perfil, t, locale),
     carregarCenarios(candidacy, perfil, t),
-    uf ? getIfetResumoUF(uf, candidacy.id).catch(() => null) : Promise.resolve(null),
+    nacional
+      ? getIfetResumoNacional(candidacy.id).catch(() => null)
+      : uf
+        ? getIfetResumoUF(uf, candidacy.id).catch(() => null)
+        : Promise.resolve(null),
     getAgendaCamara(120).catch(() => []),
-    uf
-      ? getVotacaoPartidoUF(MATRIZ_PLEITO.ano, MATRIZ_PLEITO.turno, uf, MATRIZ_PLEITO.cargo).catch(() => [])
-      : Promise.resolve([]),
+    nacional
+      ? getVotacaoPartidoNacional(PLEITO_NACIONAL.ano, PLEITO_NACIONAL.turno, PLEITO_NACIONAL.cargo).catch(() => [])
+      : uf
+        ? getVotacaoPartidoUF(MATRIZ_PLEITO.ano, MATRIZ_PLEITO.turno, uf, MATRIZ_PLEITO.cargo).catch(() => [])
+        : Promise.resolve([]),
   ]);
   const cen = cenLoad.ok ? cenLoad.cenarios : null;
 

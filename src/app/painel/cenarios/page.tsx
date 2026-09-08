@@ -7,26 +7,14 @@ import { ModuloRoadmap } from "@/components/app/ModuloRoadmap";
 import { CenariosScatter } from "@/components/app/CenariosScatter";
 import { getDictionary } from "@/lib/i18n";
 import { getCurrentCandidacy, perfilFrom } from "@/lib/candidacy";
-import { getIfetResumoUF } from "@/lib/territory";
-import { ingestVotacao, getVotosByIbge } from "@/lib/data-sources/eleitoral";
-import { getVotacaoPartidoUF, getVotosCorteEleito } from "@/lib/data-sources/regional";
-import { basePorApoios, type Apoio } from "@/lib/intel/apoios";
-import { computeCenarios, type ResultadoCenario } from "@/lib/intel/cenarios";
+import { carregarCenarios } from "@/lib/intel/cenarios-load";
+import { escopoNacional } from "@/lib/escopo";
+import { IfetInfo } from "@/components/app/IfetInfo";
+import { type ResultadoCenario } from "@/lib/intel/cenarios";
 import { URGENCIA_RESULTADO, urgVar } from "@/lib/viz/colors";
 import type { Cargo } from "@/lib/cargos";
 
 export const metadata: Metadata = { title: "Cenários" };
-
-const REF: Record<Cargo, { ano: number; turno: number; cargo: string; prop: boolean }> = {
-  presidente: { ano: 2022, turno: 1, cargo: "presidente", prop: false },
-  governador: { ano: 2022, turno: 1, cargo: "governador", prop: false },
-  senador: { ano: 2022, turno: 1, cargo: "senador", prop: false },
-  "deputado-federal": { ano: 2022, turno: 1, cargo: "deputado federal", prop: true },
-  "deputado-estadual": { ano: 2022, turno: 1, cargo: "deputado estadual", prop: true },
-  "deputado-distrital": { ano: 2022, turno: 1, cargo: "deputado distrital", prop: true },
-  prefeito: { ano: 2024, turno: 1, cargo: "prefeito", prop: false },
-  vereador: { ano: 2024, turno: 1, cargo: "vereador", prop: true },
-};
 
 function fmt(n: number, locale: string) {
   return Math.round(n).toLocaleString(locale);
@@ -62,7 +50,7 @@ export default async function Page() {
     ? ["Faixa de votos por cenário (base / favorável / adverso).", "Quantos votos faltam para eleger.", "Municípios que mais encurtam o caminho.", "Sensibilidade a cada premissa."]
     : ["Vote range per scenario (base / favourable / adverse).", "How many votes are missing to get elected.", "Municipalities that shorten the path most.", "Sensitivity to each assumption."];
 
-  if (!candidacy || !perfil || !perfil.uf || !cargo) {
+  if (!candidacy || !perfil || !cargo || (!perfil.uf && !escopoNacional(cargo))) {
     return (
       <ToolShell id="cenarios" updatedAt="—" howItWorks={howItWorks} outputs={outputs}>
         <div className="card">
@@ -75,88 +63,36 @@ export default async function Page() {
     );
   }
 
-  const ref = REF[cargo];
-  const [resumo, votacao, corte] = await Promise.all([
-    getIfetResumoUF(perfil.uf, candidacy.id),
-    getVotacaoPartidoUF(ref.ano, ref.turno, perfil.uf, ref.cargo),
-    ref.prop ? getVotosCorteEleito(ref.ano, ref.turno, perfil.uf, ref.cargo) : Promise.resolve(null),
-  ]);
+  const nacional = escopoNacional(cargo);
+  const carregado = await carregarCenarios(candidacy, perfil, t);
 
-  // Numa disputa proporcional, projetar a partir do total do PARTIDO não faz
-  // sentido (o partido tem vários candidatos). Tenta carregar a votação própria
-  // histórica do candidato antes de desistir.
-  let votosProprios = resumo?.eleitoralByCode ?? null;
-  const semHistorico = candidacy.source === "manual";
-  if (resumo && !votosProprios && !semHistorico) {
-    try {
-      await ingestVotacao(candidacy.id);
-      const v = await getVotosByIbge(candidacy.id);
-      if (v && Object.keys(v.byCode).length > 0) votosProprios = v.byCode;
-    } catch {
-      /* segue sem histórico próprio */
-    }
-  }
-  // sem histórico → base pelos apoios declarados (padrinhos)
-  let baseTipo: "propria" | "apoios" | "partido" = votosProprios ? "propria" : "partido";
-  if (resumo && !votosProprios) {
-    const base = await basePorApoios((candidacy.apoios as Apoio[] | null) ?? []).catch(() => null);
-    if (base) {
-      votosProprios = base.byCode;
-      baseTipo = "apoios";
-    }
-  }
-
-  if (!resumo || votacao.length < 100 || (ref.prop && !votosProprios)) {
+  if (!carregado.ok) {
+    const semBase = carregado.motivo === "sem-base";
     return (
       <ToolShell id="cenarios" updatedAt="—" howItWorks={howItWorks} outputs={outputs}>
         <ModuloRoadmap
           pergunta={pt ? "Quanto falta para você ganhar?" : "How much is missing to win?"}
           entrega={
-            ref.prop && !votosProprios
+            semBase
               ? pt
                 ? "Numa disputa proporcional, projetar o voto de um candidato sem histórico e sem apoios é chute. Volte ao onboarding e declare os políticos eleitos que apoiam a campanha — a base é projetada a partir do voto deles nos redutos deles. Enquanto isso, o Mapa de Calor e o Mapa de Propostas já mostram onde está a oportunidade."
-                : "In a proportional race, projecting the vote of a candidate with no history and no backers is a guess. Go back to onboarding and declare the elected officials backing the campaign — the base is projected from their vote in their strongholds. Meanwhile, the Heatmap and Proposal Map already show where the opportunity is."
+                : "In a proportional race, projecting the vote of a candidate with no history and no backers is a guess. Go back to onboarding and declare the elected officials backing the campaign. Meanwhile, the Heatmap and Proposal Map already show where the opportunity is."
               : pt
-                ? "Não foi possível carregar a votação de referência para este estado/cargo agora."
-                : "Couldn't load the reference vote for this state/office right now."
+                ? "Não foi possível carregar a votação de referência para este recorte agora."
+                : "Couldn't load the reference vote for this scope right now."
           }
           etapas={[
-            { label: pt ? "Território e temas (IFET, Radar)" : "Territory and themes (IFET, Radar)", feito: !!resumo },
-            { label: pt ? "Histórico de votação do candidato" : "Candidate's own vote history", feito: !!(resumo?.eleitoralByCode) },
-            { label: pt ? "Apoios de políticos eleitos declarados no onboarding" : "Elected backers declared in onboarding", feito: baseTipo === "apoios" },
+            { label: pt ? "Território e temas (IFET, Radar)" : "Territory and themes (IFET, Radar)", feito: carregado.motivo !== "sem-dados" },
+            { label: pt ? "Histórico de votação do candidato" : "Candidate's own vote history", feito: false },
+            { label: pt ? "Apoios de políticos eleitos declarados no onboarding" : "Elected backers declared in onboarding", feito: false },
           ]}
         />
       </ToolShell>
     );
   }
 
-  const cen = computeCenarios(
-    {
-      cargo,
-      partido: perfil.partido,
-      votosCandidatoByCode: votosProprios,
-      votacaoPartido: votacao,
-      ifetByCode: resumo.ifet.byCode,
-      populacaoByCode: resumo.populacaoByCode,
-      nomeByCode: resumo.nomeByCode,
-      corteEleito: corte,
-      fracaoPartido: !votosProprios && ref.prop ? 0.12 : 1,
-    },
-    {
-      base: t.cenarios.scenarioBase,
-      favoravel: t.cenarios.scenarioFav,
-      adverso: t.cenarios.scenarioAdv,
-      premissaBase: t.cenarios.premissaBase,
-      premissaMareBoa: t.cenarios.premissaMareBoa,
-      premissaLacunas: t.cenarios.premissaLacunas,
-      premissaCompBaixo: t.cenarios.premissaCompBaixo,
-      premissaMareRuim: t.cenarios.premissaMareRuim,
-      premissaAdvConsolida: t.cenarios.premissaAdvConsolida,
-      fatorMare: t.cenarios.fatorMare,
-      fatorComparecimento: t.cenarios.fatorComparecimento,
-      fatorLacunas: t.cenarios.fatorLacunas,
-    },
-  );
+  const cen = carregado.cenarios;
+  const baseTipo = carregado.baseTipo;
 
   const resLabel: Record<ResultadoCenario, string> = {
     vitoria: t.cenarios.resVitoria,
@@ -189,8 +125,9 @@ export default async function Page() {
       </h2>
       <p className="mt-2 max-w-2xl text-body-sm text-fossil">
         {t.cenarios.intro.replace("{nome}", perfil.nome)}
+        {nacional ? (pt ? " Escopo: Brasil — 27 UFs." : " Scope: Brazil — 27 states.") : ""}
       </p>
-      <p className="font-ui mt-2 text-caption text-pebble">
+      <p className="font-ui mt-2 flex items-center text-caption text-pebble">
         {cen.tipoDisputa === "majoritaria" ? t.cenarios.disputaMajoritaria : t.cenarios.disputaProporcional}{" "}
         {baseTipo === "propria"
           ? t.cenarios.basePropria
@@ -199,6 +136,7 @@ export default async function Page() {
               ? "Base: fração transferível do voto dos políticos eleitos que apoiam a campanha."
               : "Basis: transferable fraction of the vote of the elected officials backing the campaign."
             : t.cenarios.basePartido}
+        <IfetInfo />
       </p>
 
       {/* barra + faltam */}

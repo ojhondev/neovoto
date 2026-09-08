@@ -38,7 +38,7 @@ export function RadarLista({
     heat: string;
     recommendation: string;
     tipo: Record<TipoRadar, string>;
-    align: (a: TemaRadar["alinhamento"]) => string;
+    align: Record<TemaRadar["alinhamento"], string>;
     all: string;
     inPress: string;
   };
@@ -116,7 +116,7 @@ export function RadarLista({
                           : "bg-sand text-smoke")
                     }
                   >
-                    {labels.align(tema.alinhamento)}
+                    {labels.align[tema.alinhamento]}
                   </span>
                   {tema.naImprensa > 0 && (
                     <span className="font-ui inline-flex items-center gap-1 rounded-[3px] bg-cat-1/15 px-1.5 py-0.5 text-[11px] text-smoke" style={{ background: "var(--color-cat-1)", color: "#fff" }}>

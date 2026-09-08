@@ -4,6 +4,8 @@ import { ArrowRight, Trophy, MapPin, MessageSquareText, Handshake, Crosshair, Da
 import { getDictionary } from "@/lib/i18n";
 import { getCurrentCandidacy, perfilFrom } from "@/lib/candidacy";
 import { computePlano, type EixoPasso } from "@/lib/intel/plano";
+import { IfetInfo } from "@/components/app/IfetInfo";
+import { Info } from "@/components/app/Info";
 import { URGENCIA_RESULTADO, urgVar, catVar } from "@/lib/viz/colors";
 
 export const metadata: Metadata = { title: "Como Ganhar" };
@@ -79,7 +81,14 @@ export default async function Page() {
       {placar && (
         <section className="mt-6 rounded-[var(--radius-card-lg)] border border-ash bg-paper p-6">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
-            <p className="t-eyebrow">{t.comoGanhar.placarTitle}</p>
+            <p className="t-eyebrow flex items-center">
+              {t.comoGanhar.placarTitle}
+              <Info label={t.comoGanhar.placarTitle}>
+                {loc === "pt"
+                  ? "Votos projetados no cenário base × a barra para eleger. Numa disputa majoritária a barra é a maioria dos votos válidos; na proporcional, o voto do último eleito no pleito de referência. Projeção heurística sobre a votação real — não é previsão."
+                  : "Projected votes in the base scenario vs. the bar to get elected. In a majority race the bar is a majority of valid votes; in a proportional one, the last-elected's vote. Heuristic projection on the real vote — not a forecast."}
+              </Info>
+            </p>
             <span
               className="font-ui rounded-[3px] px-2 py-0.5 text-caption text-white"
               style={{ background: sitCor }}
@@ -135,8 +144,9 @@ export default async function Page() {
 
       {/* ---- O PLANO ---- */}
       <section className="mt-8">
-        <h2 className="t-heading text-[22px]">
+        <h2 className="t-heading flex items-center text-[22px]">
           {t.comoGanhar.planTitle} — {plano.passos.length}
+          <IfetInfo />
         </h2>
         <p className="font-ui mt-1 text-caption text-pebble">{t.comoGanhar.planSub}</p>
         <ol className="mt-5 space-y-3">

@@ -1,11 +1,15 @@
 import {
   getEstadoPorSigla,
   getMalhaMunicipiosUF,
+  getMalhaBrasilUFs,
   getPopulacaoMunicipiosUF,
   getPibMunicipiosUF,
+  getPibUF,
+  getPopulacaoUFBySigla,
+  getUFSiglaByCode,
   type GeoFeatureCollection,
 } from "@/lib/data-sources/ibge";
-import { getVotosByIbge } from "@/lib/data-sources/eleitoral";
+import { getVotosByIbge, getVotosByUF } from "@/lib/data-sources/eleitoral";
 import { computeIFET, type IfetResultado } from "@/lib/intel/ifet";
 
 export type MunicipioTerritorio = {
@@ -104,6 +108,106 @@ export async function getIfetResumoUF(
     nomeByCode,
     populacaoByCode,
     pibByCode: pib,
+  };
+}
+
+/**
+ * Versão NACIONAL do resumo (disputa presidencial): a unidade de análise é a
+ * UF, não o município. Mesmo formato de `getIfetResumoUF` — `code` carrega a
+ * sigla da UF ("SP", "RJ", …) —, então os motores rodam sem alteração.
+ */
+export async function getIfetResumoNacional(
+  candidacyId?: string,
+): Promise<IfetResumoUF | null> {
+  const [pops, pib] = await Promise.all([
+    getPopulacaoUFBySigla(),
+    getPibUF().catch(() => ({}) as Record<string, number>),
+  ]);
+  const siglas = Object.keys(pops);
+  if (siglas.length < 20) return null;
+
+  let eleitoralByCode: Record<string, number> | null = null;
+  let eleitoralAno: number | null = null;
+  let eleitoralTotal: number | null = null;
+  if (candidacyId) {
+    const v = await getVotosByUF(candidacyId).catch(() => null);
+    if (v && Object.keys(v.byUF).length > 0) {
+      eleitoralByCode = v.byUF;
+      eleitoralAno = v.ano;
+      eleitoralTotal = v.total;
+    }
+  }
+
+  const ifet = computeIFET(
+    siglas.map((sigla) => ({
+      code: sigla,
+      nome: pops[sigla].nome,
+      populacao: pops[sigla].populacao,
+      pibTotal: pib[sigla] ?? 0,
+      votosCandidato: eleitoralByCode?.[sigla],
+    })),
+  );
+
+  const nomeByCode: Record<string, string> = {};
+  const populacaoByCode: Record<string, number> = {};
+  for (const sigla of siglas) {
+    nomeByCode[sigla] = pops[sigla].nome;
+    populacaoByCode[sigla] = pops[sigla].populacao;
+  }
+
+  return {
+    ufNome: "Brasil",
+    regiao: "Nacional",
+    ifet,
+    eleitoralByCode,
+    eleitoralAno,
+    eleitoralTotal,
+    nomeByCode,
+    populacaoByCode,
+    pibByCode: pib,
+  };
+}
+
+/** Território NACIONAL pesado: malha das 27 UFs + IFET por UF. `code` = sigla. */
+export async function getTerritorioNacional(
+  candidacyId?: string,
+): Promise<TerritorioUF | null> {
+  const [malha, siglaByCode, resumo] = await Promise.all([
+    getMalhaBrasilUFs(),
+    getUFSiglaByCode(),
+    getIfetResumoNacional(candidacyId),
+  ]);
+  if (!resumo) return null;
+
+  // normaliza o codarea da malha (2 dígitos IBGE) para a sigla da UF
+  const geojson: GeoFeatureCollection = {
+    type: "FeatureCollection",
+    features: (malha.features ?? []).map((f) => ({
+      ...f,
+      properties: {
+        ...f.properties,
+        codarea: siglaByCode[String(f.properties.codarea)] ?? String(f.properties.codarea),
+      },
+    })),
+  };
+
+  const municipios: MunicipioTerritorio[] = Object.entries(resumo.populacaoByCode)
+    .map(([code, populacao]) => ({ code, nome: resumo.nomeByCode[code] ?? code, populacao }))
+    .sort((a, b) => b.populacao - a.populacao);
+
+  return {
+    ufSigla: "BR",
+    ufNome: "Brasil",
+    ufId: 0,
+    regiao: "Nacional",
+    geojson,
+    municipios,
+    populacaoByCode: resumo.populacaoByCode,
+    nomeByCode: resumo.nomeByCode,
+    eleitoralByCode: resumo.eleitoralByCode,
+    eleitoralAno: resumo.eleitoralAno,
+    eleitoralTotal: resumo.eleitoralTotal,
+    ifet: resumo.ifet,
   };
 }
 

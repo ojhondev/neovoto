@@ -7,10 +7,15 @@ import type { Candidacy } from "@/db/schema";
 import type { PerfilPolitico } from "@/lib/politico";
 import type { Dictionary } from "@/lib/i18n";
 import type { Cargo } from "@/lib/cargos";
-import { getIfetResumoUF } from "@/lib/territory";
+import { getIfetResumoUF, getIfetResumoNacional } from "@/lib/territory";
 import { ingestVotacao, getVotosByIbge } from "@/lib/data-sources/eleitoral";
-import { getVotacaoPartidoUF, getVotosCorteEleito } from "@/lib/data-sources/regional";
+import {
+  getVotacaoPartidoUF,
+  getVotacaoPartidoNacional,
+  getVotosCorteEleito,
+} from "@/lib/data-sources/regional";
 import { basePorApoios, type Apoio } from "@/lib/intel/apoios";
+import { escopoNacional, PLEITO_NACIONAL } from "@/lib/escopo";
 import { computeCenarios, type CenariosResultado } from "@/lib/intel/cenarios";
 
 export const CARGO_REF: Record<Cargo, { ano: number; turno: number; cargo: string; prop: boolean }> = {
@@ -34,20 +39,26 @@ export async function carregarCenarios(
   t: Dictionary,
 ): Promise<CenariosCarregado> {
   const cargo = (candidacy.cargo as Cargo | null) ?? perfil.cargo ?? null;
-  if (!perfil.uf || !cargo) return { ok: false, motivo: "sem-recorte" };
+  if (!cargo) return { ok: false, motivo: "sem-recorte" };
+  const nacional = escopoNacional(cargo);
+  if (!nacional && !perfil.uf) return { ok: false, motivo: "sem-recorte" };
   const ref = CARGO_REF[cargo];
 
   const [resumo, votacao, corte] = await Promise.all([
-    getIfetResumoUF(perfil.uf, candidacy.id),
-    getVotacaoPartidoUF(ref.ano, ref.turno, perfil.uf, ref.cargo),
-    ref.prop ? getVotosCorteEleito(ref.ano, ref.turno, perfil.uf, ref.cargo) : Promise.resolve(null),
+    nacional ? getIfetResumoNacional(candidacy.id) : getIfetResumoUF(perfil.uf!, candidacy.id),
+    nacional
+      ? getVotacaoPartidoNacional(PLEITO_NACIONAL.ano, PLEITO_NACIONAL.turno, PLEITO_NACIONAL.cargo)
+      : getVotacaoPartidoUF(ref.ano, ref.turno, perfil.uf!, ref.cargo),
+    !nacional && ref.prop
+      ? getVotosCorteEleito(ref.ano, ref.turno, perfil.uf!, ref.cargo)
+      : Promise.resolve(null),
   ]);
 
   if (!resumo || votacao.length < 100) return { ok: false, motivo: "sem-dados" };
 
   const semHistorico = candidacy.source === "manual";
   let votosProprios = resumo.eleitoralByCode ?? null;
-  if (!votosProprios && !semHistorico) {
+  if (!votosProprios && !semHistorico && !nacional) {
     try {
       await ingestVotacao(candidacy.id);
       const v = await getVotosByIbge(candidacy.id);
@@ -57,9 +68,10 @@ export async function carregarCenarios(
     }
   }
 
-  // sem histórico próprio → tenta a base pelos APOIOS declarados (padrinhos)
+  // sem histórico próprio → tenta a base pelos APOIOS declarados (padrinhos).
+  // (só na disputa estadual/municipal — os apoios são por município.)
   let baseTipo: "propria" | "apoios" | "partido" = votosProprios ? "propria" : "partido";
-  if (!votosProprios) {
+  if (!votosProprios && !nacional) {
     const apoios = (candidacy.apoios as Apoio[] | null) ?? [];
     const base = await basePorApoios(apoios).catch(() => null);
     if (base) {

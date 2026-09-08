@@ -4,8 +4,10 @@ import { ArrowRight } from "lucide-react";
 import { getDictionary } from "@/lib/i18n";
 import { getCurrentCandidacy, perfilFrom } from "@/lib/candidacy";
 import { getEstadoPorSigla } from "@/lib/data-sources/ibge";
-import { getVotacaoPartidoUF } from "@/lib/data-sources/regional";
+import { getVotacaoPartidoUF, getVotacaoPartidoNacional } from "@/lib/data-sources/regional";
 import { getBancadaCamara } from "@/lib/data-sources/camara";
+import { escopoNacional } from "@/lib/escopo";
+import type { Cargo } from "@/lib/cargos";
 import { analisarPartidos, PARTIDOS_PLEITO, type PartidosResultado } from "@/lib/intel/partidos-analise";
 import { PartidosViz } from "@/components/app/PartidosViz";
 import { partidoColor } from "@/lib/viz/colors";
@@ -69,7 +71,10 @@ export default async function Page() {
   const candidacy = await getCurrentCandidacy();
   const perfil = candidacy ? perfilFrom(candidacy) : null;
 
-  if (!candidacy || !perfil || !perfil.uf) {
+  const cargo = (candidacy?.cargo as Cargo | null) ?? perfil?.cargo ?? null;
+  const nacional = escopoNacional(cargo);
+
+  if (!candidacy || !perfil || (!perfil.uf && !nacional)) {
     return (
       <>
         <p className="t-eyebrow mb-2">{t.motor.name}</p>
@@ -83,12 +88,14 @@ export default async function Page() {
   }
 
   const [votacao, bancada, estado] = await Promise.all([
-    getVotacaoPartidoUF(PARTIDOS_PLEITO.ano, PARTIDOS_PLEITO.turno, perfil.uf, PARTIDOS_PLEITO.cargo),
+    nacional
+      ? getVotacaoPartidoNacional(PARTIDOS_PLEITO.ano, PARTIDOS_PLEITO.turno, PARTIDOS_PLEITO.cargo)
+      : getVotacaoPartidoUF(PARTIDOS_PLEITO.ano, PARTIDOS_PLEITO.turno, perfil.uf!, PARTIDOS_PLEITO.cargo),
     getBancadaCamara(),
-    getEstadoPorSigla(perfil.uf),
+    nacional ? Promise.resolve(null) : getEstadoPorSigla(perfil.uf!),
   ]);
 
-  const ufNome = estado?.nome ?? perfil.uf;
+  const ufNome = nacional ? "Brasil" : (estado?.nome ?? perfil.uf);
 
   if (votacao.length < 100) {
     return (

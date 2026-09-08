@@ -308,6 +308,25 @@ export async function getVotosByIbge(
   return { byCode, ano: rows[0].ano, total };
 }
 
+/** Votos agregados por sigla de UF (lê só do Neon). Para a análise nacional. */
+export async function getVotosByUF(
+  candidacyId: string,
+): Promise<{ byUF: Record<string, number>; ano: number; total: number } | null> {
+  const rows = await db
+    .select()
+    .from(electoralResults)
+    .where(eq(electoralResults.candidacyId, candidacyId));
+  if (rows.length === 0) return null;
+  const byUF: Record<string, number> = {};
+  let total = 0;
+  for (const r of rows) {
+    total += r.votos;
+    const uf = (r.ufSigla ?? "").toUpperCase();
+    if (uf) byUF[uf] = (byUF[uf] ?? 0) + r.votos;
+  }
+  return { byUF, ano: rows[0].ano, total };
+}
+
 /** Marca o estado da ingestão na candidatura. */
 export async function setEleitoralStatus(candidacyId: string, status: string) {
   await db

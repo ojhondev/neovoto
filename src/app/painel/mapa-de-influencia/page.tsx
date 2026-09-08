@@ -7,10 +7,12 @@ import { InfluenceGraph } from "@/components/app/InfluenceGraph";
 import { ModuloRoadmap } from "@/components/app/ModuloRoadmap";
 import { getDictionary } from "@/lib/i18n";
 import { getCurrentCandidacy, perfilFrom } from "@/lib/candidacy";
-import { getIfetResumoUF } from "@/lib/territory";
-import { getVotacaoPartidoUF } from "@/lib/data-sources/regional";
+import { getIfetResumoUF, getIfetResumoNacional } from "@/lib/territory";
+import { getVotacaoPartidoUF, getVotacaoPartidoNacional } from "@/lib/data-sources/regional";
 import { getBancadaCamara } from "@/lib/data-sources/camara";
 import { getEstadoPorSigla } from "@/lib/data-sources/ibge";
+import { escopoNacional, PLEITO_NACIONAL } from "@/lib/escopo";
+import type { Cargo } from "@/lib/cargos";
 import { computeInfluencia, INFLUENCIA_PLEITO } from "@/lib/intel/influencia";
 
 export const metadata: Metadata = { title: "Mapa de Influência" };
@@ -42,7 +44,10 @@ export default async function Page() {
     ? ["Rede de partidos por voto, ideologia e sobreposição de base.", "Peso do seu campo vs. o do adversário.", "Onde o adversário é frágil e de quem o seu voto depende."]
     : ["Party network by vote, ideology and base overlap.", "Weight of your field vs. the opponent's.", "Where the opponent is fragile and who your vote depends on."];
 
-  if (!candidacy || !perfil || !perfil.uf || !perfil.partido) {
+  const cargo = (candidacy?.cargo as Cargo | null) ?? perfil?.cargo ?? null;
+  const nacional = escopoNacional(cargo);
+
+  if (!candidacy || !perfil || !perfil.partido || (!perfil.uf && !nacional)) {
     return (
       <ToolShell id="mapa-de-influencia" updatedAt="—" howItWorks={howItWorks} outputs={outputs}>
         <div className="card">
@@ -56,10 +61,12 @@ export default async function Page() {
   }
 
   const [resumo, votacao, bancada, estado] = await Promise.all([
-    getIfetResumoUF(perfil.uf, candidacy.id),
-    getVotacaoPartidoUF(INFLUENCIA_PLEITO.ano, INFLUENCIA_PLEITO.turno, perfil.uf, INFLUENCIA_PLEITO.cargo),
+    nacional ? getIfetResumoNacional(candidacy.id) : getIfetResumoUF(perfil.uf!, candidacy.id),
+    nacional
+      ? getVotacaoPartidoNacional(PLEITO_NACIONAL.ano, PLEITO_NACIONAL.turno, PLEITO_NACIONAL.cargo)
+      : getVotacaoPartidoUF(INFLUENCIA_PLEITO.ano, INFLUENCIA_PLEITO.turno, perfil.uf!, INFLUENCIA_PLEITO.cargo),
     getBancadaCamara(),
-    getEstadoPorSigla(perfil.uf),
+    nacional ? Promise.resolve(null) : getEstadoPorSigla(perfil.uf!),
   ]);
 
   if (votacao.length < 100 || !resumo) {
@@ -79,8 +86,14 @@ export default async function Page() {
   }
 
   const inf = computeInfluencia(votacao, perfil.partido, bancada, resumo.nomeByCode);
-  const ufNome = estado?.nome ?? perfil.uf;
-  const pleito = pt ? "deputado federal 2022" : "federal deputy 2022";
+  const ufNome = nacional ? "Brasil" : (estado?.nome ?? perfil.uf);
+  const pleito = nacional
+    ? pt
+      ? "presidente 2022 · 1º turno"
+      : "president 2022 · 1st round"
+    : pt
+      ? "deputado federal 2022"
+      : "federal deputy 2022";
 
   const conclusao = pt
     ? `Seu campo soma ${Math.round(inf.aliado.share * 100)}% do voto de ${ufNome} (${inf.aliado.bancada} deputados); o campo adversário, ${Math.round(inf.adversario.share * 100)}%. ${inf.dependencias[0] ? `O seu voto em ${inf.dependencias[0].nome} depende do ${inf.dependencias[0].principal}. ` : ""}${inf.fragilidades[0] ? `O adversário está vulnerável em ${inf.fragilidades.slice(0, 3).map((f) => f.nome).join(", ")}.` : ""}`

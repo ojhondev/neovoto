@@ -231,6 +231,52 @@ export async function votacaoPartidoPorMunicipio(args: {
 }
 
 /**
+ * Votação por PARTIDO agregada por UF num pleito NACIONAL (Presidência) —
+ * nominais + legenda. Base dos módulos territoriais quando a disputa é o Brasil
+ * inteiro. Retorna ~27 × nº de partidos linhas (leve).
+ */
+export async function votacaoPartidoNacionalPorUF(args: {
+  ano: number;
+  turno: number;
+  cargo: string;
+}): Promise<{ uf: string; sigla: string; votos: number }[]> {
+  if (!basedosdadosDisponivel()) return [];
+  const rows = await query(
+    `SELECT sigla_uf, sigla_partido, SUM(COALESCE(votos_nominais,0) + COALESCE(votos_legenda,0)) AS votos
+     FROM \`${DATASET}.resultados_partido_municipio\`
+     WHERE ano = @ano AND turno = @turno AND cargo = @cargo
+     GROUP BY sigla_uf, sigla_partido`,
+    { ano: args.ano, turno: args.turno, cargo: args.cargo },
+  );
+  return rows
+    .filter((r) => r.sigla_uf && r.sigla_partido)
+    .map((r) => ({
+      uf: (r.sigla_uf as string).toUpperCase(),
+      sigla: (r.sigla_partido as string).toUpperCase(),
+      votos: Number(r.votos ?? 0),
+    }));
+}
+
+/** Votos do candidato agregados por UF num pleito nacional (id = sigla da UF). */
+export async function votacaoCandidatoNacionalPorUF(args: {
+  sequencial: string;
+  ano: number;
+  turno: number;
+}): Promise<{ uf: string; votos: number }[]> {
+  if (!basedosdadosDisponivel()) return [];
+  const rows = await query(
+    `SELECT sigla_uf, SUM(votos) AS votos
+     FROM \`${DATASET}.resultados_candidato_municipio\`
+     WHERE ano = @ano AND turno = @turno AND sequencial_candidato = @seq
+     GROUP BY sigla_uf`,
+    { ano: args.ano, turno: args.turno, seq: args.sequencial },
+  );
+  return rows
+    .filter((r) => r.sigla_uf)
+    .map((r) => ({ uf: (r.sigla_uf as string).toUpperCase(), votos: Number(r.votos ?? 0) }));
+}
+
+/**
  * Menor total de votos entre os ELEITOS para o cargo na UF — a "barra de
  * entrada" real de uma eleição proporcional. Usado pelos Cenários.
  */

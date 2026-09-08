@@ -11,8 +11,9 @@ import type { Dictionary } from "@/lib/i18n";
 import { CARGO_LABEL, type Cargo } from "@/lib/cargos";
 import { analisarCandidatura } from "@/lib/intel/motor";
 import { carregarCenarios } from "@/lib/intel/cenarios-load";
-import { getIfetResumoUF } from "@/lib/territory";
-import { getVotacaoPartidoUF } from "@/lib/data-sources/regional";
+import { getIfetResumoUF, getIfetResumoNacional } from "@/lib/territory";
+import { getVotacaoPartidoUF, getVotacaoPartidoNacional } from "@/lib/data-sources/regional";
+import { escopoNacional, PLEITO_NACIONAL } from "@/lib/escopo";
 import { getBancadaCamara } from "@/lib/data-sources/camara";
 import { computeColigacoes } from "@/lib/intel/coligacoes";
 import { computeInfluencia } from "@/lib/intel/influencia";
@@ -68,12 +69,21 @@ export async function computePlano(
     candidacy.objective ??
     "";
 
+  const nacional = escopoNacional(cargo);
   const [leitura, cenLoad, votDep, bancada, resumo] = await Promise.all([
     analisarCandidatura(candidacy, perfil, t, locale),
     carregarCenarios(candidacy, perfil, t),
-    uf ? getVotacaoPartidoUF(2022, 1, uf, "deputado federal").catch(() => []) : Promise.resolve([]),
+    nacional
+      ? getVotacaoPartidoNacional(PLEITO_NACIONAL.ano, PLEITO_NACIONAL.turno, PLEITO_NACIONAL.cargo).catch(() => [])
+      : uf
+        ? getVotacaoPartidoUF(2022, 1, uf, "deputado federal").catch(() => [])
+        : Promise.resolve([]),
     getBancadaCamara().catch(() => ({}) as Record<string, number>),
-    uf ? getIfetResumoUF(uf, candidacy.id).catch(() => null) : Promise.resolve(null),
+    nacional
+      ? getIfetResumoNacional(candidacy.id).catch(() => null)
+      : uf
+        ? getIfetResumoUF(uf, candidacy.id).catch(() => null)
+        : Promise.resolve(null),
   ]);
 
   const colig =

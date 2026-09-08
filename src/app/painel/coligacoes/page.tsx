@@ -6,9 +6,11 @@ import { Info } from "@/components/app/Info";
 import { ModuloRoadmap } from "@/components/app/ModuloRoadmap";
 import { getDictionary } from "@/lib/i18n";
 import { getCurrentCandidacy, perfilFrom } from "@/lib/candidacy";
-import { getVotacaoPartidoUF } from "@/lib/data-sources/regional";
+import { getVotacaoPartidoUF, getVotacaoPartidoNacional } from "@/lib/data-sources/regional";
 import { getBancadaCamara } from "@/lib/data-sources/camara";
 import { getEstadoPorSigla } from "@/lib/data-sources/ibge";
+import { escopoNacional, PLEITO_NACIONAL } from "@/lib/escopo";
+import type { Cargo } from "@/lib/cargos";
 import { computeColigacoes, COLIGACOES_PLEITO, type Afinidade } from "@/lib/intel/coligacoes";
 
 export const metadata: Metadata = { title: "Coligações" };
@@ -40,7 +42,10 @@ export default async function Page() {
     ? ["Voto novo estimado por partido adicionado.", "Sobreposição de base com cada parceiro.", "Bancada e afinidade de cada composição."]
     : ["Estimated new votes per added party.", "Base overlap with each partner.", "Bench and affinity of each composition."];
 
-  if (!candidacy || !perfil || !perfil.uf || !perfil.partido) {
+  const cargo = (candidacy?.cargo as Cargo | null) ?? perfil?.cargo ?? null;
+  const nacional = escopoNacional(cargo);
+
+  if (!candidacy || !perfil || !perfil.partido || (!perfil.uf && !nacional)) {
     return (
       <ToolShell id="coligacoes" updatedAt="—" howItWorks={howItWorks} outputs={outputs}>
         <div className="card">
@@ -54,9 +59,11 @@ export default async function Page() {
   }
 
   const [votacao, bancada, estado] = await Promise.all([
-    getVotacaoPartidoUF(COLIGACOES_PLEITO.ano, COLIGACOES_PLEITO.turno, perfil.uf, COLIGACOES_PLEITO.cargo),
+    nacional
+      ? getVotacaoPartidoNacional(PLEITO_NACIONAL.ano, PLEITO_NACIONAL.turno, PLEITO_NACIONAL.cargo)
+      : getVotacaoPartidoUF(COLIGACOES_PLEITO.ano, COLIGACOES_PLEITO.turno, perfil.uf!, COLIGACOES_PLEITO.cargo),
     getBancadaCamara(),
-    getEstadoPorSigla(perfil.uf),
+    nacional ? Promise.resolve(null) : getEstadoPorSigla(perfil.uf!),
   ]);
 
   if (votacao.length < 100) {
@@ -76,8 +83,14 @@ export default async function Page() {
   }
 
   const res = computeColigacoes(votacao, perfil.partido, bancada);
-  const ufNome = estado?.nome ?? perfil.uf;
-  const pleito = pt ? "deputado federal 2022" : "federal deputy 2022";
+  const ufNome = nacional ? "Brasil" : (estado?.nome ?? perfil.uf);
+  const pleito = nacional
+    ? pt
+      ? "presidente 2022 · 1º turno"
+      : "president 2022 · 1st round"
+    : pt
+      ? "deputado federal 2022"
+      : "federal deputy 2022";
 
   const afimLabel: Record<Afinidade, string> = {
     afim: t.coligacoes.afim,

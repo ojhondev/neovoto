@@ -199,7 +199,16 @@ export default async function PainelHome() {
           {leitura.dimensoes.map((d) => (
             <div key={d.chave} className="card flex flex-col">
               <div className="flex items-center justify-between">
-                <p className="t-eyebrow">{d.titulo}</p>
+                <p className="t-eyebrow flex items-center">
+                  {d.titulo}
+                  {d.chave === "territorio" && (
+                    <Info label="IFET">
+                      {locale === "pt"
+                        ? "IFET (Índice de Força Eleitoral Territorial): 0–100 por localidade — quanto ela pesa na estratégia. Combina peso eleitoral, quão conquistável é o voto, perfil econômico e, quando há histórico, seu desempenho ali."
+                        : "IFET (Territorial Electoral Strength Index): 0–100 per locality — how much it weighs in the strategy. Combines electoral weight, how persuadable the vote is, economic profile and, when available, your track record there."}
+                    </Info>
+                  )}
+                </p>
                 <StatusDot status={d.status} />
               </div>
               <p className="font-ui mt-3 text-[30px] font-light leading-none text-ink">{d.valor}</p>

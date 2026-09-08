@@ -99,10 +99,55 @@ export async function getPopulacaoMunicipiosUF(
   return out;
 }
 
-export async function getMalhaBrasilUFs(): Promise<unknown> {
-  return get(
+export async function getMalhaBrasilUFs(): Promise<GeoFeatureCollection> {
+  return get<GeoFeatureCollection>(
     `${MALHA}/paises/BR?formato=application/vnd.geo+json&intrarregiao=UF&qualidade=intermediaria`,
+    60 * 60 * 24 * 30,
   );
+}
+
+/** Mapa código IBGE de 2 dígitos da UF → sigla (ex.: "35" → "SP"). */
+export async function getUFSiglaByCode(): Promise<Record<string, string>> {
+  const estados = await getEstados();
+  const out: Record<string, string> = {};
+  for (const e of estados) out[String(e.id)] = e.sigla;
+  return out;
+}
+
+/**
+ * PIB total por UF (agregado 5938 / variável 37, R$ 1.000). Retorna sigla → R$.
+ */
+export async function getPibUF(): Promise<Record<string, number>> {
+  const [data, estados] = await Promise.all([
+    get<SerieRow[]>(`${AGREG}/5938/periodos/-1/variaveis/37?localidades=N3[all]`, 60 * 60 * 24 * 30),
+    getEstados(),
+  ]);
+  const nomeToSigla = new Map(estados.map((e) => [e.nome, e.sigla]));
+  const idToSigla = new Map(estados.map((e) => [String(e.id), e.sigla]));
+  const out: Record<string, number> = {};
+  for (const s of data?.[0]?.resultados?.[0]?.series ?? []) {
+    const sigla = idToSigla.get(s.localidade.id) ?? nomeToSigla.get(s.localidade.nome);
+    if (sigla) out[sigla] = lastValue(s.serie) * 1000;
+  }
+  return out;
+}
+
+/**
+ * População estimada por UF (agregado 6579, variável 9324). Retorna sigla → hab.
+ */
+export async function getPopulacaoUFBySigla(): Promise<Record<string, { nome: string; populacao: number }>> {
+  const [data, estados] = await Promise.all([
+    get<SerieRow[]>(`${AGREG}/6579/periodos/-1/variaveis/9324?localidades=N3[all]`, 60 * 60 * 24),
+    getEstados(),
+  ]);
+  const idToEstado = new Map(estados.map((e) => [String(e.id), e]));
+  const nomeToEstado = new Map(estados.map((e) => [e.nome, e]));
+  const out: Record<string, { nome: string; populacao: number }> = {};
+  for (const s of data?.[0]?.resultados?.[0]?.series ?? []) {
+    const est = idToEstado.get(s.localidade.id) ?? nomeToEstado.get(s.localidade.nome);
+    if (est) out[est.sigla] = { nome: est.nome, populacao: lastValue(s.serie) };
+  }
+  return out;
 }
 
 type SerieRow = {

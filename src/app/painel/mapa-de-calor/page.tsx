@@ -6,7 +6,9 @@ import { HeatmapExplorer } from "@/components/app/HeatmapExplorer";
 import { IfetInfo } from "@/components/app/IfetInfo";
 import { getDictionary } from "@/lib/i18n";
 import { getCurrentCandidacy, perfilFrom } from "@/lib/candidacy";
-import { getTerritorioUF } from "@/lib/territory";
+import { getTerritorioUF, getTerritorioNacional } from "@/lib/territory";
+import { escopoNacional } from "@/lib/escopo";
+import type { Cargo } from "@/lib/cargos";
 import { QUADRANTE_INFO, type Quadrante } from "@/lib/intel/ifet";
 
 export const metadata: Metadata = { title: "Mapa de Calor de Influência" };
@@ -16,7 +18,10 @@ export default async function Page() {
   const candidacy = await getCurrentCandidacy();
   const perfil = candidacy ? perfilFrom(candidacy) : null;
 
-  if (!candidacy || !perfil || !perfil.uf) {
+  const cargo = (candidacy?.cargo as Cargo | null) ?? perfil?.cargo ?? null;
+  const nacional = escopoNacional(cargo);
+
+  if (!candidacy || !perfil || (!perfil.uf && !nacional)) {
     return (
       <ToolShell id="mapa-de-calor" updatedAt="—" howItWorks={[]} outputs={[]}>
         <div className="card">
@@ -29,7 +34,9 @@ export default async function Page() {
     );
   }
 
-  const territorio = await getTerritorioUF(perfil.uf, candidacy.id);
+  const territorio = nacional
+    ? await getTerritorioNacional(candidacy.id)
+    : await getTerritorioUF(perfil.uf!, candidacy.id);
   if (!territorio) {
     return (
       <ToolShell id="mapa-de-calor" updatedAt="—" howItWorks={[]} outputs={[]}>
@@ -56,9 +63,12 @@ export default async function Page() {
   const popPrioridade = prioridade.reduce((s, m) => s + m.populacao, 0);
   const popTotal = ifet.municipios.reduce((s, m) => s + m.populacao, 0) || 1;
   const pctEleitorado = Math.round((popPrioridade / popTotal) * 100);
+  const unidade = nacional
+    ? { s: pt ? "estado" : "state", p: pt ? "estados" : "states", conc: pt ? "estado concentra" : "state concentrates", concp: pt ? "estados concentram" : "states concentrate", pop: pt ? "população do país" : "country's population", load: pt ? "O mapa pode alternar entre o índice e a votação real por UF." : "The map can toggle between the index and the real vote by state." }
+    : { s: pt ? "município" : "municipality", p: pt ? "municípios" : "municipalities", conc: pt ? "município concentra" : "municipality concentrates", concp: pt ? "municípios concentram" : "municipalities concentrate", pop: pt ? "população do estado" : "state's population", load: pt ? "O mapa pode alternar entre o índice e a votação real." : "The map can toggle between the index and the real vote." };
   const conclusao = pt
-    ? `${prioridade.length} ${prioridade.length === 1 ? "município concentra" : "municípios concentram"} a prioridade máxima da campanha de ${perfil.nome} — cerca de ${pctEleitorado}% da população do estado.${top3.length ? ` Comece por ${top3.join(", ")}.` : ""} ${territorio.eleitoralByCode ? "O mapa pode alternar entre o índice e a votação real." : "Carregue a votação por município para o índice ganhar o pilar de desempenho histórico."}`
-    : `${prioridade.length} ${prioridade.length === 1 ? "municipality concentrates" : "municipalities concentrate"} the campaign's top priority for ${perfil.nome} — about ${pctEleitorado}% of the state's population.${top3.length ? ` Start with ${top3.join(", ")}.` : ""} ${territorio.eleitoralByCode ? "The map can toggle between the index and the real vote." : "Load the vote by municipality to add the track-record pillar."}`;
+    ? `${prioridade.length} ${prioridade.length === 1 ? unidade.conc : unidade.concp} a prioridade máxima da campanha de ${perfil.nome} — cerca de ${pctEleitorado}% da ${unidade.pop}.${top3.length ? ` Comece por ${top3.join(", ")}.` : ""} ${territorio.eleitoralByCode ? unidade.load : `Carregue a votação por ${unidade.s} para o índice ganhar o pilar de desempenho histórico.`}`
+    : `${prioridade.length} ${prioridade.length === 1 ? unidade.conc : unidade.concp} the campaign's top priority for ${perfil.nome} — about ${pctEleitorado}% of the ${unidade.pop}.${top3.length ? ` Start with ${top3.join(", ")}.` : ""} ${territorio.eleitoralByCode ? unidade.load : `Load the vote by ${unidade.s} to add the track-record pillar.`}`;
 
   return (
     <ToolShell
@@ -101,7 +111,12 @@ export default async function Page() {
         <IfetInfo />
       </h2>
       <p className="mt-2 max-w-2xl text-body-sm text-fossil">
-        {t.ifet.intro.replace("{name}", perfil.nome)}
+        {(nacional
+          ? pt
+            ? "Cada UF recebe um score de 0 a 100 de prioridade estratégica para {name} na disputa presidencial, a partir do contexto territorial oficial. O mapa está colorido por esse índice."
+            : "Each state gets a 0–100 strategic-priority score for {name} in the presidential race, from official territorial context. The map is coloured by this index."
+          : t.ifet.intro
+        ).replace("{name}", perfil.nome)}
       </p>
 
       <div className="mt-6">
@@ -119,7 +134,19 @@ export default async function Page() {
               : null
           }
           quad={quad}
-          dict={{ ...t.ifet, interact: t.maps.interact }}
+          dict={{
+            ...t.ifet,
+            interact: t.maps.interact,
+            ...(nacional
+              ? {
+                  ranking: pt ? "UFs por IFET" : "States by IFET",
+                  clickHint: pt ? "Clique numa UF no mapa para ver a ficha." : "Click a state on the map to see the sheet.",
+                  selected: pt ? "UF selecionada" : "Selected state",
+                  votosTotal: pt ? "Total no país" : "Country total",
+                  pesoEleitoralHint: pt ? "Quanto voto está em jogo na UF (população)." : "Votes at stake in the state (population).",
+                }
+              : {}),
+          }}
           ufNome={territorio.ufNome}
           locale={locale}
         />

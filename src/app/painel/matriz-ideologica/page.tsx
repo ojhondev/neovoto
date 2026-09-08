@@ -8,7 +8,10 @@ import { ModuloRoadmap } from "@/components/app/ModuloRoadmap";
 import { getDictionary } from "@/lib/i18n";
 import { getCurrentCandidacy, perfilFrom } from "@/lib/candidacy";
 import { getEstadoPorSigla, getPopulacaoMunicipiosUF, getPibMunicipiosUF } from "@/lib/data-sources/ibge";
-import { getVotacaoPartidoUF } from "@/lib/data-sources/regional";
+import { getIfetResumoNacional } from "@/lib/territory";
+import { getVotacaoPartidoUF, getVotacaoPartidoNacional } from "@/lib/data-sources/regional";
+import { escopoNacional, PLEITO_NACIONAL, pleitoNacionalLabel } from "@/lib/escopo";
+import type { Cargo } from "@/lib/cargos";
 import { computeMatriz, MATRIZ_PLEITO } from "@/lib/intel/matriz";
 
 export const metadata: Metadata = { title: "Matriz Ideológica por Região" };
@@ -40,7 +43,10 @@ export default async function Page() {
     ? ["Posição de cada município nos eixos econômico e de costumes.", "Regiões mais afins e mais distantes do candidato.", "Média ideológica do estado."]
     : ["Each municipality's position on the economic and social-values axes.", "Regions most and least aligned with the candidate.", "The state's ideological average."];
 
-  if (!candidacy || !perfil || !perfil.uf) {
+  const cargo = (candidacy?.cargo as Cargo | null) ?? perfil?.cargo ?? null;
+  const nacional = escopoNacional(cargo);
+
+  if (!candidacy || !perfil || (!perfil.uf && !nacional)) {
     return (
       <ToolShell id="matriz-ideologica" updatedAt="—" howItWorks={howItWorks} outputs={outputs}>
         <div className="card">
@@ -53,14 +59,32 @@ export default async function Page() {
     );
   }
 
-  const estado = await getEstadoPorSigla(perfil.uf);
+  const estado = nacional ? null : await getEstadoPorSigla(perfil.uf!);
+  const resumoNac = nacional ? await getIfetResumoNacional(candidacy.id) : null;
   const [votacao, pops, pib] = await Promise.all([
-    getVotacaoPartidoUF(MATRIZ_PLEITO.ano, MATRIZ_PLEITO.turno, perfil.uf, MATRIZ_PLEITO.cargo),
-    estado ? getPopulacaoMunicipiosUF(estado.id) : Promise.resolve({}),
-    estado ? getPibMunicipiosUF(estado.id).catch(() => ({}) as Record<string, number>) : Promise.resolve({}),
+    nacional
+      ? getVotacaoPartidoNacional(PLEITO_NACIONAL.ano, PLEITO_NACIONAL.turno, PLEITO_NACIONAL.cargo)
+      : getVotacaoPartidoUF(MATRIZ_PLEITO.ano, MATRIZ_PLEITO.turno, perfil.uf!, MATRIZ_PLEITO.cargo),
+    nacional
+      ? Promise.resolve(
+          Object.fromEntries(
+            Object.entries(resumoNac?.populacaoByCode ?? {}).map(([c, populacao]) => [
+              c,
+              { nome: resumoNac?.nomeByCode[c] ?? c, populacao },
+            ]),
+          ),
+        )
+      : estado
+        ? getPopulacaoMunicipiosUF(estado.id)
+        : Promise.resolve({}),
+    nacional
+      ? Promise.resolve(resumoNac?.pibByCode ?? {})
+      : estado
+        ? getPibMunicipiosUF(estado.id).catch(() => ({}) as Record<string, number>)
+        : Promise.resolve({}),
   ]);
 
-  if (!estado || votacao.length < 100) {
+  if ((!estado && !nacional) || votacao.length < 100) {
     return (
       <ToolShell id="matriz-ideologica" updatedAt="—" howItWorks={howItWorks} outputs={outputs}>
         <ModuloRoadmap
@@ -90,13 +114,16 @@ export default async function Page() {
   );
 
   const nomeYou = perfil.nome;
-  const pleito = pt
-    ? `presidente 2022 · 1º turno`
-    : `president 2022 · 1st round`;
-
+  const ufNome = nacional ? "Brasil" : estado!.nome;
+  const ufSigla = nacional ? "BR" : estado!.sigla;
+  const pleito = nacional
+    ? pleitoNacionalLabel(locale)
+    : pt
+      ? `presidente 2022 · 1º turno`
+      : `president 2022 · 1st round`;
   const conclusao = pt
-    ? `${estado.nome} tende ${matriz.ufMedia.eco >= 0 ? "ao mercado" : "ao Estado"} no eixo econômico e ${matriz.ufMedia.soc >= 0 ? "ao conservadorismo" : "ao progressismo"} nos costumes. ${matriz.candidato.conhecido ? `Suas regiões mais afins são ${matriz.maisAfins.slice(0, 3).map((m) => m.nome).join(", ")}; o discurso precisa de tradução em ${matriz.maisDistantes.slice(0, 2).map((m) => m.nome).join(" e ")}.` : `O partido ${matriz.candidato.partido} não está na escala — ajuste a ficha para calibrar.`}`
-    : `${estado.nome} leans ${matriz.ufMedia.eco >= 0 ? "to the market" : "to the State"} economically and ${matriz.ufMedia.soc >= 0 ? "conservative" : "progressive"} on social values. ${matriz.candidato.conhecido ? `Your most aligned regions are ${matriz.maisAfins.slice(0, 3).map((m) => m.nome).join(", ")}; the message needs translation in ${matriz.maisDistantes.slice(0, 2).map((m) => m.nome).join(" and ")}.` : `Party ${matriz.candidato.partido} isn't in the scale — adjust the sheet to calibrate.`}`;
+    ? `${ufNome} tende ${matriz.ufMedia.eco >= 0 ? "ao mercado" : "ao Estado"} no eixo econômico e ${matriz.ufMedia.soc >= 0 ? "ao conservadorismo" : "ao progressismo"} nos costumes. ${matriz.candidato.conhecido ? `Suas ${nacional ? "UFs" : "regiões"} mais afins são ${matriz.maisAfins.slice(0, 3).map((m) => m.nome).join(", ")}; o discurso precisa de tradução em ${matriz.maisDistantes.slice(0, 2).map((m) => m.nome).join(" e ")}.` : `O partido ${matriz.candidato.partido} não está na escala — ajuste a ficha para calibrar.`}`
+    : `${ufNome} leans ${matriz.ufMedia.eco >= 0 ? "to the market" : "to the State"} economically and ${matriz.ufMedia.soc >= 0 ? "conservative" : "progressive"} on social values. ${matriz.candidato.conhecido ? `Your most aligned ${nacional ? "states" : "regions"} are ${matriz.maisAfins.slice(0, 3).map((m) => m.nome).join(", ")}; the message needs translation in ${matriz.maisDistantes.slice(0, 2).map((m) => m.nome).join(" and ")}.` : `Party ${matriz.candidato.partido} isn't in the scale — adjust the sheet to calibrate.`}`;
 
   return (
     <ToolShell
@@ -113,7 +140,14 @@ export default async function Page() {
         <Info label={t.matriz.tag}>{t.matriz.method}</Info>
       </h2>
       <p className="mt-2 max-w-2xl text-body-sm text-fossil">
-        {fill(t.matriz.intro, { uf: estado.nome, pleito, nome: nomeYou })}
+        {fill(
+          nacional
+            ? pt
+              ? "Cada UF posicionada nos eixos econômico e de costumes, a partir da votação por partido no {pleito}. Quanto mais perto de {nome}, mais o discurso tende a ressoar ali."
+              : "Each state placed on the economic and social-values axes, from party vote in the {pleito}. The closer to {nome}, the more the message resonates there."
+            : t.matriz.intro,
+          { uf: ufNome, pleito, nome: nomeYou },
+        )}
       </p>
       {!matriz.candidato.conhecido && (
         <p className="font-ui mt-2 rounded-[4px] bg-sand px-2 py-1 text-caption text-smoke">
@@ -137,7 +171,7 @@ export default async function Page() {
             axisSocLeft: t.matriz.axisSocLeft,
             axisSocRight: t.matriz.axisSocRight,
             you: nomeYou,
-            ufAverage: fill(t.matriz.ufAverage, { uf: estado.sigla }),
+            ufAverage: fill(t.matriz.ufAverage, { uf: ufSigla }),
             distance: t.matriz.distance,
             quadrants: t.matriz.quadrants,
           }}

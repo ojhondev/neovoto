@@ -108,8 +108,11 @@ export default async function Page() {
     exposicao: t.radar.tipoExposicao,
     monitorar: t.radar.tipoMonitorar,
   };
-  const alignLabel = (a: TemaRadar["alinhamento"]) =>
-    a === "afim" ? t.radar.alignAfim : a === "tensao" ? t.radar.alignTensao : t.radar.alignNeutro;
+  const alignLabel: Record<TemaRadar["alinhamento"], string> = {
+    afim: t.radar.alignAfim,
+    tensao: t.radar.alignTensao,
+    neutro: t.radar.alignNeutro,
+  };
 
   const counts = (["lacuna", "exposicao", "consolidar", "monitorar"] as TipoRadar[]).map((k) => ({
     k,
