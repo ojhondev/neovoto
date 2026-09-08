@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 type FC = {
   type: "FeatureCollection";
@@ -145,18 +145,58 @@ export function TerritoryMap({
   };
 
   // pan / zoom
+  const svgRef = useRef<SVGSVGElement | null>(null);
   const [view, setView] = useState({ k: 1, x: 0, y: 0 });
-  const drag = useRef<{ x: number; y: number } | null>(null);
+  // estado do arrasto num ref — não re-renderiza e sobrevive a ponteiro fora do SVG
+  const drag = useRef<{ px: number; py: number; vx: number; vy: number; moved: boolean } | null>(null);
   const [hover, setHover] = useState<{ nome: string; txt: string; x: number; y: number } | null>(
     null,
   );
 
-  const onWheel = (e: React.WheelEvent) => {
+  const clampPan = (x: number, y: number, k: number) => {
+    // não deixa o mapa sair inteiro da viewport
+    const mx = (W * (k - 1)) / 2 + W * 0.4;
+    const my = (H * (k - 1)) / 2 + H * 0.4;
+    return { x: Math.max(-mx, Math.min(mx, x)), y: Math.max(-my, Math.min(my, y)) };
+  };
+
+  // wheel-zoom com listener não-passivo (React torna onWheel passivo → preventDefault falha)
+  useEffect(() => {
+    const el = svgRef.current;
+    if (!el) return;
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      setView((v) => {
+        const k = Math.min(8, Math.max(1, v.k * (e.deltaY < 0 ? 1.15 : 1 / 1.15)));
+        const p = clampPan(v.x, v.y, k);
+        return { k, ...p };
+      });
+    };
+    el.addEventListener("wheel", onWheel, { passive: false });
+    return () => el.removeEventListener("wheel", onWheel);
+  }, []);
+
+  const onPointerDown = (e: React.PointerEvent<SVGSVGElement>) => {
+    if (e.button !== 0) return;
     e.preventDefault();
-    setView((v) => {
-      const k = Math.min(8, Math.max(1, v.k * (e.deltaY < 0 ? 1.15 : 1 / 1.15)));
-      return { ...v, k };
-    });
+    (e.currentTarget as SVGSVGElement).setPointerCapture?.(e.pointerId);
+    drag.current = { px: e.clientX, py: e.clientY, vx: view.x, vy: view.y, moved: false };
+  };
+  const onPointerMove = (e: React.PointerEvent<SVGSVGElement>) => {
+    const d = drag.current;
+    if (!d) return;
+    const dx = e.clientX - d.px;
+    const dy = e.clientY - d.py;
+    if (!d.moved && Math.hypot(dx, dy) < 4) return;
+    d.moved = true;
+    setView((v) => ({ ...v, ...clampPan(d.vx + dx, d.vy + dy, v.k) }));
+  };
+  const endDrag = (e: React.PointerEvent<SVGSVGElement>) => {
+    (e.currentTarget as SVGSVGElement).releasePointerCapture?.(e.pointerId);
+    // limpa no próximo tick para o onClick do path conseguir ler drag.current.moved
+    const wasMoved = drag.current?.moved ?? false;
+    drag.current = wasMoved ? { ...drag.current!, moved: true } : null;
+    if (wasMoved) setTimeout(() => (drag.current = null), 0);
   };
 
   const hasData = Object.keys(valueByCode).length > 0;
@@ -167,20 +207,15 @@ export function TerritoryMap({
   return (
     <div className="relative overflow-hidden rounded-[var(--radius-card)] border border-ash bg-map-bg">
       <svg
+        ref={svgRef}
         viewBox={`0 0 ${W} ${H}`}
-        style={{ width: "100%", height }}
-        onWheel={onWheel}
-        onMouseDown={(e) => (drag.current = { x: e.clientX - view.x, y: e.clientY - view.y })}
-        onMouseUp={() => (drag.current = null)}
-        onMouseMove={(e) => {
-          if (drag.current) {
-            setView((v) => ({ ...v, x: e.clientX - drag.current!.x, y: e.clientY - drag.current!.y }));
-          }
-        }}
-        onMouseLeave={() => {
-          drag.current = null;
-          setHover(null);
-        }}
+        style={{ width: "100%", height, touchAction: "none", userSelect: "none" }}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={endDrag}
+        onPointerCancel={endDrag}
+        onDragStart={(e) => e.preventDefault()}
+        onMouseLeave={() => setHover(null)}
         className="cursor-grab active:cursor-grabbing"
       >
         <g transform={`translate(${view.x} ${view.y}) scale(${view.k})`}>
@@ -202,13 +237,14 @@ export function TerritoryMap({
                   y: e.clientY - rect.top,
                 });
               }}
-              onClick={() =>
+              onClick={() => {
+                if (drag.current?.moved) return; // foi arrasto, não clique
                 onSelect?.({
                   code: p.code,
                   nome: nameByCode[p.code] ?? p.code,
                   value: valueByCode[p.code] ?? null,
-                })
-              }
+                });
+              }}
               style={{ cursor: onSelect ? "pointer" : "grab" }}
             />
           ))}
@@ -238,7 +274,12 @@ export function TerritoryMap({
         <button
           type="button"
           aria-label="Aproximar"
-          onClick={() => setView((v) => ({ ...v, k: Math.min(8, v.k * 1.3) }))}
+          onClick={() =>
+            setView((v) => {
+              const k = Math.min(8, v.k * 1.3);
+              return { k, ...clampPan(v.x, v.y, k) };
+            })
+          }
           className="font-ui px-2.5 py-1 text-body-sm hover:bg-bone"
         >
           +

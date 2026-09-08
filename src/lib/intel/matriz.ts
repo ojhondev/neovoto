@@ -1,24 +1,26 @@
 /**
- * Matriz Ideológica por Região (Fase 1).
- * Posiciona cada município nos eixos econômico e de costumes a partir da
- * votação agregada POR PARTIDO no último pleito presidencial (o termômetro
- * ideológico mais comparável do país), ajustada levemente pelo contexto
- * de renda (IBGE). Sem qualquer inferência sobre indivíduos.
+ * Matriz Ideológica por Região (v2 — validada por backtest).
+ * Posiciona cada município/UF nos eixos econômico e de costumes a partir da
+ * votação por partido no 1º turno presidencial de 2022. Sem inferência sobre
+ * indivíduos.
  *
- * Método explicável: posição do município = média das posições dos partidos
- * ponderada pelo voto. A escala de partido é transparente e editável
- * (src/lib/intel/partidos.ts).
+ * Método: posição = média das posições dos partidos ponderada pelo voto.
+ * Escala de partido calibrada por Bolognesi 2022 (src/lib/intel/partidos.ts).
+ *
+ * POR QUE O PRESIDENCIAL, E NÃO O PROPORCIONAL (backtest — scripts/backtest.ts):
+ * usando o voto de deputado federal, a posição atribuída NÃO prevê o 2º turno
+ * presidencial de 2022 (R² 0,06; acurácia de direção ~50%, no nível do acaso) —
+ * no interior e no Nordeste o voto proporcional é de máquina local, não de
+ * ideologia. Com o voto presidencial de 1º turno, a mesma posição prevê o 2º
+ * turno com R² 0,93 mesmo OUT OF TIME (posição de 2018 → resultado de 2022) e
+ * ~89% de acurácia de direção. A "dispersão" a mais do proporcional era ruído.
  */
 import { eixoDoPartido, PARTIDOS_VERSION } from "@/lib/intel/partidos";
 
-export const MATRIZ_VERSION = `matriz-v1 · ${PARTIDOS_VERSION}`;
+export const MATRIZ_VERSION = `matriz-v2 · ${PARTIDOS_VERSION}`;
 
-/**
- * Pleito usado como pano de fundo ideológico. Deputado federal (proporcional)
- * espalha os municípios muito melhor que o presidencial — 30+ partidos em vez
- * de uma disputa bipolar que vira só um eixo esquerda-direita.
- */
-export const MATRIZ_PLEITO = { ano: 2022, turno: 1, cargo: "deputado federal" };
+/** Pano de fundo ideológico: 1º turno presidencial 2022 (validado por backtest). */
+export const MATRIZ_PLEITO = { ano: 2022, turno: 1, cargo: "presidente" };
 
 export type MunicipioMatriz = {
   code: string;
@@ -97,9 +99,9 @@ export function computeMatriz(
 
     let eco = ecoAcc / somaClass;
     const soc = socAcc / somaClass;
-    // ajuste leve de contexto: renda mais alta empurra o eixo econômico
-    // em direção ao mercado (no máx. ±0,12).
-    eco = clamp(eco + 0.12 * (rankPib(pibPc[code] ?? 0) - 0.5) * 2);
+    // ajuste leve de contexto: renda mais alta empurra o eixo econômico em
+    // direção ao mercado — mantido pequeno (±0,06) por ser tuning não validado.
+    eco = clamp(eco + 0.06 * (rankPib(pibPc[code] ?? 0) - 0.5) * 2);
 
     municipios.push({
       code,
@@ -154,9 +156,10 @@ export function computeMatriz(
     maisDistantes,
     cobertura: votosTotais ? votosClassificados / votosTotais : 0,
     fontes: [
-      "TSE / Base dos Dados — votação por partido e município",
-      "IBGE — PIB dos Municípios (ajuste de contexto)",
+      "TSE / Base dos Dados — 1º turno presidencial 2022 por partido e município",
+      "IBGE — PIB dos Municípios (ajuste de contexto ±0,06)",
       "Bolognesi, Ribeiro & Codato (2022) — survey de especialistas (escala ideológica)",
+      "NeoVoto — backtest de validação (R² 0,93 out-of-time)",
     ],
   };
 }

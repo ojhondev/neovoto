@@ -19,8 +19,8 @@ const W = 520;
 const H = 520;
 const PAD = 44;
 
-const sx = (eco: number) => PAD + ((eco + 1) / 2) * (W - 2 * PAD);
-const sy = (soc: number) => PAD + ((1 - (soc + 1) / 2)) * (H - 2 * PAD); // soc +1 no topo
+const rawSx = (eco: number) => PAD + ((eco + 1) / 2) * (W - 2 * PAD);
+const rawSy = (soc: number) => PAD + ((1 - (soc + 1) / 2)) * (H - 2 * PAD); // soc +1 no topo
 
 function lerpHex(a: string, b: string, t: number) {
   const pa = [1, 3, 5].map((i) => parseInt(a.slice(i, i + 2), 16));
@@ -46,7 +46,31 @@ export function IdeologyMatrix({
 }) {
   const [hover, setHover] = useState<MunicipioMatriz | null>(null);
   const [sel, setSel] = useState<MunicipioMatriz | null>(null);
+  const [espalhar, setEspalhar] = useState(true);
   const loc = locale === "pt" ? "pt" : "en";
+
+  // O voto presidencial é bimodal (dois polos) → os pontos empilham.
+  // "Espalhar" plota pela posição RELATIVA (rank) para o gráfico ficar legível;
+  // os valores eco/soc mostrados continuam sendo os reais.
+  const rankMap = (vals: number[]) => {
+    const sorted = [...vals].sort((a, b) => a - b);
+    return (v: number) => {
+      // fração dos municípios com posição ≤ v (CDF empírica), interpolada
+      let lo = 0;
+      let hi = sorted.length;
+      while (lo < hi) {
+        const mid = (lo + hi) >> 1;
+        if (sorted[mid] <= v) lo = mid + 1;
+        else hi = mid;
+      }
+      const f = sorted.length > 0 ? lo / sorted.length : 0.5;
+      return f * 2 - 1; // volta p/ -1..1
+    };
+  };
+  const ecoRank = rankMap(municipios.map((m) => m.eco));
+  const socRank = rankMap(municipios.map((m) => m.soc));
+  const sx = (m: { eco: number }) => rawSx(espalhar ? ecoRank(m.eco) : m.eco);
+  const sy = (m: { soc: number }) => rawSy(espalhar ? socRank(m.soc) : m.soc);
 
   const maxPop = Math.max(...municipios.map((m) => m.populacao), 1);
   const rOf = (pop: number) => 2.5 + Math.sqrt(pop / maxPop) * 12;
@@ -97,8 +121,8 @@ export function IdeologyMatrix({
           {municipios.map((m) => (
             <circle
               key={m.code}
-              cx={sx(m.eco)}
-              cy={sy(m.soc)}
+              cx={sx(m)}
+              cy={sy(m)}
               r={rOf(m.populacao)}
               fill={colOf(m)}
               fillOpacity={sel?.code === m.code ? 0.95 : 0.62}
@@ -115,10 +139,10 @@ export function IdeologyMatrix({
           ))}
 
           {/* média da UF */}
-          <circle cx={sx(ufMedia.eco)} cy={sy(ufMedia.soc)} r={7} fill="none" stroke="var(--color-fossil)" strokeWidth={1.5} strokeDasharray="3 2" />
+          <circle cx={sx(ufMedia)} cy={sy(ufMedia)} r={7} fill="none" stroke="var(--color-fossil)" strokeWidth={1.5} strokeDasharray="3 2" />
 
           {/* candidato */}
-          <g transform={`translate(${sx(candidato.eco)} ${sy(candidato.soc)})`}>
+          <g transform={`translate(${sx(candidato)} ${sy(candidato)})`}>
             <path d="M0,-9 L2.6,-2.6 L9,0 L2.6,2.6 L0,9 L-2.6,2.6 L-9,0 L-2.6,-2.6 Z" fill="var(--color-chartreuse)" stroke="var(--color-ink)" strokeWidth={1} />
           </g>
         </svg>
@@ -143,6 +167,17 @@ export function IdeologyMatrix({
               ? "Clique num município para a recomendação de agenda ali."
               : "Click a municipality for the agenda recommendation there."}
           </p>
+          <label className="flex cursor-pointer items-center gap-1.5 pt-1 text-fossil">
+            <input
+              type="checkbox"
+              checked={espalhar}
+              onChange={(e) => setEspalhar(e.target.checked)}
+              className="h-3 w-3 accent-olive"
+            />
+            {loc === "pt"
+              ? "Espalhar (posição relativa — o voto é bimodal)"
+              : "Spread out (relative position — the vote is bimodal)"}
+          </label>
           {hover && (
             <p className="text-fossil">
               {hover.nome} · eco {hover.eco} · soc {hover.soc}

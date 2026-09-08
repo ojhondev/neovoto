@@ -9,6 +9,7 @@ import { getBancadaCamara } from "@/lib/data-sources/camara";
 import { escopoNacional } from "@/lib/escopo";
 import type { Cargo } from "@/lib/cargos";
 import { analisarPartidos, PARTIDOS_PLEITO, type PartidosResultado } from "@/lib/intel/partidos-analise";
+import { lrDoPartido } from "@/lib/intel/partidos";
 import { PartidosViz } from "@/components/app/PartidosViz";
 import { partidoColor } from "@/lib/viz/colors";
 
@@ -46,19 +47,37 @@ function interpretar(data: PartidosResultado, base: string, pt: boolean): string
     );
   }
   const nb = data.nos.find((n) => n.sigla === base);
+  const lrBase = lrDoPartido(base);
+  const ideo = (outra: string): string => {
+    if (lrBase == null) return "";
+    const lo = lrDoPartido(outra);
+    if (lo == null) return "";
+    const d = Math.abs(lrBase - lo);
+    return pt
+      ? d <= 0.25
+        ? " — e no mesmo campo ideológico (Bolognesi 2022)"
+        : d >= 0.7
+          ? " — e no campo ideológico oposto (Bolognesi 2022)"
+          : " — de campo ideológico intermediário (Bolognesi 2022)"
+      : d <= 0.25
+        ? " — same ideological field (Bolognesi 2022)"
+        : d >= 0.7
+          ? " — opposite ideological field (Bolognesi 2022)"
+          : " — middle ideological field (Bolognesi 2022)";
+  };
   if (nb) {
     if (nb.maisOposto) {
       out.push(
         pt
-          ? `Para o ${base}: o adversário territorial direto é o ${nb.maisOposto.sigla} (${nb.maisOposto.forca.toFixed(2)}) — crescer significa tirar voto dele nos municípios onde ele domina. Ataque a base dele, não a de quem já divide espaço com você.`
-          : `For ${base}: the direct territorial rival is ${nb.maisOposto.sigla} (${nb.maisOposto.forca.toFixed(2)}) — growing means taking votes from it where it dominates.`,
+          ? `Para o ${base}: o adversário territorial direto é o ${nb.maisOposto.sigla} (sobreposição de base ${nb.maisOposto.forca.toFixed(2)})${ideo(nb.maisOposto.sigla)} — crescer significa tirar voto dele nos municípios onde ele domina.`
+          : `For ${base}: the direct territorial rival is ${nb.maisOposto.sigla} (base overlap ${nb.maisOposto.forca.toFixed(2)})${ideo(nb.maisOposto.sigla)} — growing means taking votes from it where it dominates.`,
       );
     }
     if (nb.maisAfim) {
       out.push(
         pt
-          ? `${nb.maisAfim.sigla} disputa a mesma base que o ${base} (${nb.maisAfim.forca.toFixed(2)}): aliança com ele soma pouco voto novo e muito palanque repetido — considere só se trouxer estrutura ou tempo de TV.`
-          : `${nb.maisAfim.sigla} competes for the same base as ${base} (${nb.maisAfim.forca.toFixed(2)}): an alliance adds little new vote.`,
+          ? `${nb.maisAfim.sigla} pesca no mesmo lago que o ${base} (sobreposição ${nb.maisAfim.forca.toFixed(2)})${ideo(nb.maisAfim.sigla)}: aliança soma pouco voto novo e muito palanque repetido — considere só se trouxer estrutura ou tempo de TV.`
+          : `${nb.maisAfim.sigla} fishes the same pond as ${base} (overlap ${nb.maisAfim.forca.toFixed(2)})${ideo(nb.maisAfim.sigla)}: an alliance adds little new vote.`,
       );
     }
   }
