@@ -864,6 +864,21 @@ const pt = {
     creating: "Carregando os dados oficiais…",
     errorGeneric: "Não foi possível concluir. Tente novamente.",
   },
+  preparando: {
+    title: "Montando a inteligência da campanha",
+    sub: "A NeoVoto está puxando os dados oficiais e calibrando os motores para a sua disputa.",
+    steps: [
+      "Puxando resultados do TSE por município…",
+      "Reconstruindo a base do candidato e o raio de influência…",
+      "Calculando o IFET, território a território…",
+      "Cruzando a agenda legislativa da Câmara…",
+      "Posicionando os partidos no eixo ideológico…",
+      "Rodando os cenários de Monte Carlo…",
+      "Sintetizando o plano no Motor NeoVoto…",
+    ],
+    ready: "Tudo pronto",
+    openPanel: "Abrir o painel",
+  },
   auth: {
     signInTitle: "Entrar na NeoVoto",
     signUpTitle: "Crie sua conta na NeoVoto",

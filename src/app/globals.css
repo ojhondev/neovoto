@@ -371,7 +371,19 @@ h1, h2, h3, h4 {
 }
 .poly-in { animation: poly-in 420ms ease-out both; }
 
+/* Tela de preparação pós-onboarding (/preparando) */
+.prep-mark { animation: prep-float 4.2s ease-in-out infinite; }
+.prep-mark-done { animation: prep-pop 0.6s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.prep-glyph { animation: prep-spin 9s linear infinite; }
+.prep-step { animation: prep-fade 0.4s ease both; }
+@keyframes prep-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-7px); } }
+@keyframes prep-spin { to { transform: rotate(360deg); } }
+@keyframes prep-pop { 0% { transform: scale(1); } 45% { transform: scale(1.08); } 100% { transform: scale(1); } }
+@keyframes prep-fade { from { opacity: 0; } to { opacity: 1; } }
+
 @media (prefers-reduced-motion: reduce) {
+  .prep-mark, .prep-mark-done, .prep-glyph, .prep-step { animation: none; }
+
   /* Só desativa a animação de entrada (one-shot). O marquee e as partículas
      são parte da identidade da marca e seguem rodando — decisão de produto. */
   .rise { animation: none; }

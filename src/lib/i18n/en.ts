@@ -864,6 +864,21 @@ const en: Dictionary = {
     creating: "Loading the official data…",
     errorGeneric: "Could not finish. Please try again.",
   },
+  preparando: {
+    title: "Assembling your campaign intelligence",
+    sub: "NeoVoto is pulling the official data and calibrating the engines for your race.",
+    steps: [
+      "Pulling TSE results by municipality…",
+      "Reconstructing the candidate base and reach radius…",
+      "Computing the IFET, territory by territory…",
+      "Cross-referencing the Chamber's legislative agenda…",
+      "Placing parties on the ideological axis…",
+      "Running the Monte Carlo scenarios…",
+      "Synthesizing the plan in the NeoVoto Engine…",
+    ],
+    ready: "All set",
+    openPanel: "Open the dashboard",
+  },
   auth: {
     signInTitle: "Sign in to NeoVoto",
     signUpTitle: "Create your NeoVoto account",

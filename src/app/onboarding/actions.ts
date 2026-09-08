@@ -29,7 +29,7 @@ export async function finalizarOnboarding(
     if (!externalId) return { error: "Seleção inválida." };
     const res = await selectCandidacy(source, externalId, objective, cargoAlvo, apoios);
     if (!res.ok) return { error: res.error };
-    redirect("/painel");
+    redirect("/preparando");
   }
 
   if (source === "tse") {
@@ -42,7 +42,7 @@ export async function finalizarOnboarding(
     if (!cand?.externalId || !cand?.cargo) return { error: "Seleção inválida." };
     const res = await selectCandidacyTSE(cand, objective, cargoAlvo, apoios);
     if (!res.ok) return { error: res.error };
-    redirect("/painel");
+    redirect("/preparando");
   }
 
   if (source === "manual") {
@@ -58,7 +58,7 @@ export async function finalizarOnboarding(
       apoios,
     );
     if (!res.ok) return { error: res.error };
-    redirect("/painel");
+    redirect("/preparando");
   }
 
   return { error: "Seleção inválida." };
