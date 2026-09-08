@@ -3,10 +3,12 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { ToolShell } from "@/components/app/ToolShell";
 import { HeatmapExplorer } from "@/components/app/HeatmapExplorer";
+import { MovimentoView } from "@/components/app/MovimentoView";
 import { IfetInfo } from "@/components/app/IfetInfo";
 import { getDictionary } from "@/lib/i18n";
 import { getCurrentCandidacy, perfilFrom } from "@/lib/candidacy";
 import { getTerritorioUF, getTerritorioNacional } from "@/lib/territory";
+import { getMovimento } from "@/lib/intel/movimento-load";
 import { escopoNacional } from "@/lib/escopo";
 import type { Cargo } from "@/lib/cargos";
 import { QUADRANTE_INFO, type Quadrante } from "@/lib/intel/ifet";
@@ -50,6 +52,10 @@ export default async function Page() {
       </ToolShell>
     );
   }
+
+  const movimento = nacional
+    ? { movimento: null, zonas: null }
+    : await getMovimento(candidacy, perfil, territorio.nomeByCode).catch(() => ({ movimento: null, zonas: null }));
 
   const { ifet } = territorio;
   const quad = Object.fromEntries(
@@ -162,6 +168,17 @@ export default async function Page() {
           locale={locale}
         />
       </div>
+
+      {!nacional && (movimento.movimento || movimento.zonas) && (
+        <MovimentoView
+          geojson={territorio.geojson}
+          nameByCode={territorio.nomeByCode}
+          movimento={movimento.movimento}
+          zonas={movimento.zonas}
+          dict={t.movimento}
+          locale={locale}
+        />
+      )}
 
       {/* Ficha técnica */}
       <div className="card mt-6">

@@ -206,6 +206,125 @@ export async function votacaoPorMunicipio(args: {
     .map((r) => ({ idMunicipio: r.id_municipio as string, votos: Number(r.votos ?? 0) }));
 }
 
+/** Votos do candidato por ZONA eleitoral (id_municipio = IBGE). */
+export async function votacaoPorZona(args: {
+  sequencial: string;
+  ano: number;
+  turno: number;
+  uf: string;
+}): Promise<{ idMunicipio: string; zona: string; votos: number }[]> {
+  if (!basedosdadosDisponivel()) return [];
+  const rows = await query(
+    `SELECT id_municipio, zona, SUM(votos) AS votos
+     FROM \`${DATASET}.resultados_candidato_municipio_zona\`
+     WHERE ano = @ano AND turno = @turno AND sigla_uf = @uf AND sequencial_candidato = @seq
+     GROUP BY id_municipio, zona`,
+    { ano: args.ano, turno: args.turno, uf: args.uf, seq: args.sequencial },
+  );
+  return rows
+    .filter((r) => r.id_municipio && r.zona)
+    .map((r) => ({ idMunicipio: r.id_municipio as string, zona: r.zona as string, votos: Number(r.votos ?? 0) }));
+}
+
+/** Comparecimento por ZONA (para normalizar o voto do candidato por zona). */
+export async function comparecimentoPorZona(args: {
+  ano: number;
+  turno: number;
+  uf: string;
+  cargo: string;
+}): Promise<{ idMunicipio: string; zona: string; comparecimento: number }[]> {
+  if (!basedosdadosDisponivel()) return [];
+  const rows = await query(
+    `SELECT id_municipio, zona, SUM(comparecimento) AS comp
+     FROM \`${DATASET}.detalhes_votacao_municipio_zona\`
+     WHERE ano = @ano AND turno = @turno AND sigla_uf = @uf AND cargo = @cargo
+     GROUP BY id_municipio, zona`,
+    { ano: args.ano, turno: args.turno, uf: args.uf, cargo: args.cargo },
+  );
+  return rows
+    .filter((r) => r.id_municipio && r.zona)
+    .map((r) => ({ idMunicipio: r.id_municipio as string, zona: r.zona as string, comparecimento: Number(r.comp ?? 0) }));
+}
+
+/**
+ * Comparecimento e eleitorado apto por município num pleito. Base para
+ * normalizar o voto do candidato pelo eleitorado que efetivamente votou —
+ * e para medir bolsões de abstenção. `id_municipio` = IBGE.
+ */
+export async function comparecimentoPorMunicipio(args: {
+  ano: number;
+  turno: number;
+  uf: string;
+  cargo: string;
+}): Promise<{ idMunicipio: string; aptos: number; comparecimento: number; validos: number }[]> {
+  if (!basedosdadosDisponivel()) return [];
+  const rows = await query(
+    `SELECT id_municipio, SUM(aptos) AS aptos, SUM(comparecimento) AS comparecimento, SUM(votos_validos) AS validos
+     FROM \`${DATASET}.detalhes_votacao_municipio\`
+     WHERE ano = @ano AND turno = @turno AND sigla_uf = @uf AND cargo = @cargo
+     GROUP BY id_municipio`,
+    { ano: args.ano, turno: args.turno, uf: args.uf, cargo: args.cargo },
+  );
+  return rows
+    .filter((r) => r.id_municipio)
+    .map((r) => ({
+      idMunicipio: r.id_municipio as string,
+      aptos: Number(r.aptos ?? 0),
+      comparecimento: Number(r.comparecimento ?? 0),
+      validos: Number(r.validos ?? 0),
+    }));
+}
+
+/**
+ * Perfil do eleitorado por município: escolaridade e faixa etária agregadas.
+ * Da tabela `perfil_eleitorado_municipio_zona` (códigos TSE de `instrucao`).
+ * Retorna, por município: total de eleitores, fração com superior completo,
+ * fração de baixa instrução (até fundamental incompleto) e idade mediana aprox.
+ */
+export type PerfilEleitorado = {
+  idMunicipio: string;
+  eleitores: number;
+  /** índice 0..1 de escolaridade (média do nível TSE 1–8 sobre o eleitorado) */
+  escolaridade: number;
+  fracSuperior: number;
+  fracBaixaInstrucao: number;
+  frac60mais: number;
+};
+
+export async function perfilEleitoradoPorMunicipio(args: {
+  ano: number;
+  uf: string;
+}): Promise<PerfilEleitorado[]> {
+  if (!basedosdadosDisponivel()) return [];
+  // instrucao (TSE): 1 analfabeto · 2 lê e escreve · 3 fund. incompleto · 4 fund. completo
+  //                  5 médio incompleto · 6 médio completo · 7 superior incompleto · 8 superior completo
+  const rows = await query(
+    `SELECT id_municipio,
+            SUM(eleitores) AS tot,
+            SUM(SAFE_CAST(instrucao AS INT64) * eleitores) AS soma_instr,
+            SUM(CASE WHEN instrucao = '8' THEN eleitores ELSE 0 END) AS superior,
+            SUM(CASE WHEN instrucao IN ('1','2','3') THEN eleitores ELSE 0 END) AS baixa,
+            SUM(CASE WHEN grupo_idade IN ('6064','6569','7074','7579','8084','8589','9094','9599','9999') THEN eleitores ELSE 0 END) AS idosos
+     FROM \`${DATASET}.perfil_eleitorado_municipio_zona\`
+     WHERE ano = @ano AND sigla_uf = @uf AND instrucao != '0'
+     GROUP BY id_municipio`,
+    { ano: args.ano, uf: args.uf.toUpperCase() },
+  );
+  return rows
+    .filter((r) => r.id_municipio && Number(r.tot ?? 0) > 0)
+    .map((r) => {
+      const tot = Number(r.tot);
+      return {
+        idMunicipio: r.id_municipio as string,
+        eleitores: tot,
+        escolaridade: Math.min(1, Number(r.soma_instr ?? 0) / (8 * tot)),
+        fracSuperior: Number(r.superior ?? 0) / tot,
+        fracBaixaInstrucao: Number(r.baixa ?? 0) / tot,
+        frac60mais: Number(r.idosos ?? 0) / tot,
+      };
+    });
+}
+
 /**
  * Votação por PARTIDO por município num pleito (nominais + legenda).
  * Base da Matriz Ideológica e do módulo de Coligações. `id_municipio` = IBGE.

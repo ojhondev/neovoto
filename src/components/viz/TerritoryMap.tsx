@@ -11,7 +11,7 @@ type FC = {
   }[];
 };
 
-type Scale = "heat" | "sequential" | "votes";
+type Scale = "heat" | "sequential" | "votes" | "diverging";
 
 const RAMP: Record<Scale, string[]> = {
   // prioridade / urgência — vermelho→âmbar→amarelo→verde-claro→verde
@@ -20,6 +20,8 @@ const RAMP: Record<Scale, string[]> = {
   sequential: ["#eef4dd", "#b6d271", "#5c9c2e", "#2e6b12"],
   // votação real — azul, para não confundir com o índice
   votes: ["#e6eefb", "#9dc2ee", "#4a8fd6", "#1c5aa0"],
+  // divergente — perda (vermelho) ↔ neutro ↔ crescimento (verde)
+  diverging: ["#c0392b", "#e8a49a", "#ece7de", "#9bc37f", "#2e7d32"],
 };
 
 function lerpHex(a: string, b: string, t: number) {
@@ -126,19 +128,29 @@ export function TerritoryMap({
   const H = 620;
 
   const paths = useMemo(() => buildPaths(geojson, W, H), [geojson]);
+  const diverging = scale === "diverging";
   const { minV, maxV } = useMemo(() => {
-    const vals = Object.values(valueByCode).filter((v) => v > 0);
-    return {
-      minV: vals.length ? Math.min(...vals) : 0,
-      maxV: vals.length ? Math.max(...vals) : 1,
-    };
-  }, [valueByCode]);
+    const all = Object.values(valueByCode);
+    const vals = diverging ? all : all.filter((v) => v > 0);
+    if (vals.length === 0) return { minV: 0, maxV: 1 };
+    if (diverging) {
+      // domínio robusto: 90º percentil do |valor|, para outliers não lavarem o mapa
+      const abs = vals.map((v) => Math.abs(v)).sort((a, b) => a - b);
+      const m = Math.max(abs[Math.floor(abs.length * 0.9)] ?? abs[abs.length - 1] ?? 1e-6, 1e-6);
+      return { minV: -m, maxV: m };
+    }
+    return { minV: Math.min(...vals), maxV: Math.max(...vals) };
+  }, [valueByCode, diverging]);
 
   const logMin = Math.log(minV + 1);
   const logMax = Math.log(maxV + 1);
   const colorFor = (code: string) => {
     const raw = valueByCode[code];
     if (raw == null) return "var(--color-ash)";
+    if (diverging) {
+      const t = maxV > 0 ? 0.5 + raw / (2 * maxV) : 0.5;
+      return ramp(scale, Math.max(0, Math.min(1, t)));
+    }
     if (raw <= 0) return ramp(scale, 0);
     const t = logMax > logMin ? (Math.log(raw + 1) - logMin) / (logMax - logMin) : 0.5;
     return ramp(scale, t);

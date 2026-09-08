@@ -7,6 +7,10 @@ import {
   votacaoPartidoPorMunicipio,
   votacaoPartidoNacionalPorUF,
   votosCorteEleito,
+  comparecimentoPorMunicipio,
+  comparecimentoPorZona,
+  perfilEleitoradoPorMunicipio,
+  votacaoPorZona,
 } from "@/lib/data-sources/basedosdados";
 
 export const getVotacaoPartidoUF = unstable_cache(
@@ -34,5 +38,36 @@ export const getVotosCorteEleito = unstable_cache(
   async (ano: number, turno: number, uf: string, cargo: string) =>
     votosCorteEleito({ ano, turno, uf, cargo }),
   ["votos-corte-eleito-v1"],
+  { revalidate: 60 * 60 * 24 * 30 },
+);
+
+/** Comparecimento e aptos por município (choropleth de abstenção, normalização). */
+export const getComparecimentoUF = unstable_cache(
+  async (ano: number, turno: number, uf: string, cargo: string) =>
+    comparecimentoPorMunicipio({ ano, turno, uf, cargo }),
+  ["comparecimento-uf-v1"],
+  { revalidate: 60 * 60 * 24 * 30 },
+);
+
+/** Perfil do eleitorado (escolaridade, idade) por município. */
+export const getPerfilEleitoradoUF = unstable_cache(
+  async (ano: number, uf: string) => perfilEleitoradoPorMunicipio({ ano, uf }),
+  ["perfil-eleitorado-uf-v1"],
+  { revalidate: 60 * 60 * 24 * 30 },
+);
+
+/** Comparecimento por zona (normaliza o voto do candidato por zona). */
+export const getComparecimentoZonaUF = unstable_cache(
+  async (ano: number, turno: number, uf: string, cargo: string) =>
+    comparecimentoPorZona({ ano, turno, uf, cargo }),
+  ["comparecimento-zona-uf-v1"],
+  { revalidate: 60 * 60 * 24 * 30 },
+);
+
+/** Votos do candidato por zona (chave por sequencial). */
+export const getVotacaoPorZona = unstable_cache(
+  async (sequencial: string, ano: number, turno: number, uf: string) =>
+    votacaoPorZona({ sequencial, ano, turno, uf }),
+  ["votacao-por-zona-v1"],
   { revalidate: 60 * 60 * 24 * 30 },
 );
