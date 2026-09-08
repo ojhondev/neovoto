@@ -21,6 +21,8 @@ import { config } from "dotenv";
 import { votacaoPartidoPorMunicipio } from "@/lib/data-sources/basedosdados";
 import { lrDoPartido, BOLOGNESI_2022 } from "@/lib/intel/partidos";
 import { computeBaseCandidato, type CampanhaPropria } from "@/lib/intel/base-candidato";
+import { computeIFET } from "@/lib/intel/ifet";
+import { computeCenarios } from "@/lib/intel/cenarios";
 import type { MunicipioGeo } from "@/lib/geo-math";
 
 config({ path: ".env.local" });
@@ -341,6 +343,28 @@ function spearmanSafe(a: number[], b: number[]): number {
   const s = spearman(a, b);
   return Number.isNaN(s) ? 0 : s;
 }
+function median(xs: number[]): number {
+  if (xs.length === 0) return NaN;
+  const s = [...xs].sort((a, b) => a - b);
+  const m = Math.floor(s.length / 2);
+  return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
+}
+const PARTICULAS = new Set(["de", "da", "do", "dos", "das", "e", "di", "del"]);
+function tokens(nome: string): string[] {
+  return nome
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z\s]/g, " ")
+    .split(/\s+/)
+    .filter((t) => t.length >= 3 && !PARTICULAS.has(t));
+}
+/** true só quando os nomes são idênticos após normalizar (mesmo critério do TSE p/ a pessoa). */
+function mesmaPessoa(a: string, b: string): boolean {
+  const ta = tokens(a).join(" ");
+  const tb = tokens(b).join(" ");
+  return ta.length > 0 && ta === tb;
+}
 function precisionAtK(pred: Map<string, number>, actual: Map<string, number>, k: number): number {
   const top = (m: Map<string, number>) =>
     [...m.entries()].sort((x, y) => y[1] - x[1]).slice(0, k).map(([c]) => c);
@@ -419,23 +443,23 @@ async function backtestBaseCandidato(ufs: string[]) {
     const dns = [...new Set(alvoRows.map((r) => r.dn).filter(Boolean))] as string[];
     const priorRows = dns.length
       ? await bq(
-          `SELECT c.sequencial seq, c.ano ano, c.cargo cargo, CAST(c.data_nascimento AS STRING) dn,
+          `SELECT c.sequencial seq, c.ano ano, c.cargo cargo, c.nome pnome, CAST(c.data_nascimento AS STRING) dn,
                   r.id_municipio code, SUM(r.votos) votos, ANY_VALUE(r.resultado) resultado
            FROM \`${DATASET}.candidatos\` c
            JOIN \`${DATASET}.resultados_candidato_municipio\` r
              ON r.sequencial_candidato=c.sequencial AND r.ano=c.ano AND r.turno=1
            WHERE c.sigla_uf='${uf}' AND c.ano<=2020
              AND CAST(c.data_nascimento AS STRING) IN (${dns.map((d) => `'${d}'`).join(",")})
-           GROUP BY seq, ano, cargo, dn, code`,
+           GROUP BY seq, ano, cargo, pnome, dn, code`,
         )
       : [];
-    const priorByDn = new Map<string, Map<string, { ano: number; cargo: string; byCode: Record<string, number>; total: number; res: string | null }>>();
+    const priorByDn = new Map<string, Map<string, { ano: number; cargo: string; nome: string; byCode: Record<string, number>; total: number; res: string | null }>>();
     for (const r of priorRows) {
       const dn = r.dn!;
       if (!priorByDn.has(dn)) priorByDn.set(dn, new Map());
       const bySeq = priorByDn.get(dn)!;
       const key = r.seq!;
-      if (!bySeq.has(key)) bySeq.set(key, { ano: Number(r.ano), cargo: (r.cargo ?? "").toLowerCase(), byCode: {}, total: 0, res: r.resultado });
+      if (!bySeq.has(key)) bySeq.set(key, { ano: Number(r.ano), cargo: (r.cargo ?? "").toLowerCase(), nome: r.pnome ?? "", byCode: {}, total: 0, res: r.resultado });
       const c = bySeq.get(key)!;
       c.byCode[r.code!] = (c.byCode[r.code!] ?? 0) + Number(r.votos);
       c.total += Number(r.votos);
@@ -471,7 +495,7 @@ async function backtestBaseCandidato(ufs: string[]) {
       const campanhas: CampanhaPropria[] = [];
       if (dn && priorByDn.has(dn)) {
         for (const c of priorByDn.get(dn)!.values()) {
-          if (Object.keys(c.byCode).length > 0)
+          if (Object.keys(c.byCode).length > 0 && mesmaPessoa(a.nome ?? "", c.nome))
             campanhas.push({ ano: c.ano, cargo: c.cargo, byCode: c.byCode, totalVotos: c.total, eleito: /eleito/i.test(c.res ?? "") && !/nao|não/i.test(c.res ?? "") });
         }
       }
@@ -547,6 +571,268 @@ async function backtestBaseCandidato(ufs: string[]) {
   }
 }
 
+// ---------- D) CENÁRIOS (Monte Carlo) ----------
+/**
+ * A distribuição que os Cenários projetam para 2022 — construída SÓ com dado
+ * ≤2018/2020 — deve estar CALIBRADA contra o resultado real de 2022.
+ *
+ * Amostra: candidatos a deputado estadual que disputaram o cargo em 2018 E em
+ * 2022 (condiciona em "concorreu de novo", não no voto de 2022). Preditor: voto
+ * próprio de 2018 + Base do Candidato (âncora, rede) com dado ≤2020. Barra =
+ * corte dos eleitos de 2018 (o que se sabia antes de 2022).
+ *
+ * Métricas:
+ *  - cobertura do IC 80% (p10–p90) — alvo 80% — e do IC 50% (p25–p75) — alvo 50%
+ *  - PIT: onde na CDF prevista o resultado real caiu (6 baldes) — deve ser ~plano
+ *  - erro % da mediana vs baseline "repete 2018 ± maré"
+ *  - Brier da 'chance de eleger' vs Brier da taxa-base
+ */
+const DUMMY_TXT = Object.fromEntries(
+  ["base","favoravel","adverso","premissaBase","premissaMareBoa","premissaLacunas","premissaCompBaixo","premissaMareRuim","premissaAdvConsolida","fatorMare","fatorComparecimento","fatorLacunas"].map((k) => [k, k]),
+) as Parameters<typeof computeCenarios>[1];
+
+async function backtestCenariosV2(ufs: string[]) {
+  console.log("\n" + "=".repeat(70));
+  console.log("D) CENÁRIOS — a distribuição projetada para 2022 (dado ≤2020) está calibrada?");
+  console.log("=".repeat(70));
+
+  type Rec = { tier: "A" | "B"; d: { p10: number; p25: number; p50: number; p75: number; p90: number }; pv: number; need: number; actual: number; elected: boolean; base50: number };
+  const recs: Rec[] = [];
+
+  for (const uf of ufs) {
+    const geoRows = await bq(
+      `SELECT id_municipio, nome, id_regiao_imediata, nome_regiao_imediata, id_regiao_intermediaria,
+              ST_Y(centroide) lat, ST_X(centroide) lng FROM \`basedosdados.br_bd_diretorios_brasil.municipio\` WHERE sigla_uf='${uf}'`,
+    );
+    const geo: MunicipioGeo[] = geoRows.map((r) => ({
+      code: r.id_municipio!, nome: r.nome ?? "",
+      regImediata: r.id_regiao_imediata ?? "", nomeRegImediata: r.nome_regiao_imediata ?? "",
+      regIntermediaria: r.id_regiao_intermediaria ?? "", lat: Number(r.lat ?? 0), lng: Number(r.lng ?? 0),
+    }));
+    const nn = (s: string) => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").trim();
+    const codeByNome = new Map(geo.map((g) => [nn(g.nome), g.code]));
+    const popRows = await bq(
+      `SELECT id_municipio, populacao FROM \`basedosdados.br_ibge_populacao.municipio\`
+       WHERE sigla_uf='${uf}' AND ano=(SELECT MAX(ano) FROM \`basedosdados.br_ibge_populacao.municipio\` WHERE sigla_uf='${uf}')`,
+    );
+    const popByCode = new Map(popRows.map((r) => [r.id_municipio!, Number(r.populacao)]));
+    const pibRows = await bq(
+      `SELECT id_municipio, pib FROM \`basedosdados.br_ibge_pib.municipio\`
+       WHERE sigla_uf='${uf}' AND ano=(SELECT MAX(ano) FROM \`basedosdados.br_ibge_pib.municipio\` WHERE sigla_uf='${uf}')`,
+    ).catch(() => []);
+    const pibByCode = new Map(pibRows.map((r) => [r.id_municipio!, Number(r.pib)]));
+
+    // eleição de referência: deputado estadual 2018, por partido+município
+    const v2018 = await votacaoPartidoPorMunicipio({ ano: 2018, turno: 1, uf, cargo: "deputado estadual" });
+    if (v2018.length < 100) { console.log(` ${uf}: sem dados de 2018, pulando`); continue; }
+    // corte dos eleitos 2018
+    const corte18row = await bq(
+      `SELECT MIN(v) c FROM (SELECT sequencial_candidato, SUM(votos) v
+        FROM \`${DATASET}.resultados_candidato_municipio\`
+        WHERE ano=2018 AND turno=1 AND sigla_uf='${uf}' AND cargo='deputado estadual'
+          AND LOWER(resultado) LIKE '%eleito%' AND LOWER(resultado) NOT LIKE '%nao%' AND LOWER(resultado) NOT LIKE '%não%'
+        GROUP BY sequencial_candidato)`,
+    );
+    const corte18 = Number(corte18row[0]?.c ?? 0) || 30000;
+
+    // candidatos que disputaram dep. estadual em 2018 E em 2022 (mesma pessoa: nome + nascimento)
+    const dupRows = await bq(
+      `WITH c18 AS (
+         SELECT CAST(data_nascimento AS STRING) dn, UPPER(nome) nomeU, ANY_VALUE(sequencial) s18 FROM \`${DATASET}.candidatos\`
+         WHERE ano=2018 AND sigla_uf='${uf}' AND cargo='deputado estadual' AND data_nascimento IS NOT NULL
+         GROUP BY dn, nomeU
+       )
+       SELECT c.sequencial seq22, c18.s18 seq18, c.nome nome, c.sigla_partido part, c.municipio_nascimento nasc,
+              CAST(c.data_nascimento AS STRING) dn,
+              SUM(r.votos) tot22,
+              MAX(CASE WHEN LOWER(r.resultado) LIKE '%eleito%' AND LOWER(r.resultado) NOT LIKE '%nao%' AND LOWER(r.resultado) NOT LIKE '%não%' THEN 1 ELSE 0 END) el22
+       FROM \`${DATASET}.candidatos\` c
+       JOIN c18 ON CAST(c.data_nascimento AS STRING)=c18.dn AND UPPER(c.nome)=c18.nomeU
+       JOIN \`${DATASET}.resultados_candidato_municipio\` r
+         ON r.sequencial_candidato=c.sequencial AND r.ano=2022 AND r.turno=1
+       WHERE c.ano=2022 AND c.sigla_uf='${uf}' AND c.cargo='deputado estadual'
+       GROUP BY seq22, seq18, nome, part, nasc, dn
+       LIMIT 600`,
+    );
+    if (dupRows.length === 0) { console.log(` ${uf}: 0 candidatos 2018∩2022`); continue; }
+
+    // voto próprio de 2018 (dep. estadual) por município — query dedicada e enxuta
+    const seqs18 = [...new Set(dupRows.map((r) => r.seq18).filter(Boolean))] as string[];
+    const own18Rows = seqs18.length
+      ? await bq(
+          `SELECT sequencial_candidato seq, id_municipio code, SUM(votos) v, ANY_VALUE(resultado) res
+           FROM \`${DATASET}.resultados_candidato_municipio\`
+           WHERE ano=2018 AND turno=1 AND sigla_uf='${uf}' AND cargo='deputado estadual'
+             AND sequencial_candidato IN (${seqs18.map((s) => `'${s}'`).join(",")})
+           GROUP BY seq, code`,
+        )
+      : [];
+    const own18BySeq = new Map<string, { byCode: Record<string, number>; total: number; res: string | null }>();
+    for (const r of own18Rows) {
+      const cur = own18BySeq.get(r.seq!) ?? { byCode: {}, total: 0, res: r.res };
+      cur.byCode[r.code!] = (cur.byCode[r.code!] ?? 0) + Number(r.v);
+      cur.total += Number(r.v);
+      own18BySeq.set(r.seq!, cur);
+    }
+
+    const dns = [...new Set(dupRows.map((r) => r.dn).filter(Boolean))] as string[];
+    // campanhas anteriores ≤2020 — restrito a cargos úteis para a Base (evita truncar a resposta)
+    const priorRows = await bq(
+      `SELECT c.sequencial seq, c.ano ano, c.cargo cargo, c.nome pnome, CAST(c.data_nascimento AS STRING) dn,
+              r.id_municipio code, SUM(r.votos) votos, ANY_VALUE(r.resultado) res
+       FROM \`${DATASET}.candidatos\` c
+       JOIN \`${DATASET}.resultados_candidato_municipio\` r
+         ON r.sequencial_candidato=c.sequencial AND r.ano=c.ano AND r.turno=1
+       WHERE c.sigla_uf='${uf}' AND c.ano<=2020
+         AND c.cargo IN ('deputado estadual','vereador','prefeito','deputado federal')
+         AND CAST(c.data_nascimento AS STRING) IN (${dns.map((d) => `'${d}'`).join(",")})
+       GROUP BY seq, ano, cargo, pnome, dn, code`,
+    );
+    type PriorCamp = CampanhaPropria & { nome: string };
+    const priorByDn = new Map<string, PriorCamp[]>();
+    const tmp = new Map<string, Map<string, { ano: number; cargo: string; nome: string; byCode: Record<string, number>; total: number; res: string | null }>>();
+    for (const r of priorRows) {
+      const dn = r.dn!;
+      if (!tmp.has(dn)) tmp.set(dn, new Map());
+      const bySeq = tmp.get(dn)!;
+      if (!bySeq.has(r.seq!)) bySeq.set(r.seq!, { ano: Number(r.ano), cargo: (r.cargo ?? "").toLowerCase(), nome: r.pnome ?? "", byCode: {}, total: 0, res: r.res });
+      const c = bySeq.get(r.seq!)!;
+      c.byCode[r.code!] = (c.byCode[r.code!] ?? 0) + Number(r.votos);
+      c.total += Number(r.votos);
+    }
+    for (const [dn, bySeq] of tmp) {
+      priorByDn.set(dn, [...bySeq.values()].filter((c) => Object.keys(c.byCode).length > 0).map((c) => ({
+        ano: c.ano, cargo: c.cargo, nome: c.nome, byCode: c.byCode, totalVotos: c.total,
+        eleito: /eleito/i.test(c.res ?? "") && !/nao|não/i.test(c.res ?? ""),
+      })));
+    }
+
+    // vereadores 2020 eleitos por partido (rede local)
+    const verRows = await bq(
+      `SELECT id_municipio, sigla_partido, SUM(votos) v FROM \`${DATASET}.resultados_candidato_municipio\`
+       WHERE ano=2020 AND turno=1 AND sigla_uf='${uf}' AND cargo='vereador'
+         AND LOWER(resultado) LIKE '%eleito%' AND LOWER(resultado) NOT LIKE '%nao%' AND LOWER(resultado) NOT LIKE '%não%' GROUP BY 1,2`,
+    );
+    const eleitosPart = new Map<string, Record<string, number>>();
+    for (const r of verRows) {
+      const p = (r.sigla_partido ?? "").toUpperCase();
+      if (!eleitosPart.has(p)) eleitosPart.set(p, {});
+      eleitosPart.get(p)![r.id_municipio!] = Number(r.v);
+    }
+
+    let n = 0;
+    let puladosHomonimo = 0;
+    for (const a of dupRows) {
+      const dn = a.dn as string;
+      // voto próprio de 2018 no cargo — da query dedicada (nunca truncada)
+      const o18 = a.seq18 ? own18BySeq.get(a.seq18 as string) : undefined;
+      const own2018 = o18 && o18.total > 0
+        ? { ano: 2018, cargo: "deputado estadual", byCode: o18.byCode, totalVotos: o18.total, eleito: /eleito/i.test(o18.res ?? "") && !/nao|não/i.test(o18.res ?? "") }
+        : undefined;
+      // outras campanhas ≤2020 (para âncora + camada própria da Base), sem a de dep-est 2018
+      const outras: CampanhaPropria[] = (priorByDn.get(dn) ?? [])
+        .filter((c) => mesmaPessoa(a.nome ?? "", c.nome) && !(c.cargo === "deputado estadual" && c.ano === 2018))
+        .map((c) => ({ ano: c.ano, cargo: c.cargo, byCode: c.byCode, totalVotos: c.totalVotos, eleito: c.eleito }));
+      const campanhas: CampanhaPropria[] = own2018 ? [own2018, ...outras] : outras;
+      if (!own2018 && campanhas.length === 0) { puladosHomonimo++; continue; }
+      const anchorCode =
+        (a.nasc ? codeByNome.get(nn(a.nasc)) : null) ??
+        (campanhas.length ? Object.entries([...campanhas].sort((x, y) => y.ano - x.ano)[0].byCode).sort((x, y) => y[1] - x[1])[0]?.[0] : null) ??
+        null;
+
+      const base = computeBaseCandidato({
+        anoAlvo: 2022, geo, campanhas, ancoraCode: anchorCode,
+        ancoraVia: a.nasc ? "nascimento" : "ultima-campanha",
+        baseDeclarada: [], eleitosPartido: eleitosPart.get((a.part ?? "").toUpperCase()) ?? {},
+        apoiosByCode: {}, apoiosNomes: [],
+      });
+      const ifet = computeIFET(
+        geo.map((g) => ({ code: g.code, nome: g.nome, populacao: popByCode.get(g.code) ?? 0, pibTotal: pibByCode.get(g.code) ?? 0, alcance: base.alcanceByCode[g.code], confianca: base.confiancaByCode[g.code] })),
+        { modo: base.modo },
+      );
+      const cen = computeCenarios(
+        {
+          cargo: "deputado-estadual", partido: (a.part ?? "").toUpperCase(),
+          votosCandidatoByCode: own2018?.byCode ?? null,
+          alcanceByCode: own2018 ? null : base.alcanceByCode,
+          votacaoPartido: v2018.map((r) => ({ idMunicipio: r.idMunicipio, sigla: r.sigla, votos: r.votos })),
+          ifetByCode: ifet.byCode,
+          populacaoByCode: Object.fromEntries(popByCode),
+          nomeByCode: Object.fromEntries(geo.map((g) => [g.code, g.nome])),
+          corteEleito: corte18, fracaoPartido: 0.12,
+        },
+        DUMMY_TXT,
+        { sims: 1500 },
+      );
+
+      const base50 = own2018
+        ? own2018.totalVotos
+        : Math.round((base.cobertura || 0.05) * corte18 * 0.5);
+      recs.push({
+        tier: own2018 ? "A" : "B",
+        d: cen.distribuicao, pv: cen.probVitoria, need: cen.votosNecessarios,
+        actual: Number(a.tot22), elected: Number(a.el22) === 1, base50,
+      });
+      n++;
+    }
+    console.log(` ${uf}: ${n} candidatos (dep. estadual 2018 ∩ 2022) · ${puladosHomonimo} descartados (só dn em comum)`);
+  }
+
+  // ---- agregação ----
+  const report = (label: string, rs: Rec[]) => {
+    if (rs.length < 5) return;
+    const mean = (xs: number[]) => xs.reduce((s, v) => s + v, 0) / xs.length;
+    const cov = (lo: (r: Rec) => number, hi: (r: Rec) => number) =>
+      mean(rs.map((r) => (r.actual >= lo(r) && r.actual <= hi(r) ? 1 : 0)));
+    const cov80 = cov((r) => r.d.p10, (r) => r.d.p90);
+    const cov50 = cov((r) => r.d.p25, (r) => r.d.p75);
+    const belowMed = mean(rs.map((r) => (r.actual <= r.d.p50 ? 1 : 0)));
+    // PIT em 6 baldes
+    const pit = [0, 0, 0, 0, 0, 0]; // <p10, p10-25, p25-50, p50-75, p75-90, >p90
+    for (const r of rs) {
+      const a = r.actual, d = r.d;
+      if (a < d.p10) pit[0]++;
+      else if (a < d.p25) pit[1]++;
+      else if (a < d.p50) pit[2]++;
+      else if (a < d.p75) pit[3]++;
+      else if (a < d.p90) pit[4]++;
+      else pit[5]++;
+    }
+    const pitPct = pit.map((c) => ((c / rs.length) * 100).toFixed(0));
+    // erro % da mediana
+    const ape = (pred: (r: Rec) => number) =>
+      rs.filter((r) => r.actual >= 500).map((r) => Math.abs(pred(r) - r.actual) / r.actual);
+    const medApeModel = median(ape((r) => r.d.p50));
+    const medApeBase = median(ape((r) => r.base50));
+    // Brier da chance de eleger
+    const brier = mean(rs.map((r) => (r.pv - (r.elected ? 1 : 0)) ** 2));
+    const rate = mean(rs.map((r) => (r.elected ? 1 : 0)));
+    const brierBase = mean(rs.map((r) => (rate - (r.elected ? 1 : 0)) ** 2));
+    // ρ mediana × real
+    const rho = spearmanSafe(rs.map((r) => r.d.p50), rs.map((r) => r.actual));
+    // distribuição empírica do "crescimento" real: actual / base50 (só onde base50>200)
+    const ratios = rs.filter((r) => r.base50 > 200 && r.actual > 0).map((r) => r.actual / r.base50);
+    const logr = ratios.map((x) => Math.log(x));
+    const sdLog = Math.sqrt(mean(logr.map((v) => (v - mean(logr)) ** 2)));
+    const rs2 = [...ratios].sort((a, b) => a - b);
+    const rq = (q: number) => rs2[Math.floor(q * (rs2.length - 1))] ?? NaN;
+
+    console.log(`\n  [${label}] n=${rs.length}`);
+    console.log(`   crescimento real (voto22 / base): p10 ${rq(0.1).toFixed(2)}× · p50 ${rq(0.5).toFixed(2)}× · p90 ${rq(0.9).toFixed(2)}×   (sd log = ${sdLog.toFixed(2)})`);
+    console.log(`   cobertura IC 80% (p10–p90): ${(cov80 * 100).toFixed(0)}%   (alvo 80%)`);
+    console.log(`   cobertura IC 50% (p25–p75): ${(cov50 * 100).toFixed(0)}%   (alvo 50%)`);
+    console.log(`   resultado ≤ mediana prevista: ${(belowMed * 100).toFixed(0)}%   (alvo 50%)`);
+    console.log(`   PIT [<p10 |p10-25|p25-50|p50-75|p75-90| >p90]: ${pitPct.join("% | ")}%   (ideal 10|15|25|25|15|10)`);
+    console.log(`   erro % mediana:  modelo ${(medApeModel * 100).toFixed(0)}%   vs baseline "repete 2018" ${(medApeBase * 100).toFixed(0)}%`);
+    console.log(`   Brier 'chance de eleger': ${brier.toFixed(3)}   vs taxa-base ${brierBase.toFixed(3)}   (taxa real de eleição: ${(rate * 100).toFixed(0)}%)`);
+    console.log(`   Spearman ρ (mediana prevista × voto real 2022): ${rho.toFixed(3)}`);
+  };
+
+  report("todos", recs);
+  report("Tier A — tinha voto próprio de dep. estadual 2018", recs.filter((r) => r.tier === "A"));
+  report("Tier B — só âncora/rede (sem histórico no cargo)", recs.filter((r) => r.tier === "B"));
+}
+
 // ---------- main ----------
 async function main() {
   const args = process.argv.slice(2);
@@ -561,6 +847,7 @@ async function main() {
     await backtestPartidos(alvoUFs, "municipio", "deputado federal");
   }
   if (!only || only === "base") await backtestBaseCandidato(ufs.length ? ufs : ["SP", "MG", "RS"]);
+  if (!only || only === "cenarios") await backtestCenariosV2(ufs.length ? ufs : ["SP", "MG", "RS"]);
   process.exit(0);
 }
 main().catch((e) => {

@@ -582,9 +582,11 @@ const pt = {
     version: "Versão",
     sources: "Fontes",
     probHint:
-      "Fração das 4.000 simulações em que o total passa da barra. É condicional às premissas do modelo — não uma probabilidade de vitória do mundo real, nem intenção de voto.",
+      "Fração das simulações em que o total passa da barra do último eleito. É condicional às premissas do modelo — não uma probabilidade de vitória do mundo real, nem intenção de voto.",
+    confiancaAlta: "Projeção sobre a sua votação real em eleição anterior no cargo — a faixa é a mais confiável.",
+    confiancaBaixa: "Sem histórico seu no cargo: a faixa é projetada do alcance territorial e é LARGA e de baixa confiança. Trate como ordem de grandeza, não como número.",
     disclaimer:
-      "Projeção de apoio interno por simulação (Monte Carlo). A 'chance de eleger' é condicional às premissas do modelo — não é intenção de voto nem pesquisa e não deve ser divulgada (Lei 9.504/1997). Método ainda não validado por backtesting — ver docs/BACKTEST-METODOS.md.",
+      "Projeção de apoio interno por simulação (Monte Carlo). O modelo de crescimento é calibrado e backtestado contra dep. estadual 2018→2022 (docs/BACKTEST-METODOS.md §D): a faixa p10–p90 cobriu 76% dos resultados reais (alvo 80%) e a 'chance de eleger' bate a taxa-base (Brier 0,11 vs 0,20). O nível de um candidato proporcional uma eleição à frente é pouco previsível — por isso as faixas são largas. Condicional às premissas — não é intenção de voto nem pesquisa e não deve ser divulgada (Lei 9.504/1997).",
     needCandidate: "Selecione um candidato no onboarding para projetar os cenários.",
   },
   partidos: {

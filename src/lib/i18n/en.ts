@@ -584,9 +584,11 @@ const en: Dictionary = {
     version: "Version",
     sources: "Sources",
     probHint:
-      "Fraction of the 4,000 simulations where the total clears the bar. Conditional on the model's assumptions — not a real-world win probability, not voting intention.",
+      "Fraction of simulations where the total clears the last-elected's bar. Conditional on the model's assumptions — not a real-world win probability, not voting intention.",
+    confiancaAlta: "Projection over your real vote in a previous election for this office — the range is the most reliable.",
+    confiancaBaixa: "No own history for this office: the range is projected from territorial reach and is WIDE and low-confidence. Treat it as an order of magnitude, not a number.",
     disclaimer:
-      "Internal projection via simulation (Monte Carlo). The 'chance to get elected' is conditional on the model's assumptions — not voting intention, not a poll, and not to be published (Brazil's Law 9.504/1997). Method not yet validated by backtesting — see docs/BACKTEST-METODOS.md.",
+      "Internal projection via simulation (Monte Carlo). The growth model is calibrated and backtested against state-deputy 2018→2022 (docs/BACKTEST-METODOS.md §D): the p10–p90 range covered 76% of real outcomes (target 80%) and the 'chance to get elected' beats the base rate (Brier 0.11 vs 0.20). An individual proportional candidate's level one election ahead is hard to predict — hence the wide ranges. Conditional on the assumptions — not voting intention, not a poll, not to be published (Brazil's Law 9.504/1997).",
     needCandidate: "Select a candidate in the onboarding to project the scenarios.",
   },
   partidos: {

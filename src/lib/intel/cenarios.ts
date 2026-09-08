@@ -21,10 +21,26 @@
 import { eixoDoPartido } from "@/lib/intel/partidos";
 import type { Cargo } from "@/lib/cargos";
 
-export const CENARIOS_VERSION = "cenarios-v2-montecarlo";
+export const CENARIOS_VERSION = "cenarios-v3-mc-calibrado";
 
 const N_SIMS = 4000;
 const MAJORITARIOS: Cargo[] = ["presidente", "governador", "senador", "prefeito"];
+
+/**
+ * CALIBRAÇÃO (docs/BACKTEST-METODOS.md §D). O voto de um candidato proporcional
+ * uma eleição à frente é quase imprevisível em NÍVEL — o que se calibra é a
+ * distribuição do "crescimento" `voto_alvo / referência`. Medido em SP
+ * (dep. estadual 2018→2022, 215 candidatos, casados por nome+nascimento EXATO):
+ *   ratio v2022/v2018 → p10 0,29 · p25 0,53 · p50 0,92 · p75 1,39 · p90 1,79
+ *   → lognormal: drift (mediana) ≈ 0,90, sd(log) ≈ 0,62.
+ * Sem histórico no cargo (base sintética): sem dado limpo — distribuição bem mais
+ * larga e viés para baixo (drift 0,5, sigma 1,0), projeção de baixa confiança.
+ * Maré nacional e comparecimento entram como fatores menores em cima disso.
+ */
+const CRESC = {
+  proprio: { drift: 0.9, sigma: 0.62 },
+  sintetico: { drift: 0.5, sigma: 1.0 },
+};
 
 export type ResultadoCenario = "vitoria" | "disputa" | "derrota";
 
@@ -87,13 +103,6 @@ function randn(): number {
 function normal(mean: number, sd: number): number {
   return mean + sd * randn();
 }
-function triangular(min: number, mode: number, max: number): number {
-  const u = Math.random();
-  const c = (mode - min) / (max - min);
-  return u < c
-    ? min + Math.sqrt(u * (max - min) * (mode - min))
-    : max - Math.sqrt((1 - u) * (max - min) * (max - mode));
-}
 function quantil(sorted: number[], q: number): number {
   if (sorted.length === 0) return 0;
   const i = Math.min(sorted.length - 1, Math.max(0, Math.floor(q * (sorted.length - 1))));
@@ -130,7 +139,9 @@ export function computeCenarios(
     fracaoPartido?: number;
   },
   txt: Textos,
+  opts: { sims?: number } = {},
 ): CenariosResultado {
+  const nSims = Math.max(200, opts.sims ?? N_SIMS);
   const tipoDisputa =
     args.cargo && MAJORITARIOS.includes(args.cargo) ? "majoritaria" : "proporcional";
   const campoBase = campoDe(args.partido);
@@ -240,26 +251,23 @@ export function computeCenarios(
       ? Math.round(totalValidos * 0.5)
       : (args.corteEleito ?? Math.round(votosBaseCentral * 0.9 + 20000));
 
-  // ---------- Monte Carlo ----------
+  // ---------- Monte Carlo (modelo de crescimento calibrado) ----------
+  // referência = nível do candidato hoje (voto próprio, base sintética ou partido).
   const codes = [...totalMun.keys()];
-  const totais: number[] = [];
-  for (let s = 0; s < N_SIMS; s++) {
-    const capt = temAlcance ? triangular(0.02, CAPT_MODE, 0.09) : CAPT_MODE;
-    const mare = normal(1, 0.07);
-    const comp = normal(1, 0.035);
-    const conv = triangular(0.1, 0.28, 0.55);
-    const shock = Math.exp(normal(0, 0.1));
+  const ref = codes.reduce((s, code) => s + candVotos(code, CAPT_MODE), 0);
+  const cr = temVotoProprio ? CRESC.proprio : CRESC.sintetico;
+  // mediana do lognormal = drift → mu = ln(drift)
+  const muG = Math.log(Math.max(1e-6, cr.drift));
 
-    let vBase = 0;
-    let ganho = 0;
-    for (const code of codes) {
-      const atual = candVotos(code, capt);
-      vBase += atual;
-      const teto = tetoDe(code, capt);
-      const gap = Math.max(0, teto - atual);
-      ganho += gap * ((args.ifetByCode[code] ?? 0) / 100);
-    }
-    const total = Math.max(0, (vBase + conv * ganho) * mare * comp * shock);
+  const totais: number[] = [];
+  for (let s = 0; s < nSims; s++) {
+    // crescimento individual do candidato entre eleições (o termo dominante)
+    const growth = Math.exp(muG + normal(0, cr.sigma));
+    // fatores de contexto, menores, centrados em 1
+    const mare = normal(1, 0.05);
+    const comp = normal(1, 0.03);
+    const exec = normal(1, 0.06); // execução de campanha / erro do modelo
+    const total = Math.max(0, ref * growth * mare * comp * exec);
     totais.push(total);
   }
   totais.sort((a, b) => a - b);
@@ -329,7 +337,7 @@ export function computeCenarios(
     faltam: votosNecessarios - votosBase,
     distribuicao,
     probVitoria,
-    sims: N_SIMS,
+    sims: nSims,
     cenarios,
     municipiosAlvo: alvos.slice(0, 6),
     dispersao: dispersao.sort((a, b) => b.gap - a.gap).slice(0, 120),

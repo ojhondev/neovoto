@@ -204,6 +204,15 @@ export default async function Page() {
                 ? `Mediana ${fmt(cen.votosBase, locale)} · ${falta > 0 ? `faltam ${fmt(falta, locale)}` : `folga de ${fmt(-falta, locale)}`} · ${cen.sims.toLocaleString(locale)} simulações sobre premissas amostradas`
                 : `Median ${fmt(cen.votosBase, locale)} · ${falta > 0 ? `${fmt(falta, locale)} missing` : `${fmt(-falta, locale)}-vote cushion`} · ${cen.sims.toLocaleString(locale)} simulations over sampled assumptions`}
             </p>
+            <p
+              className="font-ui mt-2 rounded-[6px] border-l-2 px-3 py-2 text-caption"
+              style={{
+                borderColor: baseTipo === "propria" ? "var(--color-olive)" : "var(--color-negative)",
+                background: "var(--color-sand)",
+              }}
+            >
+              {baseTipo === "propria" ? t.cenarios.confiancaAlta : t.cenarios.confiancaBaixa}
+            </p>
           </div>
         );
       })()}

@@ -134,3 +134,67 @@ população só no eixo de **peso** (quanto voto absoluto está em jogo).
 anos à frente com dado esparso, em disputa de lista); testado em SP/MG/RS, só
 dep. estadual 2022; as camadas "rede do partido" e "decaimento por distância" não
 foram isoladas uma da outra. Próximo: vereador→prefeito e isolar cada camada.
+
+---
+
+## D) Cenários (Monte Carlo)
+
+**Hipótese:** a distribuição de votos que os Cenários projetam para 2022 —
+construída **só com dado ≤2018/2020** — deve estar **calibrada** contra o
+resultado real de 2022.
+
+**Amostra:** 496 candidatos que disputaram **deputado estadual em 2018 E em 2022**
+(SP+MG+RS), casados como a mesma pessoa por **nome + data de nascimento exatos**
+(condiciona em "concorreu de novo", não no voto de 2022). Referência = voto
+próprio de 2018 por município. Barra = corte dos eleitos de 2018.
+`npm run backtest -- SP MG RS --only=cenarios`.
+
+### Calibração do modelo de crescimento
+
+O voto de um candidato proporcional uma eleição à frente é quase imprevisível em
+**nível**. O que se calibra é o "crescimento" `voto_alvo / referência`:
+
+| ratio v2022/v2018 (486 re-runners) | p10 | p25 | p50 | p75 | p90 |
+|---|---|---|---|---|---|
+| real | 0,31× | 0,51× | **0,90×** | 1,34× | 1,73× |
+
+→ lognormal com **mediana 0,90 e sd(log) ≈ 0,62**, + maré/comparecimento/execução
+como fatores menores. É o que `CRESC.proprio` usa em `cenarios.ts`.
+
+### Calibração da distribuição prevista vs. resultado real 2022
+
+| métrica | Cenários v3 | alvo |
+|---|---|---|
+| **cobertura do IC 80% (p10–p90)** | **76%** | 80% |
+| cobertura do IC 50% (p25–p75) | 46% | 50% |
+| resultado ≤ mediana prevista | 51% | 50% |
+| PIT (6 baldes) | 16·14·21·25·16·8 | 10·15·25·25·15·10 |
+| **Brier da "chance de eleger"** | **0,110** | taxa-base 0,197 |
+| Spearman ρ (mediana prevista × voto real) | **0,94** | — |
+| erro % da mediana (ponto) | 38% | baseline "repete 2018": 37% |
+
+**Conclusão:** a distribuição está **bem calibrada** para candidatos com histórico
+próprio no cargo — o IC 80% cobre 76% dos casos (leve subcobertura), o PIT é
+quase plano, a mediana é não-viesada, e a "chance de eleger" tem **skill real**
+(Brier 0,11 vs 0,20 da taxa-base; ρ 0,94 no ordenamento). O **ponto** (mediana)
+não bate um "repete 2018" ingênuo — e não deveria: o valor está na **faixa
+calibrada** e na **probabilidade**, não num número exato.
+
+**Não calibrado:** candidatos **sem histórico no cargo** (base sintética via
+alcance territorial) — n=10 no backtest, cobertura 10%, mediana viesada para
+cima. O modelo os trata com distribuição bem mais larga e enviesada para baixo
+(`CRESC.sintetico`), e a interface **marca essa projeção como de baixa confiança**
+("ordem de grandeza, não um número"). Backtestar first-timers é impossível por
+construção (não há eleição anterior comparável).
+
+### O que mudou (v2 → v3)
+
+O v2 (`cenarios-v2-montecarlo`) tinha um termo aditivo de "captura de lacunas"
+sempre ≥ 0 e ruído de só ±13% → **coberturas de 13–17%** (intervalos ~5× estreitos
+demais, mediana enviesada para cima). O v3 substitui pelo modelo de crescimento
+lognormal calibrado acima e move a "captura de lacunas" para o painel de
+*targeting* (onde concentrar), fora da projeção de nível.
+
+> **Nota:** os números de §C foram medidos com um casador de pessoa mais frouxo;
+> reexecução com o casamento exato (nome+nascimento) está pendente — a direção
+> (Base bate a população em precisão@10 de *share*) não muda.
