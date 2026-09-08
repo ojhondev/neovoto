@@ -91,6 +91,13 @@ export const candidacies = pgTable(
     apoios: jsonb("apoios")
       .$type<{ source: string; externalId: string; nome: string; uf: string; cargo: string }[]>()
       .default([]),
+    /** âncora territorial: município-base / domicílio eleitoral (código IBGE) */
+    anchorIbge: text("anchor_ibge"),
+    /** outros municípios onde a candidatura já atua (códigos IBGE) */
+    baseIbge: jsonb("base_ibge").$type<string[]>().default([]),
+    /** município e UF de nascimento do candidato (nome, como vem do TSE) */
+    birthMunicipio: text("birth_municipio"),
+    birthUf: text("birth_uf"),
     electionYear: integer("election_year"),
     photoUrl: text("photo_url"),
     email: text("email"),

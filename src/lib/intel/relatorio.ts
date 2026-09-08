@@ -142,31 +142,43 @@ export async function computeRelatorio(
   // ---- Território ----
   if (resumo) {
     const ifet = resumo.ifet;
-    const pm = ifet.municipios.filter((m) => m.quadrante === "prioridade-maxima");
-    const consolidar = ifet.municipios.filter((m) => m.quadrante === "consolidar");
-    const top = pm.slice(0, 5).map((m) => m.nome);
-    const fortes = consolidar.slice(0, 3).map((m) => m.nome);
-    secoes.push({
-      chave: "territorio",
-      titulo: pt ? "Território" : "Territory",
-      paragrafos: [
-        pt
-          ? `${resumo.ufNome} tem ${pm.length} municípios de prioridade máxima — muito voto em jogo e eleitorado conquistável. Concentre agenda, tempo do candidato e recurso de comunicação em ${top.join(", ")}.`
-          : `${resumo.ufNome} has ${pm.length} top-priority municipalities — lots of votes at stake and a persuadable electorate. Concentrate agenda, candidate time and communication budget on ${top.join(", ")}.`,
-        fortes.length
-          ? pt
-            ? `Onde você já é forte (${fortes.join(", ")}): defenda a base, não desperdice palanque — o voto ali é mais cristalizado.`
-            : `Where you're already strong (${fortes.join(", ")}): defend the base, don't waste rallies — the vote there is more crystallised.`
-          : "",
-        resumo.eleitoralByCode
-          ? pt
-            ? `A votação real por município está carregada (${resumo.eleitoralTotal?.toLocaleString(locale)} votos em ${resumo.eleitoralAno}).`
-            : `Real vote by municipality is loaded (${resumo.eleitoralTotal?.toLocaleString(locale)} votes in ${resumo.eleitoralAno}).`
-          : pt
-            ? "A votação por município do candidato ainda não foi carregada — o IFET usa só o contexto territorial."
-            : "The candidate's vote by municipality isn't loaded — IFET uses territorial context only.",
-      ].filter(Boolean),
-    });
+    const ancora = resumo.base?.ancora ?? null;
+    if (ifet.modo === "contexto") {
+      secoes.push({
+        chave: "territorio",
+        titulo: pt ? "Território" : "Territory",
+        paragrafos: [
+          pt
+            ? `Ainda não há sinal territorial do candidato (histórico próprio, município-base ou apoios declarados). O mapa mostra o peso de cada município — quanto voto está em jogo — mas não onde a candidatura tem alcance para tirar esse voto. Informe o domicílio eleitoral e os apoios para o diagnóstico ganhar precisão.`
+            : `No territorial signal for the candidate yet (own history, home base or endorsements). The map shows each municipality's weight but not where the campaign can reach those votes.`,
+        ],
+      });
+    } else {
+      const pm = ifet.municipios.filter((m) => m.quadrante === "prioridade");
+      const reduto = ifet.municipios.filter((m) => m.quadrante === "reduto");
+      const expansao = ifet.municipios.filter((m) => m.quadrante === "expansao");
+      const top = pm.slice(0, 5).map((m) => m.nome);
+      const fortes = reduto.slice(0, 3).map((m) => m.nome);
+      secoes.push({
+        chave: "territorio",
+        titulo: pt ? "Território" : "Territory",
+        paragrafos: [
+          pt
+            ? `${resumo.ufNome} tem ${pm.length} ${pm.length === 1 ? "município" : "municípios"} de prioridade — muito voto em jogo E onde ${ancora ? `a base em ${ancora.nome} dá` : "o candidato tem"} alcance. Concentre agenda, tempo do candidato e verba de comunicação em ${top.join(", ")}.`
+            : `${resumo.ufNome} has ${pm.length} priority ${pm.length === 1 ? "municipality" : "municipalities"} — votes at stake AND real reach${ancora ? ` from the base in ${ancora.nome}` : ""}. Concentrate on ${top.join(", ")}.`,
+          fortes.length
+            ? pt
+              ? `Seu reduto (${fortes.join(", ")}): o voto ali é seu para perder — defenda a base e invista em mobilização e comparecimento, não em convencimento.`
+              : `Your stronghold (${fortes.join(", ")}): the vote there is yours to lose — defend and invest in turnout.`
+            : "",
+          expansao.length
+            ? pt
+              ? `${expansao.length} ${expansao.length === 1 ? "município tem" : "municípios têm"} muito voto mas fora do seu alcance hoje (${expansao.slice(0, 3).map((m) => m.nome).join(", ")}). Só entre com padrinho local, tempo de TV ou palanque — verba de mídia solta ali rende pouco.`
+              : `${expansao.length} ${expansao.length === 1 ? "municipality has" : "municipalities have"} many votes but out of reach today. Only enter with a local sponsor, broadcast time or a stage.`
+            : "",
+        ].filter(Boolean),
+      });
+    }
   }
 
   // ---- Posicionamento ----

@@ -19,12 +19,12 @@ export function urgenciaDeScore(v: number): Urgencia {
   return "none";
 }
 
-/** quadrante do IFET → urgência (prioridade máxima = agir agora) */
+/** quadrante do IFET → urgência (prioridade = agir agora; reduto = defender) */
 export const URGENCIA_QUADRANTE: Record<string, Urgencia> = {
-  "prioridade-maxima": "crit",
-  consolidar: "low",
-  "oportunidade-dispersa": "high",
-  "baixa-prioridade": "none",
+  prioridade: "crit",
+  reduto: "low",
+  expansao: "high",
+  fora: "none",
 };
 
 /** tipo do Radar → urgência */

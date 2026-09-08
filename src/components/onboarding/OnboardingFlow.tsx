@@ -33,7 +33,7 @@ type TseResult = {
   casa: string;
   foto: string;
 };
-type ManualData = { nome: string; partido: string; uf: string };
+type ManualData = { nome: string; partido: string; uf: string; municipioBase: string };
 type Picked =
   | { kind: "fed"; data: FedResult }
   | { kind: "tse"; data: TseResult }
@@ -68,6 +68,8 @@ type Dict = {
   manualNome: string;
   manualPartido: string;
   manualUf: string;
+  manualBase: string;
+  manualBaseHint: string;
   manualNext: string;
   manualBack: string;
   objectiveTitle: string;
@@ -88,7 +90,7 @@ export function OnboardingFlow({ dict }: { dict: Dict }) {
   const [picked, setPicked] = useState<Picked | null>(null);
   const [objective, setObjective] = useState(dict.objectives[0]?.value ?? "eleicao");
   const [cargoAlvo, setCargoAlvo] = useState<string>("");
-  const [manualForm, setManualForm] = useState<ManualData>({ nome: "", partido: "", uf: "" });
+  const [manualForm, setManualForm] = useState<ManualData>({ nome: "", partido: "", uf: "", municipioBase: "" });
   const [showManual, setShowManual] = useState(false);
   const [apoios, setApoios] = useState<
     { source: string; externalId: string; nome: string; uf: string; cargo: string }[]
@@ -365,9 +367,23 @@ export function OnboardingFlow({ dict }: { dict: Dict }) {
                       ))}
                     </select>
                   </div>
+                  <div>
+                    <input
+                      value={manualForm.municipioBase}
+                      onChange={(e) => setManualForm((s) => ({ ...s, municipioBase: e.target.value }))}
+                      placeholder={dict.manualBase}
+                      className="font-ui w-full rounded-[8px] border border-ash bg-paper px-3 py-2.5 text-body-sm outline-none"
+                    />
+                    <p className="font-ui mt-1 text-caption text-pebble">{dict.manualBaseHint}</p>
+                  </div>
                   <button
                     type="button"
-                    disabled={!manualForm.nome.trim() || !manualForm.partido.trim() || !manualForm.uf}
+                    disabled={
+                      !manualForm.nome.trim() ||
+                      !manualForm.partido.trim() ||
+                      !manualForm.uf ||
+                      !manualForm.municipioBase.trim()
+                    }
                     onClick={() => pick({ kind: "manual", data: manualForm })}
                     className="btn btn-primary w-full justify-center disabled:opacity-40"
                   >
@@ -401,6 +417,7 @@ export function OnboardingFlow({ dict }: { dict: Dict }) {
               <input type="hidden" name="nome" value={picked.data.nome} />
               <input type="hidden" name="partido" value={picked.data.partido} />
               <input type="hidden" name="uf" value={picked.data.uf} />
+              <input type="hidden" name="municipioBase" value={picked.data.municipioBase} />
             </>
           )}
           <input type="hidden" name="objective" value={objective} />

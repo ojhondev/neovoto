@@ -302,6 +302,150 @@ export async function votosCorteEleito(args: {
   return c > 0 ? c : null;
 }
 
+export type BddHistorico = {
+  sequencial: string;
+  ano: number;
+  cargo: string;
+  siglaUf: string;
+  siglaPartido: string;
+  nomeUrna: string;
+  situacao: string | null;
+  municipioNascimento: string | null;
+  ufNascimento: string | null;
+  dataNascimento: string | null;
+};
+
+/**
+ * Histórico de candidaturas de UMA PESSOA — todas as eleições em que concorreu,
+ * qualquer cargo, 2012+. Filtra homônimos por data de nascimento (quando conhecida)
+ * ou por município + UF de nascimento. É a base para reconstruir a força
+ * territorial de quem já disputou antes, mesmo para outro cargo.
+ */
+export async function historicoDoCandidato(
+  nome: string,
+  filtro?: { dataNascimento?: string | null; municipioNascimento?: string | null; ufNascimento?: string | null },
+): Promise<BddHistorico[]> {
+  if (!basedosdadosDisponivel()) return [];
+  const rows = await query(
+    `SELECT sequencial, ano, cargo, sigla_uf, sigla_partido, nome_urna, situacao,
+            municipio_nascimento, sigla_uf_nascimento, CAST(data_nascimento AS STRING) AS data_nascimento
+     FROM \`${DATASET}.candidatos\`
+     WHERE ano >= 2012
+       AND (UPPER(nome) LIKE UPPER(@like) OR UPPER(nome_urna) LIKE UPPER(@like))
+     ORDER BY ano DESC
+     LIMIT 80`,
+    { like: `%${nome.trim()}%` },
+  );
+  const norm = (s: string | null | undefined) =>
+    (s ?? "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").trim();
+
+  const all = rows.map((r) => ({
+    sequencial: r.sequencial ?? "",
+    ano: Number(r.ano ?? 0),
+    cargo: (r.cargo ?? "").toLowerCase(),
+    siglaUf: (r.sigla_uf ?? "").toUpperCase(),
+    siglaPartido: (r.sigla_partido ?? "").toUpperCase(),
+    nomeUrna: r.nome_urna ?? "",
+    situacao: r.situacao ?? null,
+    municipioNascimento: r.municipio_nascimento ?? null,
+    ufNascimento: r.sigla_uf_nascimento ?? null,
+    dataNascimento: r.data_nascimento ?? null,
+  }));
+
+  const dn = filtro?.dataNascimento?.slice(0, 10);
+  const mn = norm(filtro?.municipioNascimento);
+  const un = norm(filtro?.ufNascimento);
+  const filtered = all.filter((c) => {
+    if (dn && c.dataNascimento) return c.dataNascimento.slice(0, 10) === dn;
+    if (mn && c.municipioNascimento) return norm(c.municipioNascimento) === mn && (!un || norm(c.ufNascimento) === un);
+    return true;
+  });
+  return (dn || mn ? filtered : all).filter((c) => c.sequencial);
+}
+
+/** Votos por município de vários sequenciais de uma vez (todas as campanhas da pessoa). */
+export async function votacaoDeSequenciais(
+  seqs: string[],
+): Promise<{ sequencial: string; ano: number; idMunicipio: string; votos: number; resultado: string | null }[]> {
+  if (!basedosdadosDisponivel() || seqs.length === 0) return [];
+  const safe = [...new Set(seqs)].filter((s) => /^\d{4,}$/.test(s)).slice(0, 30);
+  if (safe.length === 0) return [];
+  const rows = await query(
+    `SELECT sequencial_candidato, ano, id_municipio, SUM(votos) AS votos, ANY_VALUE(resultado) AS resultado
+     FROM \`${DATASET}.resultados_candidato_municipio\`
+     WHERE turno = 1 AND sequencial_candidato IN (${safe.map((s) => `'${s}'`).join(",")})
+     GROUP BY sequencial_candidato, ano, id_municipio`,
+    {},
+  );
+  return rows
+    .filter((r) => r.id_municipio)
+    .map((r) => ({
+      sequencial: r.sequencial_candidato ?? "",
+      ano: Number(r.ano ?? 0),
+      idMunicipio: r.id_municipio as string,
+      votos: Number(r.votos ?? 0),
+      resultado: r.resultado ?? null,
+    }));
+}
+
+/** Municípios onde o PARTIDO elegeu alguém para um cargo — a rede de mandatos local. */
+export async function eleitosDoPartidoUF(args: {
+  uf: string;
+  partido: string;
+  cargo: string;
+  ano: number;
+}): Promise<{ idMunicipio: string; votos: number }[]> {
+  if (!basedosdadosDisponivel()) return [];
+  const rows = await query(
+    `SELECT id_municipio, SUM(votos) AS votos
+     FROM \`${DATASET}.resultados_candidato_municipio\`
+     WHERE ano = @ano AND turno = 1 AND sigla_uf = @uf AND cargo = @cargo AND sigla_partido = @part
+       AND LOWER(resultado) LIKE '%eleito%'
+       AND LOWER(resultado) NOT LIKE '%nao%' AND LOWER(resultado) NOT LIKE '%não%'
+     GROUP BY id_municipio`,
+    { ano: args.ano, uf: args.uf.toUpperCase(), cargo: args.cargo, part: args.partido.toUpperCase() },
+  );
+  return rows
+    .filter((r) => r.id_municipio)
+    .map((r) => ({ idMunicipio: r.id_municipio as string, votos: Number(r.votos ?? 0) }));
+}
+
+export type MunicipioGeo = {
+  code: string;
+  nome: string;
+  regImediata: string;
+  nomeRegImediata: string;
+  regIntermediaria: string;
+  lat: number;
+  lng: number;
+};
+
+/**
+ * Diretório de municípios de uma UF: região geográfica imediata / intermediária
+ * (agrupamento oficial do IBGE) + centroide. Base do raio de influência do candidato.
+ */
+export async function municipiosComRegiaoUF(uf: string): Promise<MunicipioGeo[]> {
+  if (!basedosdadosDisponivel()) return [];
+  const rows = await query(
+    `SELECT id_municipio, nome, id_regiao_imediata, nome_regiao_imediata, id_regiao_intermediaria,
+            ST_Y(centroide) AS lat, ST_X(centroide) AS lng
+     FROM \`basedosdados.br_bd_diretorios_brasil.municipio\`
+     WHERE sigla_uf = @uf`,
+    { uf: uf.toUpperCase() },
+  );
+  return rows
+    .filter((r) => r.id_municipio)
+    .map((r) => ({
+      code: r.id_municipio as string,
+      nome: r.nome ?? "",
+      regImediata: r.id_regiao_imediata ?? "",
+      nomeRegImediata: r.nome_regiao_imediata ?? "",
+      regIntermediaria: r.id_regiao_intermediaria ?? "",
+      lat: Number(r.lat ?? 0),
+      lng: Number(r.lng ?? 0),
+    }));
+}
+
 /**
  * Votação do CAMPO POLÍTICO (partido + coligados) por município — usado para o IFET
  * quando não há histórico do próprio candidato naquele território.

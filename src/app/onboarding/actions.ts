@@ -52,6 +52,7 @@ export async function finalizarOnboarding(
         partido: String(formData.get("partido") ?? ""),
         uf: String(formData.get("uf") ?? ""),
         cargo: cargoAlvo || "deputado-estadual",
+        municipioBase: String(formData.get("municipioBase") ?? ""),
       },
       objective,
       apoios,

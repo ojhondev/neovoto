@@ -87,6 +87,15 @@ export default async function Page() {
 
   const inf = computeInfluencia(votacao, perfil.partido, bancada, resumo.nomeByCode);
   const ufNome = nacional ? "Brasil" : (estado?.nome ?? perfil.uf);
+
+  const base = resumo.base;
+  const alcanceContexto = base?.modo === "contexto";
+  const topAlcance = base
+    ? Object.entries(base.alcanceByCode)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 8)
+        .map(([code, v]) => ({ nome: resumo.nomeByCode[code] ?? code, v }))
+    : [];
   const pleito = nacional
     ? pt
       ? "presidente 2022 · 1º turno"
@@ -122,6 +131,34 @@ export default async function Page() {
       <p className="mt-2 max-w-2xl text-body-sm text-fossil">
         {fill(t.influencia.intro, { uf: ufNome, pleito })}
       </p>
+
+      <div className="mt-4 rounded-[10px] border border-ash bg-paper p-4">
+        <p className="t-eyebrow">
+          {pt ? "Sua influência como candidato" : "Your reach as a candidate"}
+        </p>
+        {alcanceContexto || topAlcance.length === 0 ? (
+          <p className="mt-1.5 max-w-2xl text-body-sm text-fossil">
+            {pt
+              ? `A rede abaixo é do seu partido e do seu campo em ${ufNome} — não a sua influência pessoal. Sem histórico de campanha, cidade-base ou apoios do candidato, a plataforma ainda não consegue desenhar o alcance dele. Informe a base no perfil da candidatura.`
+              : `The network below is your party's and your field's in ${ufNome} — not your personal influence. Without the candidate's campaign history, home city or endorsements, the platform can't map their reach yet.`}
+          </p>
+        ) : (
+          <>
+            <p className="mt-1.5 max-w-2xl text-body-sm text-fossil">
+              {pt
+                ? `A rede abaixo é do seu partido em ${ufNome}. O seu alcance real como candidato${base?.ancora ? `, a partir da base em ${base.ancora.nome},` : ""} se concentra em:`
+                : `The network below is your party's in ${ufNome}. Your real reach as a candidate${base?.ancora ? `, from the base in ${base.ancora.nome},` : ""} concentrates in:`}
+            </p>
+            <ul className="mt-2 flex flex-wrap gap-1.5">
+              {topAlcance.map((m) => (
+                <li key={m.nome} className="font-ui rounded-[4px] bg-sand px-2 py-1 text-caption text-smoke">
+                  {m.nome} · {Math.round(m.v * 100)}
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+      </div>
 
       <div className="mt-6">
         <InfluenceGraph

@@ -5,6 +5,8 @@ import { redirect } from "next/navigation";
 import { RefreshCw } from "lucide-react";
 import { getDictionary } from "@/lib/i18n";
 import { getCurrentCandidacy, perfilFrom } from "@/lib/candidacy";
+import { getGeoUF } from "@/lib/data-sources/geo";
+import { BaseTerritorialEditor } from "@/components/app/BaseTerritorialEditor";
 import { trocarCandidato } from "./actions";
 
 export const metadata: Metadata = { title: "Candidato" };
@@ -19,6 +21,17 @@ export default async function CandidatoPage() {
   const objectiveLabel =
     t.onboarding.objectives.find((o) => o.value === candidacy.objective)?.label ??
     candidacy.objective;
+
+  const uf = (perfil.uf || candidacy.uf || "").toUpperCase();
+  const geo = uf ? await getGeoUF(uf).catch(() => []) : [];
+  const nomeByCode = new Map(geo.map((g) => [g.code, g.nome]));
+  const anchorNome =
+    (candidacy.anchorIbge && nomeByCode.get(candidacy.anchorIbge)) ||
+    candidacy.birthMunicipio ||
+    null;
+  const extrasNomes = ((candidacy.baseIbge as string[] | null) ?? [])
+    .map((c) => nomeByCode.get(c))
+    .filter((v): v is string => !!v);
 
   return (
     <>
@@ -94,6 +107,17 @@ export default async function CandidatoPage() {
           </section>
         )}
       </div>
+
+      {uf && (
+        <div className="mt-4">
+          <BaseTerritorialEditor
+            dict={t.baseEditor}
+            municipios={geo.map((g) => g.nome).sort((a, b) => a.localeCompare(b))}
+            anchorNome={anchorNome}
+            extrasNomes={extrasNomes}
+          />
+        </div>
+      )}
 
       {perfil.proposicoes && perfil.proposicoes.recentes.length > 0 && (
         <section className="card mt-4">

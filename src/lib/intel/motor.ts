@@ -127,59 +127,71 @@ export async function analisarCandidatura(
     sinais += ifet.municipios.length;
     ifet.fontes.forEach((f) => fontes.add(f));
 
-    const prioridade = ifet.municipios.filter((m) => m.quadrante === "prioridade-maxima");
+    const contexto = ifet.modo === "contexto";
+    const prioridade = ifet.municipios.filter((m) => m.quadrante === "prioridade");
+    const expansao = ifet.municipios.filter((m) => m.quadrante === "expansao");
     const topNomes = prioridade.slice(0, 3).map((m) => m.nome);
     const temVoto = !!resumo.eleitoralByCode;
-    const concentracao = concentracaoTop(ifet, 5); // % do "peso" nos 5 maiores
+    const concentracao = concentracaoTop(ifet, 5);
+    const ancora = resumo.base?.ancora ?? null;
     const un = nacional
       ? { s: pt ? "UF" : "state", p: pt ? "UFs" : "states", por: pt ? "UF" : "state" }
       : { s: pt ? "município" : "municipality", p: pt ? "municípios" : "municipalities", por: pt ? "município" : "municipality" };
 
-    territorioScore = Math.round(
-      40 + concentracao * 40 + (temVoto ? 20 : 0),
-    );
+    territorioScore = contexto
+      ? 20
+      : Math.round(30 + Math.min(1, ifet.cobertura * 3) * 35 + concentracao * 20 + (temVoto ? 15 : 0));
 
     dimensoes.push({
       chave: "territorio",
       titulo: pt ? "Território" : "Territory",
-      valor: String(prioridade.length),
-      rotulo: pt ? `${un.p} prioridade máxima` : `top-priority ${un.p}`,
-      status: temVoto ? "ok" : "atencao",
-      href: "/painel/mapa-de-calor",
-      leitura: pt
-        ? `Sua força se concentra em ${prioridade.length} ${prioridade.length === 1 ? un.s : un.p} de prioridade máxima${topNomes.length ? ` (${topNomes.join(", ")})` : ""}. ${
-            temVoto
-              ? `A votação real por ${un.por} está carregada (${resumo.eleitoralTotal?.toLocaleString(locale)} votos em ${resumo.eleitoralAno}).`
-              : `A votação real por ${un.por} ainda não foi carregada — o IFET está usando só o contexto territorial.`
-          }`
-        : `Your strength concentrates in ${prioridade.length} top-priority ${prioridade.length === 1 ? un.s : un.p}${topNomes.length ? ` (${topNomes.join(", ")})` : ""}. ${
-            temVoto
-              ? `Real vote by ${un.por} is loaded (${resumo.eleitoralTotal?.toLocaleString(locale)} votes in ${resumo.eleitoralAno}).`
-              : `Real vote by ${un.por} isn't loaded yet — IFET is using territorial context only.`
-          }`,
+      valor: contexto ? "—" : String(prioridade.length),
+      rotulo: contexto
+        ? pt ? "sem base do candidato" : "no candidate base"
+        : pt ? `${un.p} de prioridade` : `priority ${un.p}`,
+      status: contexto ? "atencao" : temVoto || prioridade.length ? "ok" : "atencao",
+      href: contexto ? "/painel/candidato" : "/painel/mapa-de-calor",
+      leitura: contexto
+        ? pt
+          ? `Ainda não há sinal territorial do candidato (histórico próprio, município-base ou apoios). O mapa mostra só o peso do território — não onde ${nacional ? "a candidatura" : "ele"} tem voto para tirar. Informe o domicílio eleitoral para calibrar.`
+          : `No territorial signal for the candidate yet (own history, home base or endorsements). The map only shows territorial weight — not where the campaign can actually win votes.`
+        : pt
+          ? `${prioridade.length} ${prioridade.length === 1 ? un.s : un.p} de prioridade${topNomes.length ? ` (${topNomes.join(", ")})` : ""}: muito voto em jogo E alcance real do candidato${ancora ? `, a partir da base em ${ancora.nome}` : ""}. Outros ${expansao.length} ${un.p} têm voto mas exigem estrutura para entrar.`
+          : `${prioridade.length} priority ${prioridade.length === 1 ? un.s : un.p}${topNomes.length ? ` (${topNomes.join(", ")})` : ""}: votes at stake AND real reach${ancora ? `, from the base in ${ancora.nome}` : ""}. Another ${expansao.length} have votes but need structure to enter.`,
       barras: quadranteBarras(ifet, pt),
     });
 
-    if (topNomes.length) {
+    if (contexto) {
+      acoes.push({
+        ordem: 0,
+        titulo: pt ? "Informar o município-base do candidato" : "Set the candidate's home municipality",
+        porque: pt
+          ? "Sem o domicílio eleitoral, o histórico de campanhas ou apoios, a plataforma não sabe onde o candidato tem pé — e recomendaria só as maiores cidades."
+          : "Without the electoral domicile, campaign history or endorsements, the platform can't tell where the candidate has a foothold.",
+        href: "/painel/candidato",
+      });
+    } else if (topNomes.length) {
       acoes.push({
         ordem: 0,
         titulo: pt
           ? `Concentrar agenda e recurso em ${topNomes.slice(0, 3).join(", ")}`
           : `Concentrate agenda and budget on ${topNomes.slice(0, 3).join(", ")}`,
         porque: pt
-          ? `São ${nacional ? "as UFs" : "os municípios"} com mais voto em jogo e eleitorado conquistável para ${cargoLabel || "a disputa"}.`
-          : `They hold the most votes at stake and the most persuadable electorate.`,
+          ? `${nacional ? "UFs" : "Municípios"} com muito voto em jogo E onde ${nacional ? "a candidatura" : "o candidato"} já tem alcance${ancora ? ` (base em ${ancora.nome})` : ""} — o retorno por real gasto é maior aqui.`
+          : `Places with votes at stake AND where the candidate already has reach — best return per real spent.`,
         href: "/painel/mapa-de-calor",
       });
     }
-    if (!resumo.eleitoralByCode && candidacy.source === "tse" && !nacional) {
+    if (!contexto && expansao.slice(0, 3).length) {
       acoes.push({
-        ordem: 5,
-        titulo: pt ? "Carregar a votação por município do candidato" : "Load the candidate's vote by municipality",
+        ordem: 6,
+        titulo: pt
+          ? `Só entrar em ${expansao.slice(0, 3).map((m) => m.nome).join(", ")} com aliado ou estrutura`
+          : `Only enter ${expansao.slice(0, 3).map((m) => m.nome).join(", ")} with a local ally or structure`,
         porque: pt
-          ? "Sem ela, o IFET e os cenários trabalham só com o contexto — a leitura fica menos precisa."
-          : "Without it, IFET and scenarios run on context only — the read is less precise.",
-        href: "/painel/mapa-de-calor",
+          ? "Têm muito voto, mas o candidato não tem base ali. Verba solta rende pouco — precisa de padrinho local, tempo ou palanque."
+          : "Lots of votes, but no base there. Loose budget underperforms — needs a local sponsor, time or a stage.",
+        href: "/painel/coligacoes",
       });
     }
   } else {
@@ -395,9 +407,9 @@ function quadranteBarras(ifet: IfetResultado, pt: boolean) {
   const total = ifet.municipios.length || 1;
   const count = (quad: string) => ifet.municipios.filter((m) => m.quadrante === quad).length;
   return [
-    { label: pt ? "Prioridade máxima" : "Top priority", v: count("prioridade-maxima") / total },
-    { label: pt ? "Consolidar" : "Consolidate", v: count("consolidar") / total },
-    { label: pt ? "Oportunidade" : "Opportunity", v: count("oportunidade-dispersa") / total },
+    { label: pt ? "Prioridade" : "Priority", v: count("prioridade") / total },
+    { label: pt ? "Reduto" : "Stronghold", v: count("reduto") / total },
+    { label: pt ? "Expansão" : "Expansion", v: count("expansao") / total },
   ];
 }
 
@@ -431,10 +443,17 @@ function montarSintesePt(a: SinteseArgs): string {
   const partes: string[] = [];
   const alvo = a.cargoLabel ? `à ${a.cargoLabel}` : "na disputa";
   if (a.resumo) {
-    const pm = a.resumo.ifet.municipios.filter((m) => m.quadrante === "prioridade-maxima").length;
-    partes.push(
-      `Na candidatura de ${a.perfil.nome} ${alvo}, o território de ${a.resumo.ufNome} tem ${pm} ${pm === 1 ? "praça" : "praças"} de prioridade máxima`,
-    );
+    if (a.resumo.ifet.modo === "contexto") {
+      partes.push(
+        `Na candidatura de ${a.perfil.nome} ${alvo}, ainda falta o sinal territorial do candidato — informe o município-base para o Motor sair do contexto genérico`,
+      );
+    } else {
+      const pm = a.resumo.ifet.municipios.filter((m) => m.quadrante === "prioridade").length;
+      const anc = a.resumo.base?.ancora?.nome;
+      partes.push(
+        `Na candidatura de ${a.perfil.nome} ${alvo}, ${a.resumo.ufNome} tem ${pm} ${pm === 1 ? "praça" : "praças"} de prioridade${anc ? ` a partir da base em ${anc}` : ""}`,
+      );
+    }
   }
   if (a.radar) {
     const lac = a.radar.temas.filter((x) => x.tipo === "lacuna").length;
@@ -454,10 +473,16 @@ function montarSintesePt(a: SinteseArgs): string {
 function montarSinteseEn(a: SinteseArgs): string {
   const partes: string[] = [];
   if (a.resumo) {
-    const pm = a.resumo.ifet.municipios.filter((m) => m.quadrante === "prioridade-maxima").length;
-    partes.push(
-      `For ${a.perfil.nome}'s race, the territory of ${a.resumo.ufNome} has ${pm} top-priority ${pm === 1 ? "stronghold" : "strongholds"}`,
-    );
+    if (a.resumo.ifet.modo === "contexto") {
+      partes.push(
+        `For ${a.perfil.nome}'s race, the candidate's territorial signal is still missing — set the home municipality so the Engine leaves generic context`,
+      );
+    } else {
+      const pm = a.resumo.ifet.municipios.filter((m) => m.quadrante === "prioridade").length;
+      partes.push(
+        `For ${a.perfil.nome}'s race, ${a.resumo.ufNome} has ${pm} priority ${pm === 1 ? "stronghold" : "strongholds"}`,
+      );
+    }
   }
   if (a.radar) {
     const lac = a.radar.temas.filter((x) => x.tipo === "lacuna").length;

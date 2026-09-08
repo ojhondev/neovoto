@@ -11,6 +11,29 @@ import {
 } from "@/lib/data-sources/ibge";
 import { getVotosByIbge, getVotosByUF } from "@/lib/data-sources/eleitoral";
 import { computeIFET, type IfetResultado } from "@/lib/intel/ifet";
+import { db } from "@/db";
+import { candidacies, type Candidacy } from "@/db/schema";
+import { eq } from "drizzle-orm";
+import type { PerfilPolitico } from "@/lib/politico";
+import { getBaseCandidato } from "@/lib/intel/base-candidato-load";
+import type { BaseCandidato } from "@/lib/intel/base-candidato";
+
+/** Carrega a Base do Candidato (alcance territorial) a partir do id da candidatura. */
+async function loadBase(candidacyId?: string): Promise<BaseCandidato | null> {
+  if (!candidacyId) return null;
+  try {
+    const rows = await db.select().from(candidacies).where(eq(candidacies.id, candidacyId)).limit(1);
+    const c: Candidacy | undefined = rows[0];
+    if (!c) return null;
+    const raw = c.raw as unknown;
+    const perfil =
+      raw && typeof raw === "object" && "nome" in raw ? (raw as PerfilPolitico) : null;
+    if (!perfil) return null;
+    return await getBaseCandidato(c, perfil);
+  } catch {
+    return null;
+  }
+}
 
 export type MunicipioTerritorio = {
   code: string;
@@ -31,14 +54,16 @@ export type TerritorioUF = {
   eleitoralByCode: Record<string, number> | null;
   eleitoralAno: number | null;
   eleitoralTotal: number | null;
-  /** IFET v1 — Índice de Força Eleitoral Territorial (contexto IBGE) */
+  /** IFET v2 — Índice de Força Eleitoral Territorial (peso × alcance) */
   ifet: IfetResultado;
+  base: BaseCandidato | null;
 };
 
 export type IfetResumoUF = {
   ufNome: string;
   regiao: string;
   ifet: IfetResultado;
+  base: BaseCandidato | null;
   eleitoralByCode: Record<string, number> | null;
   eleitoralAno: number | null;
   eleitoralTotal: number | null;
@@ -59,9 +84,10 @@ export async function getIfetResumoUF(
   const estado = await getEstadoPorSigla(ufSigla);
   if (!estado) return null;
 
-  const [pops, pib] = await Promise.all([
+  const [pops, pib, base] = await Promise.all([
     getPopulacaoMunicipiosUF(estado.id),
     getPibMunicipiosUF(estado.id).catch(() => ({}) as Record<string, number>),
+    loadBase(candidacyId),
   ]);
   const municipios = Object.entries(pops).map(([code, v]) => ({
     code,
@@ -88,7 +114,10 @@ export async function getIfetResumoUF(
       populacao: m.populacao,
       pibTotal: pib[m.code] ?? 0,
       votosCandidato: eleitoralByCode?.[m.code],
+      alcance: base?.alcanceByCode[m.code],
+      confianca: base?.confiancaByCode[m.code],
     })),
+    { modo: base?.modo ?? "contexto" },
   );
 
   const nomeByCode: Record<string, string> = {};
@@ -102,6 +131,7 @@ export async function getIfetResumoUF(
     ufNome: estado.nome,
     regiao: estado.regiao.nome,
     ifet,
+    base,
     eleitoralByCode,
     eleitoralAno,
     eleitoralTotal,
@@ -159,6 +189,7 @@ export async function getIfetResumoNacional(
     ufNome: "Brasil",
     regiao: "Nacional",
     ifet,
+    base: null,
     eleitoralByCode,
     eleitoralAno,
     eleitoralTotal,
@@ -208,6 +239,7 @@ export async function getTerritorioNacional(
     eleitoralAno: resumo.eleitoralAno,
     eleitoralTotal: resumo.eleitoralTotal,
     ifet: resumo.ifet,
+    base: null,
   };
 }
 
@@ -219,10 +251,11 @@ export async function getTerritorioUF(
   const estado = await getEstadoPorSigla(ufSigla);
   if (!estado) return null;
 
-  const [geojson, pops, pib] = await Promise.all([
+  const [geojson, pops, pib, base] = await Promise.all([
     getMalhaMunicipiosUF(estado.id),
     getPopulacaoMunicipiosUF(estado.id),
     getPibMunicipiosUF(estado.id).catch(() => ({}) as Record<string, number>),
+    loadBase(candidacyId),
   ]);
 
   const municipios: MunicipioTerritorio[] = Object.entries(pops).map(
@@ -249,7 +282,10 @@ export async function getTerritorioUF(
       populacao: m.populacao,
       pibTotal: pib[m.code] ?? 0,
       votosCandidato: eleitoralByCode?.[m.code],
+      alcance: base?.alcanceByCode[m.code],
+      confianca: base?.confiancaByCode[m.code],
     })),
+    { modo: base?.modo ?? "contexto" },
   );
 
   const populacaoByCode: Record<string, number> = {};
@@ -272,5 +308,6 @@ export async function getTerritorioUF(
     eleitoralAno,
     eleitoralTotal,
     ifet,
+    base,
   };
 }

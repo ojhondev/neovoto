@@ -79,7 +79,15 @@ async function persist(
   source: Fonte,
   externalId: string,
   objective: string,
-  extra: { cargo?: string; electionYear?: number; electoralStatus: string; apoios?: Apoio[] },
+  extra: {
+    cargo?: string;
+    electionYear?: number;
+    electoralStatus: string;
+    apoios?: Apoio[];
+    anchorIbge?: string | null;
+    birthMunicipio?: string | null;
+    birthUf?: string | null;
+  },
   opts: { setCookie?: boolean } = {},
 ): Promise<string> {
   const existing = await db
@@ -96,6 +104,9 @@ async function persist(
     cargo: extra.cargo ?? null,
     electionYear: extra.electionYear ?? null,
     apoios: extra.apoios ?? [],
+    ...(extra.anchorIbge !== undefined ? { anchorIbge: extra.anchorIbge } : {}),
+    ...(extra.birthMunicipio !== undefined ? { birthMunicipio: extra.birthMunicipio } : {}),
+    ...(extra.birthUf !== undefined ? { birthUf: extra.birthUf } : {}),
     photoUrl: perfil.foto || null,
     email: perfil.email,
     objective,
@@ -147,7 +158,7 @@ export async function selectCandidacy(
 
 /** Candidatura de um candidato cadastrado manualmente (1ª campanha). */
 export async function selectCandidacyManual(
-  input: { nome: string; partido: string; uf: string; cargo: string },
+  input: { nome: string; partido: string; uf: string; cargo: string; municipioBase?: string },
   objective: string,
   apoios?: Apoio[],
 ): Promise<{ ok: true; id: string } | { ok: false; error: string }> {
@@ -163,16 +174,57 @@ export async function selectCandidacyManual(
       cargo: input.cargo as Cargo,
     });
     const ext = perfil.externalId;
+    const base = input.municipioBase?.trim();
+    let anchorIbge: string | null = null;
+    if (base) {
+      try {
+        const { getGeoUF, codeFromNome } = await import("@/lib/data-sources/geo");
+        anchorIbge = codeFromNome(await getGeoUF(input.uf.toUpperCase()), base);
+      } catch {
+        /* resolve depois */
+      }
+    }
     const id = await persist(perfil, "manual", ext, objective, {
       cargo: input.cargo,
       electionYear: 2026,
       electoralStatus: "na",
       apoios,
+      anchorIbge,
+      birthMunicipio: base || null,
+      birthUf: base ? input.uf.toUpperCase() : null,
     });
     return { ok: true, id };
   } catch {
     return { ok: false, error: "Falha ao gravar a candidatura." };
   }
+}
+
+/** Atualiza a base territorial (âncora + municípios onde já atua) de uma candidatura. */
+export async function updateBaseTerritorial(
+  candidacyId: string,
+  municipioBase: string,
+  extras: string[],
+): Promise<{ ok: boolean; anchor: string | null }> {
+  const rows = await db.select().from(candidacies).where(eq(candidacies.id, candidacyId)).limit(1);
+  const c = rows[0];
+  if (!c || !c.uf) return { ok: false, anchor: null };
+  const { getGeoUF, codeFromNome } = await import("@/lib/data-sources/geo");
+  const geo = await getGeoUF(c.uf.toUpperCase()).catch(() => []);
+  const anchor = municipioBase.trim() ? codeFromNome(geo, municipioBase.trim()) : null;
+  const baseIbge = extras
+    .map((n) => codeFromNome(geo, n.trim()))
+    .filter((v): v is string => !!v);
+  await db
+    .update(candidacies)
+    .set({
+      anchorIbge: anchor,
+      baseIbge,
+      birthMunicipio: municipioBase.trim() || c.birthMunicipio,
+      birthUf: municipioBase.trim() ? c.uf.toUpperCase() : c.birthUf,
+      refreshedAt: new Date(),
+    })
+    .where(eq(candidacies.id, candidacyId));
+  return { ok: true, anchor };
 }
 
 /** Candidatura a partir do espelho do TSE (brasil.io) — qualquer cargo. */
