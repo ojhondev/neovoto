@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import type { MunicipioMatriz } from "@/lib/intel/matriz";
+import { recomendaMunicipio, type MunicipioMatriz } from "@/lib/intel/matriz";
+import { ClipButton } from "@/components/app/ClipButton";
 
 type Labels = {
   axisEcoLeft: string;
@@ -37,13 +38,18 @@ export function IdeologyMatrix({
   locale,
 }: {
   municipios: MunicipioMatriz[];
-  candidato: { eco: number; soc: number };
+  candidato: { eco: number; soc: number; conhecido?: boolean };
   ufMedia: { eco: number; soc: number };
   nomeYou: string;
   labels: Labels;
   locale: string;
 }) {
   const [hover, setHover] = useState<MunicipioMatriz | null>(null);
+  const [sel, setSel] = useState<MunicipioMatriz | null>(null);
+  const loc = locale === "pt" ? "pt" : "en";
+  const rec = sel
+    ? recomendaMunicipio(sel, { eco: candidato.eco, soc: candidato.soc, conhecido: candidato.conhecido ?? true }, loc)
+    : null;
 
   const maxPop = Math.max(...municipios.map((m) => m.populacao), 1);
   const rOf = (pop: number) => 2.5 + Math.sqrt(pop / maxPop) * 12;
@@ -97,10 +103,12 @@ export function IdeologyMatrix({
               cy={sy(m.soc)}
               r={rOf(m.populacao)}
               fill={colOf(m)}
-              fillOpacity={0.62}
-              stroke={hover?.code === m.code ? "var(--color-ink)" : "none"}
+              fillOpacity={sel?.code === m.code ? 0.95 : 0.62}
+              stroke={hover?.code === m.code || sel?.code === m.code ? "var(--color-ink)" : "none"}
+              className="cursor-pointer"
               onMouseEnter={() => setHover(m)}
               onMouseLeave={() => setHover(null)}
+              onClick={() => setSel(m)}
             >
               <title>
                 {m.nome} · eco {m.eco} · soc {m.soc} · {labels.distance} {m.distancia}
@@ -127,30 +135,46 @@ export function IdeologyMatrix({
           <span className="inline-block h-3 w-3 rounded-full border border-dashed border-fossil" />
           <span className="text-smoke">{labels.ufAverage}</span>
         </div>
-        {hover ? (
-          <div className="rounded-[6px] border border-ash bg-paper p-3">
-            <p className="text-body text-ink">{hover.nome}</p>
-            <p className="mt-1 text-caption text-fossil">
-              eco {hover.eco} · soc {hover.soc}
-            </p>
-            <p className="text-caption text-fossil">
-              {labels.distance}: {hover.distancia} · {hover.populacao.toLocaleString(locale)} hab.
-            </p>
+        <div className="space-y-1.5 text-caption text-pebble">
+          <div className="flex items-center gap-2">
+            <span className="h-2.5 w-16 rounded-full" style={{ background: "linear-gradient(90deg,#2f6fed,#b9b2a6,#e5397f)" }} />
+            <span>{loc === "pt" ? "esquerda → centro → direita" : "left → centre → right"}</span>
           </div>
-        ) : (
-          <div className="space-y-1.5 text-caption text-pebble">
-            <div className="flex items-center gap-2">
-              <span className="h-2.5 w-16 rounded-full" style={{ background: "linear-gradient(90deg,#2f6fed,#b9b2a6,#e5397f)" }} />
-              <span>{locale === "pt" ? "esquerda → centro → direita" : "left → centre → right"}</span>
-            </div>
-            <p>
-              {locale === "pt"
-                ? "Tamanho do ponto = população. Posição = eixos econômico (X) e de costumes (Y)."
-                : "Dot size = population. Position = economic (X) and social-values (Y) axes."}
+          <p>
+            {loc === "pt"
+              ? "Clique num município para a recomendação de agenda ali."
+              : "Click a municipality for the agenda recommendation there."}
+          </p>
+          {hover && (
+            <p className="text-fossil">
+              {hover.nome} · eco {hover.eco} · soc {hover.soc}
             </p>
-          </div>
-        )}
+          )}
+        </div>
       </div>
+
+      {/* recomendação acionável do município selecionado */}
+      {sel && rec && (
+        <div className="mt-4 rounded-[var(--radius-card)] border-l-2 border-olive bg-paper p-4 sm:col-span-2 lg:col-span-2">
+          <div className="flex items-start justify-between gap-3">
+            <p className="t-eyebrow mb-1">
+              {loc === "pt" ? "O que fazer em" : "What to do in"} {sel.nome}
+            </p>
+            <ClipButton
+              item={{
+                modulo: loc === "pt" ? "Matriz Ideológica" : "Ideological Matrix",
+                titulo: `${loc === "pt" ? "Agenda para" : "Agenda for"} ${sel.nome}`,
+                texto: rec,
+              }}
+            />
+          </div>
+          <p className="text-body-sm text-ink">{rec}</p>
+          <p className="font-ui mt-2 text-caption text-pebble">
+            eco {sel.eco} · soc {sel.soc} · {labels.distance} {sel.distancia} ·{" "}
+            {sel.populacao.toLocaleString(locale)} {loc === "pt" ? "hab." : "inhab."}
+          </p>
+        </div>
+      )}
     </div>
   );
 }

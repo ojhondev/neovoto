@@ -161,6 +161,55 @@ export function computeMatriz(
   };
 }
 
+/** Traduz a posição de um município em recomendação de agenda. Pura, sem I/O. */
+export function recomendaMunicipio(
+  m: { nome: string; eco: number; soc: number; distancia: number },
+  cand: { eco: number; soc: number; conhecido: boolean },
+  locale: "pt" | "en",
+): string {
+  const pt = locale === "pt";
+  const temasEco =
+    m.eco <= -0.15
+      ? pt
+        ? "trabalho e geração de emprego, saúde pública, apoio a quem tem menos"
+        : "jobs, public healthcare, support for those who have less"
+      : m.eco >= 0.15
+        ? pt
+          ? "custo de vida, pequeno negócio e desburocratização, segurança"
+          : "cost of living, small business and deregulation, safety"
+        : pt
+          ? "infraestrutura, saúde e educação — pautas de consenso"
+          : "infrastructure, health and education — consensus themes";
+  const tomSoc =
+    m.soc >= 0.2
+      ? pt
+        ? " Evite pautas de costumes na ofensiva; se o tema surgir, responda pelo lado da segurança e da ordem."
+        : " Avoid pushing social-values themes; if raised, answer via safety and order."
+      : m.soc <= -0.2
+        ? pt
+          ? " Há espaço para pautas de direitos e meio ambiente sem custo."
+          : " There's room for rights and environment themes at no cost."
+        : "";
+  const dist =
+    m.distancia <= 0.55
+      ? pt
+        ? `Seu discurso já ressoa em ${m.nome} — reforce presença e mobilização.`
+        : `Your message already resonates in ${m.nome} — reinforce presence.`
+      : m.distancia >= 1.0
+        ? pt
+          ? `${m.nome} está longe do seu eixo (${m.distancia.toFixed(2)}): o discurso precisa de tradução, não de confronto ideológico.`
+          : `${m.nome} is far from your axis (${m.distancia.toFixed(2)}): the message needs translation, not ideological confrontation.`
+        : pt
+          ? `${m.nome} é terreno intermediário — dá para crescer com a agenda certa.`
+          : `${m.nome} is middle ground — you can grow with the right agenda.`;
+  const eixoTxt = pt
+    ? `${m.eco <= -0.15 ? "à esquerda no eixo econômico" : m.eco >= 0.15 ? "à direita no eixo econômico" : "no centro econômico"}`
+    : `${m.eco <= -0.15 ? "left on the economic axis" : m.eco >= 0.15 ? "right on the economic axis" : "economically centrist"}`;
+  return pt
+    ? `${dist} O eleitorado ali é ${eixoTxt}: aborde ${temasEco}.${tomSoc}`
+    : `${dist} The electorate there is ${eixoTxt}: address ${temasEco}.${tomSoc}`;
+}
+
 function mediana(xs: number[]): number {
   if (xs.length === 0) return 0;
   const s = [...xs].sort((a, b) => a - b);

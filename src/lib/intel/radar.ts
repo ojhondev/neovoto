@@ -33,6 +33,7 @@ export type TemaRadar = {
   alinhamento: Alinhamento;
   tipo: TipoRadar;
   recomendacao: string;
+  naImprensa: number; // menções na camada de imprensa/tendências (0 = só no Congresso)
 };
 
 export type RadarResultado = {
@@ -79,6 +80,8 @@ type Textos = {
   monitorar: (t: { tema: string; n: number }) => string;
 };
 
+export type ItemContexto = { texto: string; data: string; peso: number };
+
 export function computeRadar(
   agenda: ItemAgenda[],
   perfil: {
@@ -89,23 +92,26 @@ export function computeRadar(
   textos: Textos,
   janelaDias: number,
   locale: "pt" | "en",
+  contexto: ItemContexto[] = [],
 ): RadarResultado {
   const campoCandidato = campoDoPartido(perfil.partido);
 
-  // 1) classifica a agenda, com decaimento por idade
+  // 1) classifica a agenda + a camada de imprensa/tendências, com decaimento por idade
   const agora = Date.now();
   const score = new Map<string, number>();
   const mencoes = new Map<string, number>();
-  for (const item of agenda) {
-    const idade = item.data
-      ? Math.max(0, (agora - new Date(item.data).getTime()) / 86_400_000)
-      : janelaDias;
-    const w = Math.exp(-idade / 45);
-    for (const id of classificarTexto(item.ementa)) {
+  const mencoesImprensa = new Map<string, number>();
+  const add = (texto: string, data: string, base: number, imprensa: boolean) => {
+    const idade = data ? Math.max(0, (agora - new Date(data).getTime()) / 86_400_000) : janelaDias;
+    const w = base * Math.exp(-idade / (imprensa ? 8 : 45));
+    for (const id of classificarTexto(texto)) {
       score.set(id, (score.get(id) ?? 0) + w);
       mencoes.set(id, (mencoes.get(id) ?? 0) + 1);
+      if (imprensa) mencoesImprensa.set(id, (mencoesImprensa.get(id) ?? 0) + 1);
     }
-  }
+  };
+  for (const item of agenda) add(item.ementa, item.data, 1, false);
+  for (const c of contexto) add(c.texto, c.data, c.peso, true);
   const maxScore = Math.max(1, ...score.values());
 
   // 2) footprint temático do candidato.
@@ -164,6 +170,7 @@ export function computeRadar(
       alinhamento,
       tipo,
       recomendacao,
+      naImprensa: mencoesImprensa.get(t.id) ?? 0,
     };
   });
 
@@ -172,12 +179,15 @@ export function computeRadar(
   temas.sort((a, b) => ordem[a.tipo] - ordem[b.tipo] || b.heat - a.heat);
 
   return {
-    version: RADAR_VERSION,
+    version: contexto.length > 0 ? `${RADAR_VERSION}+imprensa` : RADAR_VERSION,
     janelaDias,
-    itensAnalisados: agenda.length,
+    itensAnalisados: agenda.length + contexto.length,
     campoCandidato,
     temas,
-    fontes: ["Câmara dos Deputados — proposições apresentadas (Dados Abertos v2)"],
+    fontes:
+      contexto.length > 0
+        ? ["Câmara — proposições", "Imprensa e tendências (últimos dias)"]
+        : ["Câmara — proposições"],
   };
 }
 

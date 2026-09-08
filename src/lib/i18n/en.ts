@@ -17,6 +17,9 @@ const en: Dictionary = {
     lastUpdate: "Last updated",
     mockNotice:
       "Illustrative data. Official integrations (TSE, IBGE, Chamber, Senate) are connected in the next phase.",
+    ifetShort: "IFET — territorial priority",
+    ifetExplainer:
+      "IFET (Territorial Electoral Strength Index) is the 0–100 number NeoVoto computes for each municipality: how much it WEIGHS in your strategy. It combines electoral weight (how much vote is at stake), how winnable the electorate tends to be, the territory's economic profile and — when there's history — your own performance there. High IFET = a municipality where concentrating the campaign yields more votes per real spent.",
   },
   nav: {
     product: "Product",
@@ -337,6 +340,12 @@ const en: Dictionary = {
     disputabilidadeHint: "How volatile / winnable the electorate tends to be.",
     desempenhoHistoricoHint: "The candidate's own strength in the municipality last election (votes per inhabitant).",
     quadrantsTitle: "Strategic quadrants",
+    quadExplain: {
+      pm: "Lots of vote at stake AND a still-winnable electorate. This is where each campaign real yields the most votes. Prioritise the candidate's agenda, media and structure here.",
+      co: "Lots of vote, but more crystallised — voters there have decided. Defend what's yours: presence, not conquest. Don't waste rallies trying to grow where you're already at the ceiling.",
+      od: "Volatile electorate, but in smaller municipalities — the gain per place is small. Low-cost actions: local-leader outreach, material, occasional visits.",
+      bp: "Few votes and crystallised vote. Minimal institutional presence; don't invest campaign resources here.",
+    },
     ranking: "Municipalities by IFET",
     clickHint: "Click a municipality on the map to see its sheet.",
     selected: "Selected municipality",

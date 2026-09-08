@@ -4,6 +4,7 @@ import { useState } from "react";
 import { TerritoryMap, type TerritoryMapHandle } from "@/components/viz/TerritoryMap";
 import type { IfetMunicipio, Quadrante } from "@/lib/intel/ifet";
 import { URGENCIA_QUADRANTE, urgVar } from "@/lib/viz/colors";
+import { Info } from "@/components/app/Info";
 
 type QuadInfo = Record<Quadrante, { label: string; acao: string }>;
 
@@ -25,6 +26,7 @@ type Dict = {
   disputabilidadeHint: string;
   desempenhoHistoricoHint: string;
   quadrantsTitle: string;
+  quadExplain: { pm: string; co: string; od: string; bp: string };
   ranking: string;
   clickHint: string;
   selected: string;
@@ -38,6 +40,13 @@ const QUAD_ORDER: Quadrante[] = [
   "oportunidade-dispersa",
   "baixa-prioridade",
 ];
+
+const QUAD_KEY: Record<Quadrante, "pm" | "co" | "od" | "bp"> = {
+  "prioridade-maxima": "pm",
+  consolidar: "co",
+  "oportunidade-dispersa": "od",
+  "baixa-prioridade": "bp",
+};
 
 function Bar({ label, hint, v, color }: { label: string; hint: string; v: number; color: string }) {
   return (
@@ -141,12 +150,15 @@ export function HeatmapExplorer({
               </span>
               <span className="font-ui text-caption text-fossil">{dict.score}</span>
             </div>
-            <div
-              className="font-ui mt-3 inline-block rounded-[4px] px-2 py-1 text-caption text-white"
-              style={{ background: urgVar(URGENCIA_QUADRANTE[sel.quadrante] ?? "none") }}
-            >
-              {quad[sel.quadrante].label}
-            </div>
+            <span className="mt-3 inline-flex items-center">
+              <span
+                className="font-ui rounded-[4px] px-2 py-1 text-caption text-white"
+                style={{ background: urgVar(URGENCIA_QUADRANTE[sel.quadrante] ?? "none") }}
+              >
+                {quad[sel.quadrante].label}
+              </span>
+              <Info label={quad[sel.quadrante].label}>{dict.quadExplain[QUAD_KEY[sel.quadrante]]}</Info>
+            </span>
             <p className="mt-2 text-body-sm text-fossil">{quad[sel.quadrante].acao}</p>
 
             <div className="mt-5 space-y-3">
@@ -199,7 +211,10 @@ export function HeatmapExplorer({
                 />
                 <p className="font-ui text-[24px] font-light text-ink">{n}</p>
               </div>
-              <p className="font-ui mt-1 text-body-sm text-ink">{quad[q].label}</p>
+              <p className="font-ui mt-1 flex items-center text-body-sm text-ink">
+                {quad[q].label}
+                <Info label={quad[q].label}>{dict.quadExplain[QUAD_KEY[q]]}</Info>
+              </p>
               <p className="font-ui mt-1 text-caption text-fossil">{quad[q].acao}</p>
             </div>
           ))}

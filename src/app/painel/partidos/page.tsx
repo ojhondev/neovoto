@@ -6,11 +6,62 @@ import { getCurrentCandidacy, perfilFrom } from "@/lib/candidacy";
 import { getEstadoPorSigla } from "@/lib/data-sources/ibge";
 import { getVotacaoPartidoUF } from "@/lib/data-sources/regional";
 import { getBancadaCamara } from "@/lib/data-sources/camara";
-import { analisarPartidos, PARTIDOS_PLEITO } from "@/lib/intel/partidos-analise";
+import { analisarPartidos, PARTIDOS_PLEITO, type PartidosResultado } from "@/lib/intel/partidos-analise";
 import { PartidosViz } from "@/components/app/PartidosViz";
 import { partidoColor } from "@/lib/viz/colors";
 
 export const metadata: Metadata = { title: "Partidos" };
+
+/** interpretação da matriz de correlação em linguagem direta */
+function interpretar(data: PartidosResultado, base: string, pt: boolean): string[] {
+  const out: string[] = [];
+  // par mais anti-correlacionado
+  let piorPar: { a: string; b: string; v: number } | null = null;
+  const clusters = new Map<string, string[]>();
+  for (let i = 0; i < data.ordem.length; i++) {
+    for (let j = i + 1; j < data.ordem.length; j++) {
+      const v = data.matriz[i][j];
+      if (!piorPar || v < piorPar.v) piorPar = { a: data.ordem[i], b: data.ordem[j], v };
+      if (v >= 0.5) {
+        const k = data.ordem[i];
+        clusters.set(k, [...(clusters.get(k) ?? []), data.ordem[j]]);
+      }
+    }
+  }
+  if (piorPar && piorPar.v <= -0.4) {
+    out.push(
+      pt
+        ? `${piorPar.a} e ${piorPar.b} dividem o estado em dois blocos praticamente opostos (${piorPar.v.toFixed(2)}): onde um é forte, o outro é fraco. É o eixo real da disputa territorial.`
+        : `${piorPar.a} and ${piorPar.b} split the state into two nearly opposite blocs (${piorPar.v.toFixed(2)}): where one is strong, the other is weak.`,
+    );
+  }
+  const grande = [...clusters.entries()].sort((a, b) => b[1].length - a[1].length)[0];
+  if (grande && grande[1].length >= 2) {
+    out.push(
+      pt
+        ? `${[grande[0], ...grande[1]].slice(0, 4).join(", ")} ocupam o mesmo espaço geográfico — provavelmente o voto de centro / anti-polarização. Disputam entre si os mesmos municípios.`
+        : `${[grande[0], ...grande[1]].slice(0, 4).join(", ")} occupy the same geographic space — likely the centre / anti-polarisation vote.`,
+    );
+  }
+  const nb = data.nos.find((n) => n.sigla === base);
+  if (nb) {
+    if (nb.maisOposto) {
+      out.push(
+        pt
+          ? `Para o ${base}: o adversário territorial direto é o ${nb.maisOposto.sigla} (${nb.maisOposto.forca.toFixed(2)}) — crescer significa tirar voto dele nos municípios onde ele domina. Ataque a base dele, não a de quem já divide espaço com você.`
+          : `For ${base}: the direct territorial rival is ${nb.maisOposto.sigla} (${nb.maisOposto.forca.toFixed(2)}) — growing means taking votes from it where it dominates.`,
+      );
+    }
+    if (nb.maisAfim) {
+      out.push(
+        pt
+          ? `${nb.maisAfim.sigla} disputa a mesma base que o ${base} (${nb.maisAfim.forca.toFixed(2)}): aliança com ele soma pouco voto novo e muito palanque repetido — considere só se trouxer estrutura ou tempo de TV.`
+          : `${nb.maisAfim.sigla} competes for the same base as ${base} (${nb.maisAfim.forca.toFixed(2)}): an alliance adds little new vote.`,
+      );
+    }
+  }
+  return out.length ? out : [pt ? "Correlações fracas — no presidencial o voto se concentra nos dois polos." : "Weak correlations — presidential vote concentrates on the two poles."];
+}
 
 export default async function Page() {
   const { locale, t } = await getDictionary();
@@ -129,18 +180,14 @@ export default async function Page() {
         </table>
       </section>
 
-      <div className="card mt-6">
-        <h3 className="t-heading text-[20px]">{t.partidos.fichaTitle}</h3>
-        <dl className="font-ui mt-3 grid gap-x-8 gap-y-3 text-body-sm sm:grid-cols-2">
-          <div>
-            <dt className="text-pebble">{t.partidos.version}</dt>
-            <dd className="text-smoke">{data.version}</dd>
-          </div>
-          <div>
-            <dt className="text-pebble">{t.partidos.sources}</dt>
-            <dd className="text-smoke">{data.fontes.join(" · ")}</dd>
-          </div>
-        </dl>
+      {/* interpretação */}
+      <div className="card mt-6 border-l-2 border-olive">
+        <p className="t-eyebrow mb-2">{pt ? "O que a correlação diz" : "What the correlation says"}</p>
+        <div className="space-y-2 text-body-sm text-smoke">
+          {interpretar(data, base, pt).map((linha, i) => (
+            <p key={i}>{linha}</p>
+          ))}
+        </div>
       </div>
 
       <p className="font-ui mt-6 border-t border-ash pt-4 text-caption text-pebble">

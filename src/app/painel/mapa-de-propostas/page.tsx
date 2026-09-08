@@ -7,7 +7,9 @@ import { URGENCIA_RADAR, urgVar } from "@/lib/viz/colors";
 import { getDictionary } from "@/lib/i18n";
 import { getCurrentCandidacy, perfilFrom } from "@/lib/candidacy";
 import { getAgendaCamara } from "@/lib/data-sources/agenda";
+import { getManchetes, getTendencias } from "@/lib/data-sources/imprensa";
 import { computeRadar, type TemaRadar, type TipoRadar } from "@/lib/intel/radar";
+import { RadarLista } from "@/components/app/RadarLista";
 
 export const metadata: Metadata = { title: "Mapa de Propostas" };
 
@@ -64,7 +66,15 @@ export default async function Page() {
     );
   }
 
-  const agenda = await getAgendaCamara(JANELA_DIAS);
+  const [agenda, manchetes, tendencias] = await Promise.all([
+    getAgendaCamara(JANELA_DIAS),
+    getManchetes().catch(() => []),
+    getTendencias().catch(() => []),
+  ]);
+  const contexto = [
+    ...manchetes.map((m) => ({ texto: m.titulo, data: m.data, peso: 1.6 })),
+    ...tendencias.map((tr) => ({ texto: tr.titulo, data: tr.data, peso: 2.2 })),
+  ];
 
   if (agenda.length < 20) {
     return (
@@ -83,7 +93,7 @@ export default async function Page() {
     exposicao: (v: { tema: string; n: number }) => fill(t.radar.recExposicao, v),
     monitorar: (v: { tema: string; n: number }) => fill(t.radar.recMonitorar, v),
   };
-  const radar = computeRadar(agenda, perfil, textos, JANELA_DIAS, locale === "pt" ? "pt" : "en");
+  const radar = computeRadar(agenda, perfil, textos, JANELA_DIAS, locale === "pt" ? "pt" : "en", contexto);
 
   const campoLabel =
     radar.campoCandidato === "progressista"
@@ -158,65 +168,21 @@ export default async function Page() {
               : '"In cycle" (0–100) is how much the theme shows up in the Chamber\'s recent agenda, weighted toward the last few days. "Gap to claim" = hot + friendly to your field + no position of yours. "Careful entering" = hot, but tense terrain for your side.'}
           </Info>
         </h3>
-        <ol className="mt-4 divide-y divide-ash">
-          {radar.temas.map((tema) => (
-            <li key={tema.id} className="py-4 first:pt-0 last:pb-0">
-              <div className="flex items-start gap-4">
-                <div className="w-28 shrink-0">
-                  <div className="font-ui flex items-baseline justify-between text-caption">
-                    <span className="text-pebble">{t.radar.colHeat}</span>
-                    <span className="text-fossil">{tema.heat}</span>
-                  </div>
-                  <div className="mt-1 h-2 rounded-[2px] bg-sand">
-                    <div
-                      className="h-full rounded-[2px]"
-                      style={{
-                        width: `${tema.heat}%`,
-                        background: urgVar(tema.heat >= 60 ? "high" : tema.heat >= 30 ? "med" : "none"),
-                      }}
-                    />
-                  </div>
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="font-ui text-body text-ink">{tema.label}</span>
-                    <span
-                      className="font-ui rounded-[3px] px-1.5 py-0.5 text-[11px] text-white"
-                      style={{ background: urgVar(URGENCIA_RADAR[tema.tipo] ?? "none") }}
-                    >
-                      {tipoLabel[tema.tipo]}
-                    </span>
-                    <span
-                      className={
-                        "font-ui rounded-[3px] px-1.5 py-0.5 text-[11px] " +
-                        (tema.alinhamento === "tensao"
-                          ? "bg-[#c9772f]/20 text-smoke"
-                          : tema.alinhamento === "afim"
-                            ? "bg-olive/20 text-smoke"
-                            : "bg-sand text-smoke")
-                      }
-                    >
-                      {alignLabel(tema.alinhamento)}
-                    </span>
-                  </div>
-                  <p className="font-ui mt-1 text-caption text-pebble">
-                    {tema.candidatoAtivo
-                      ? tema.iniciativasCandidato > 0
-                        ? fill(t.radar.statusAtivo, { k: tema.iniciativasCandidato })
-                        : t.radar.statusFrentes
-                      : t.radar.statusSilente}
-                    {" · "}
-                    {tema.mencoes} {pt ? "projetos" : "bills"}
-                  </p>
-                  <p className="mt-2 text-body-sm text-fossil">
-                    <span className="text-pebble">{t.radar.recommendation}: </span>
-                    {tema.recomendacao}
-                  </p>
-                </div>
-              </div>
-            </li>
-          ))}
-        </ol>
+        <div className="mt-4">
+          <RadarLista
+            temas={radar.temas}
+            modulo={t.radar.name}
+            locale={locale}
+            labels={{
+              heat: t.radar.colHeat,
+              recommendation: t.radar.recommendation,
+              tipo: tipoLabel,
+              align: alignLabel,
+              all: pt ? "Todas" : "All",
+              inPress: pt ? "no noticiário" : "in the news",
+            }}
+          />
+        </div>
       </div>
 
       {/* ficha técnica */}

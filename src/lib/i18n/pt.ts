@@ -15,6 +15,9 @@ const pt = {
     lastUpdate: "Última atualização",
     mockNotice:
       "Dados ilustrativos. As integrações oficiais (TSE, IBGE, Câmara, Senado) são conectadas na próxima fase.",
+    ifetShort: "IFET — prioridade territorial",
+    ifetExplainer:
+      "IFET (Índice de Força Eleitoral Territorial) é o número de 0 a 100 que a NeoVoto calcula para cada município: quanto ele PESA na sua estratégia. Combina o peso eleitoral (quanto voto está em jogo), o quão conquistável o eleitorado tende a ser, o perfil econômico do território e — quando há histórico — o seu desempenho ali. IFET alto = município onde concentrar campanha rende mais voto por real gasto.",
   },
   nav: {
     product: "Produto",
@@ -335,6 +338,12 @@ const pt = {
     disputabilidadeHint: "Quão volátil / conquistável tende a ser o eleitorado.",
     desempenhoHistoricoHint: "Força do próprio candidato no município na última eleição (votos por habitante).",
     quadrantsTitle: "Quadrantes estratégicos",
+    quadExplain: {
+      pm: "Muito voto em jogo E eleitorado ainda conquistável. É onde cada real de campanha rende mais voto. Priorize agenda do candidato, mídia e estrutura aqui.",
+      co: "Muito voto, mas mais cristalizado — o eleitor ali já decidiu. Defenda o que é seu: presença, não conquista. Não desperdice palanque tentando crescer onde já está no teto.",
+      od: "Eleitorado volátil, mas em municípios menores — o ganho por praça é pequeno. Ações de baixo custo: articulação com liderança local, material, visita pontual.",
+      bp: "Pouco voto e voto cristalizado. Presença institucional mínima; não invista recurso de campanha aqui.",
+    },
     ranking: "Municípios por IFET",
     clickHint: "Clique num município no mapa para ver a ficha.",
     selected: "Município selecionado",

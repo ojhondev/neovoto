@@ -21,7 +21,7 @@ export function MatrizViews({
   quadLabels,
 }: {
   municipios: MunicipioMatriz[];
-  candidato: { eco: number; soc: number };
+  candidato: { eco: number; soc: number; conhecido?: boolean };
   ufMedia: { eco: number; soc: number };
   nomeYou: string;
   labels: React.ComponentProps<typeof IdeologyMatrix>["labels"];

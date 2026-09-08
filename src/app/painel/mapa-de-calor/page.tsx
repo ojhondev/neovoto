@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { ToolShell } from "@/components/app/ToolShell";
 import { HeatmapExplorer } from "@/components/app/HeatmapExplorer";
+import { IfetInfo } from "@/components/app/IfetInfo";
 import { getDictionary } from "@/lib/i18n";
 import { getCurrentCandidacy, perfilFrom } from "@/lib/candidacy";
 import { getTerritorioUF } from "@/lib/territory";
@@ -95,8 +96,9 @@ export default async function Page() {
             ]
       }
     >
-      <h2 className="t-heading text-[22px]">
+      <h2 className="t-heading flex items-center text-[22px]">
         {t.ifet.name} <span className="mark ml-1 text-caption">{t.ifet.tag} {ifet.version}</span>
+        <IfetInfo />
       </h2>
       <p className="mt-2 max-w-2xl text-body-sm text-fossil">
         {t.ifet.intro.replace("{name}", perfil.nome)}
