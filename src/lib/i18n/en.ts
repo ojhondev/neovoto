@@ -370,6 +370,13 @@ const en: Dictionary = {
     pending: "Layers coming in the next versions",
     weight0: "weight 0 in this version",
   },
+  apoiadores: {
+    title: "Backers and sponsors",
+    body: "Elected officials backing the campaign transfer part of their base in their strongholds — the Engine uses this to project the vote of a candidate with no own history.",
+    suggested: "Likely, in your region",
+    votesInRegion: "votes in your region",
+    add: "Add",
+  },
   baseEditor: {
     title: "Candidate's base",
     body: "The city where the candidate votes and operates anchors the territorial-reach calculation: its IBGE immediate region is the natural surroundings, and influence decays with distance. Without it, the platform only sees state-level context.",
@@ -540,7 +547,7 @@ const en: Dictionary = {
   cenarios: {
     tag: "SCENARIOS",
     intro:
-      "Projection of {nome}'s result from explicit assumptions over the real vote and IFET. Not a forecast — it's what tends to happen if each set of assumptions holds.",
+      "Distribution of {nome}'s result via Monte Carlo simulation (4,000 runs) over sampled assumptions — national mood, turnout, gap conversion. Not a voting-intention forecast: it's the range the total tends to fall in if the model's assumptions hold.",
     disputaMajoritaria: "Majority race — needs a majority of valid votes.",
     disputaProporcional: "Proportional race — needs to clear the last-elected's bar.",
     basePropria: "Basis: your real vote by municipality.",
@@ -576,8 +583,10 @@ const en: Dictionary = {
     fichaTitle: "Technical sheet",
     version: "Version",
     sources: "Sources",
+    probHint:
+      "Fraction of the 4,000 simulations where the total clears the bar. Conditional on the model's assumptions — not a real-world win probability, not voting intention.",
     disclaimer:
-      "Internal projection. Explicit assumptions, no statistical simulation — not voting intention and not to be published (Brazil's Law 9.504/1997). The Monte Carlo + backtesting version arrives in a later phase.",
+      "Internal projection via simulation (Monte Carlo). The 'chance to get elected' is conditional on the model's assumptions — not voting intention, not a poll, and not to be published (Brazil's Law 9.504/1997). Method not yet validated by backtesting — see docs/BACKTEST-METODOS.md.",
     needCandidate: "Select a candidate in the onboarding to project the scenarios.",
   },
   partidos: {

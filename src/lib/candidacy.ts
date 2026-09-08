@@ -315,6 +315,28 @@ export async function adicionarConcorrente(
   }
 }
 
+/** Adiciona um apoiador (padrinho) à candidatura ativa e recalcula a Base. */
+export async function adicionarApoio(
+  candidacyId: string,
+  apoio: { externalId: string; nome: string; uf: string; cargo: string },
+): Promise<{ ok: boolean }> {
+  const rows = await db.select().from(candidacies).where(eq(candidacies.id, candidacyId)).limit(1);
+  const c = rows[0];
+  if (!c) return { ok: false };
+  const atuais = (c.apoios as Apoio[] | null) ?? [];
+  if (atuais.some((a) => a.externalId === apoio.externalId || a.nome.toUpperCase() === apoio.nome.toUpperCase())) {
+    return { ok: true };
+  }
+  await db
+    .update(candidacies)
+    .set({
+      apoios: [...atuais, { source: "tse", ...apoio }].slice(0, 12),
+      refreshedAt: new Date(),
+    })
+    .where(eq(candidacies.id, candidacyId));
+  return { ok: true };
+}
+
 /** Reprocessa a votação de uma candidatura TSE (quando ficou "indisponivel"). */
 export async function retryVotacao(candidacyId: string): Promise<string> {
   let status: string;

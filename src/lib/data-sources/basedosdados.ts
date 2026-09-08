@@ -13,6 +13,9 @@
  * NeoVoto consome (uma query por candidato, filtrada por ano/UF/cargo, cacheada no Neon).
  */
 import { createSign } from "node:crypto";
+import type { MunicipioGeo } from "@/lib/geo-math";
+
+export type { MunicipioGeo };
 
 const DATASET = "basedosdados.br_tse_eleicoes";
 
@@ -388,6 +391,56 @@ export async function votacaoDeSequenciais(
     }));
 }
 
+export type ApoiadorSugerido = {
+  sequencial: string;
+  nome: string;
+  nomeUrna: string;
+  cargo: string;
+  ano: number;
+  votosRegiao: number;
+};
+
+/**
+ * Políticos ELEITOS do mesmo partido cuja votação se concentra na região da
+ * âncora do candidato — os "padrinhos de estrutura" naturais. `codes` = códigos
+ * IBGE da Região Imediata + Intermediária.
+ */
+export async function apoiadoresNaRegiao(args: {
+  uf: string;
+  partido: string;
+  codes: string[];
+}): Promise<ApoiadorSugerido[]> {
+  if (!basedosdadosDisponivel() || args.codes.length === 0) return [];
+  const safe = [...new Set(args.codes)].filter((c) => /^\d{7}$/.test(c)).slice(0, 60);
+  if (safe.length === 0) return [];
+  const rows = await query(
+    `SELECT r.sequencial_candidato AS seq, r.cargo AS cargo, r.ano AS ano,
+            ANY_VALUE(c.nome_urna) AS nome_urna, ANY_VALUE(c.nome) AS nome,
+            SUM(r.votos) AS votos_regiao
+     FROM \`${DATASET}.resultados_candidato_municipio\` r
+     LEFT JOIN \`${DATASET}.candidatos\` c
+       ON c.sequencial = r.sequencial_candidato AND c.ano = r.ano
+     WHERE r.ano IN (2022, 2024) AND r.turno = 1 AND r.sigla_uf = @uf
+       AND r.sigla_partido = @part
+       AND r.id_municipio IN (${safe.map((s) => `'${s}'`).join(",")})
+       AND LOWER(r.resultado) LIKE '%eleito%'
+       AND LOWER(r.resultado) NOT LIKE '%nao%' AND LOWER(r.resultado) NOT LIKE '%não%'
+     GROUP BY seq, cargo, ano
+     HAVING votos_regiao >= 40
+     ORDER BY votos_regiao DESC
+     LIMIT 20`,
+    { uf: args.uf.toUpperCase(), part: args.partido.toUpperCase() },
+  );
+  return rows.map((r) => ({
+    sequencial: r.seq ?? "",
+    nome: r.nome ?? r.nome_urna ?? "",
+    nomeUrna: r.nome_urna ?? r.nome ?? "",
+    cargo: (r.cargo ?? "").toLowerCase(),
+    ano: Number(r.ano ?? 0),
+    votosRegiao: Number(r.votos_regiao ?? 0),
+  }));
+}
+
 /** Municípios onde o PARTIDO elegeu alguém para um cargo — a rede de mandatos local. */
 export async function eleitosDoPartidoUF(args: {
   uf: string;
@@ -409,16 +462,6 @@ export async function eleitosDoPartidoUF(args: {
     .filter((r) => r.id_municipio)
     .map((r) => ({ idMunicipio: r.id_municipio as string, votos: Number(r.votos ?? 0) }));
 }
-
-export type MunicipioGeo = {
-  code: string;
-  nome: string;
-  regImediata: string;
-  nomeRegImediata: string;
-  regIntermediaria: string;
-  lat: number;
-  lng: number;
-};
 
 /**
  * Diretório de municípios de uma UF: região geográfica imediata / intermediária

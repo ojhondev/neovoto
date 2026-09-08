@@ -26,6 +26,11 @@
  * Método: normalização por percentil-rank robusto (winsor. 2%), agregação por
  * média geométrica ponderada, decomposição aditiva para explicar. A especificação
  * fina (curvas, priors) vive na ficha metodológica interna.
+ *
+ * Backtest (docs/BACKTEST-METODOS.md §C): o eixo de alcance prevê ONDE o candidato
+ * performa acima da média (share) com precisão@10 ~4–6× a do ranking por
+ * população. NÃO prevê contagem bruta de votos (essa segue a população) — por isso
+ * o alcance é o eixo dominante da PRIORIDADE e a população fica só no PESO.
  */
 import type { Confianca } from "@/lib/intel/base-candidato";
 

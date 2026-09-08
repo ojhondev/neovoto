@@ -2,7 +2,12 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { clearCandidacy, getCurrentCandidacyId, updateBaseTerritorial } from "@/lib/candidacy";
+import {
+  clearCandidacy,
+  getCurrentCandidacyId,
+  updateBaseTerritorial,
+  adicionarApoio,
+} from "@/lib/candidacy";
 
 export async function trocarCandidato() {
   await clearCandidacy();
@@ -23,6 +28,23 @@ export async function salvarBaseTerritorial(
     .slice(0, 12);
   const res = await updateBaseTerritorial(id, municipioBase, extras);
   if (!res.ok) return { error: "Não foi possível salvar." };
+  revalidarPainel();
+  return { ok: true };
+}
+
+export async function adicionarApoioSugerido(formData: FormData): Promise<void> {
+  const id = await getCurrentCandidacyId();
+  if (!id) return;
+  await adicionarApoio(id, {
+    externalId: String(formData.get("externalId") ?? ""),
+    nome: String(formData.get("nome") ?? ""),
+    uf: String(formData.get("uf") ?? ""),
+    cargo: String(formData.get("cargo") ?? ""),
+  });
+  revalidarPainel();
+}
+
+function revalidarPainel() {
   for (const p of [
     "/painel",
     "/painel/candidato",
@@ -34,5 +56,4 @@ export async function salvarBaseTerritorial(
   ]) {
     revalidatePath(p);
   }
-  return { ok: true };
 }

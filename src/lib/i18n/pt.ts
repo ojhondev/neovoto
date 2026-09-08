@@ -368,6 +368,13 @@ const pt = {
     pending: "Camadas que entram nas próximas versões",
     weight0: "peso 0 nesta versão",
   },
+  apoiadores: {
+    title: "Apoiadores e padrinhos",
+    body: "Políticos eleitos que apoiam a campanha transferem parte da base deles nos redutos deles — o Motor usa isso para projetar o voto de quem não tem histórico próprio.",
+    suggested: "Prováveis, na sua região",
+    votesInRegion: "votos na sua região",
+    add: "Adicionar",
+  },
   baseEditor: {
     title: "Base do candidato",
     body: "A cidade onde o candidato vota e atua ancora o cálculo de alcance territorial: a Região Geográfica Imediata dela (IBGE) é o entorno natural, e a influência decai com a distância. Sem isso, a plataforma só enxerga o contexto do estado.",
@@ -538,7 +545,7 @@ const pt = {
   cenarios: {
     tag: "CENÁRIOS",
     intro:
-      "Projeção do resultado de {nome} a partir de premissas explícitas sobre a votação real e o IFET. Não é previsão — é o que tende a acontecer se cada conjunto de premissas se confirmar.",
+      "Distribuição do resultado de {nome} por simulação de Monte Carlo (4.000 rodadas) sobre premissas amostradas — maré nacional, comparecimento, conversão de lacunas. Não é previsão de intenção de voto: é a faixa onde o total tende a cair se as premissas do modelo valerem.",
     disputaMajoritaria: "Disputa majoritária — precisa da maioria dos votos válidos.",
     disputaProporcional: "Disputa proporcional — precisa passar da barra do último eleito.",
     basePropria: "Base: sua votação real por município.",
@@ -574,8 +581,10 @@ const pt = {
     fichaTitle: "Ficha técnica",
     version: "Versão",
     sources: "Fontes",
+    probHint:
+      "Fração das 4.000 simulações em que o total passa da barra. É condicional às premissas do modelo — não uma probabilidade de vitória do mundo real, nem intenção de voto.",
     disclaimer:
-      "Projeção de apoio interno. Premissas explícitas, sem simulação estatística — não é intenção de voto e não deve ser divulgada (Lei 9.504/1997). A versão com Monte Carlo e backtesting entra numa próxima fase.",
+      "Projeção de apoio interno por simulação (Monte Carlo). A 'chance de eleger' é condicional às premissas do modelo — não é intenção de voto nem pesquisa e não deve ser divulgada (Lei 9.504/1997). Método ainda não validado por backtesting — ver docs/BACKTEST-METODOS.md.",
     needCandidate: "Selecione um candidato no onboarding para projetar os cenários.",
   },
   partidos: {

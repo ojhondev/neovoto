@@ -6,8 +6,9 @@ import { RefreshCw } from "lucide-react";
 import { getDictionary } from "@/lib/i18n";
 import { getCurrentCandidacy, perfilFrom } from "@/lib/candidacy";
 import { getGeoUF } from "@/lib/data-sources/geo";
+import { getApoiadoresSugeridos, getBaseCandidato } from "@/lib/intel/base-candidato-load";
 import { BaseTerritorialEditor } from "@/components/app/BaseTerritorialEditor";
-import { trocarCandidato } from "./actions";
+import { trocarCandidato, adicionarApoioSugerido } from "./actions";
 
 export const metadata: Metadata = { title: "Candidato" };
 
@@ -25,13 +26,18 @@ export default async function CandidatoPage() {
   const uf = (perfil.uf || candidacy.uf || "").toUpperCase();
   const geo = uf ? await getGeoUF(uf).catch(() => []) : [];
   const nomeByCode = new Map(geo.map((g) => [g.code, g.nome]));
+  const base = uf ? await getBaseCandidato(candidacy, perfil).catch(() => null) : null;
   const anchorNome =
     (candidacy.anchorIbge && nomeByCode.get(candidacy.anchorIbge)) ||
     candidacy.birthMunicipio ||
+    base?.ancora?.nome ||
     null;
   const extrasNomes = ((candidacy.baseIbge as string[] | null) ?? [])
     .map((c) => nomeByCode.get(c))
     .filter((v): v is string => !!v);
+
+  const apoiadores = await getApoiadoresSugeridos(candidacy, perfil).catch(() => []);
+  const apoiosAtuais = ((candidacy.apoios as { nome: string; uf: string; cargo: string }[] | null) ?? []);
 
   return (
     <>
@@ -117,6 +123,57 @@ export default async function CandidatoPage() {
             extrasNomes={extrasNomes}
           />
         </div>
+      )}
+
+      {(apoiadores.length > 0 || apoiosAtuais.length > 0) && (
+        <section className="card mt-4">
+          <h2 className="t-heading text-[22px]">{t.apoiadores.title}</h2>
+          <p className="mt-2 text-body-sm text-fossil">{t.apoiadores.body}</p>
+
+          {apoiosAtuais.length > 0 && (
+            <ul className="mt-3 flex flex-wrap gap-1.5">
+              {apoiosAtuais.map((a, i) => (
+                <li
+                  key={`${a.nome}-${i}`}
+                  className="font-ui rounded-[4px] bg-sand px-2 py-1 text-caption text-smoke"
+                >
+                  {a.nome}
+                  {a.uf ? ` (${a.uf})` : ""}
+                </li>
+              ))}
+            </ul>
+          )}
+
+          {apoiadores.filter((a) => !a.jaEApoio).length > 0 && (
+            <>
+              <p className="t-eyebrow mt-4">{t.apoiadores.suggested}</p>
+              <ul className="mt-2 divide-y divide-ash">
+                {apoiadores
+                  .filter((a) => !a.jaEApoio)
+                  .map((a) => (
+                    <li key={a.sequencial} className="flex items-center gap-3 py-2.5">
+                      <span className="min-w-0 flex-1">
+                        <span className="font-ui block truncate text-body-sm text-ink">{a.nome}</span>
+                        <span className="font-ui block text-caption text-fossil">
+                          {a.cargoLabel} · {perfil.partido} · {a.ano} ·{" "}
+                          {a.votosRegiao.toLocaleString(locale)} {t.apoiadores.votesInRegion}
+                        </span>
+                      </span>
+                      <form action={adicionarApoioSugerido} className="shrink-0">
+                        <input type="hidden" name="externalId" value={a.sequencial} />
+                        <input type="hidden" name="nome" value={a.nome} />
+                        <input type="hidden" name="uf" value={uf} />
+                        <input type="hidden" name="cargo" value={a.cargo} />
+                        <button type="submit" className="btn btn-ghost text-caption">
+                          {t.apoiadores.add}
+                        </button>
+                      </form>
+                    </li>
+                  ))}
+              </ul>
+            </>
+          )}
+        </section>
       )}
 
       {perfil.proposicoes && perfil.proposicoes.recentes.length > 0 && (

@@ -35,20 +35,20 @@ export default async function Page() {
 
   const howItWorks = pt
     ? [
-        "Parte da sua votação real por município (ou do seu partido, se não houver histórico).",
+        "Parte da votação real por município — ou, sem histórico, do alcance territorial do candidato (cidade-base, rede do partido, apoios) × uma taxa de captação amostrada.",
         "Define a barra: maioria dos válidos (majoritária) ou voto do último eleito (proporcional).",
-        "Aplica premissas explícitas de maré, comparecimento e conversão de lacunas de IFET.",
-        "Devolve a faixa de resultado de cada cenário e o que mais move o ponteiro.",
+        "Roda 4.000 simulações de Monte Carlo amostrando maré nacional, comparecimento, conversão das lacunas e um choque de execução.",
+        "Devolve a distribuição do total (p10…p90), a chance de eleger nas premissas do modelo e o que mais move o ponteiro.",
       ]
     : [
-        "Starts from your real vote by municipality (or your party's, if no history).",
+        "Starts from the real vote by municipality — or, with no history, from the candidate's territorial reach (home base, party network, endorsements) × a sampled capture rate.",
         "Sets the bar: majority of valid votes (majority race) or the last-elected's vote (proportional).",
-        "Applies explicit assumptions of mood, turnout and IFET-gap conversion.",
-        "Returns each scenario's result range and what moves the needle most.",
+        "Runs 4,000 Monte Carlo simulations sampling national mood, turnout, gap conversion and an execution shock.",
+        "Returns the total's distribution (p10…p90), the chance to get elected under the model's assumptions, and the biggest lever.",
       ];
   const outputs = pt
-    ? ["Faixa de votos por cenário (base / favorável / adverso).", "Quantos votos faltam para eleger.", "Municípios que mais encurtam o caminho.", "Sensibilidade a cada premissa."]
-    : ["Vote range per scenario (base / favourable / adverse).", "How many votes are missing to get elected.", "Municipalities that shorten the path most.", "Sensitivity to each assumption."];
+    ? ["Distribuição do total de votos (p10 / mediana / p90).", "Chance de eleger condicionada às premissas.", "Municípios que mais encurtam o caminho.", "Sensibilidade a cada premissa."]
+    : ["Distribution of the total vote (p10 / median / p90).", "Chance to get elected, conditional on the assumptions.", "Municipalities that shorten the path most.", "Sensitivity to each assumption."];
 
   if (!candidacy || !perfil || !cargo || (!perfil.uf && !escopoNacional(cargo))) {
     return (
@@ -103,9 +103,10 @@ export default async function Page() {
   const falta = cen.faltam;
   const topFator = cen.sensibilidade[0]?.fator ?? "";
   const alvos3 = cen.municipiosAlvo.slice(0, 3).map((m) => m.nome).join(", ");
+  const pv = Math.round(cen.probVitoria * 100);
   const conclusao = pt
-    ? `${falta > 0 ? `Faltam ${fmt(falta, locale)} votos` : `Folga de ${fmt(-falta, locale)} votos`} para ${perfil.nome} eleger no cenário base (${fmt(cen.votosBase, locale)} de ${fmt(cen.votosNecessarios, locale)}). O que mais move o ponteiro: ${topFator}${alvos3 ? ` — comece por ${alvos3}` : ""}.`
-    : `${falta > 0 ? `${fmt(falta, locale)} votes missing` : `A ${fmt(-falta, locale)}-vote cushion`} for ${perfil.nome} to get elected in the base scenario (${fmt(cen.votosBase, locale)} of ${fmt(cen.votosNecessarios, locale)}). Biggest lever: ${topFator}${alvos3 ? ` — start with ${alvos3}` : ""}.`;
+    ? `${pv}% de chance de eleger ${perfil.nome} nas premissas do modelo — mediana ${fmt(cen.votosBase, locale)} de ${fmt(cen.votosNecessarios, locale)} (${falta > 0 ? `faltam ${fmt(falta, locale)}` : `folga de ${fmt(-falta, locale)}`}). O que mais move o ponteiro: ${topFator}${alvos3 ? ` — comece por ${alvos3}` : ""}.`
+    : `${pv}% chance to elect ${perfil.nome} under the model's assumptions — median ${fmt(cen.votosBase, locale)} of ${fmt(cen.votosNecessarios, locale)} (${falta > 0 ? `${fmt(falta, locale)} missing` : `${fmt(-falta, locale)}-vote cushion`}). Biggest lever: ${topFator}${alvos3 ? ` — start with ${alvos3}` : ""}.`;
 
   const maxSens = Math.max(...cen.sensibilidade.map((s) => s.impacto), 1);
 
@@ -131,39 +132,81 @@ export default async function Page() {
         {cen.tipoDisputa === "majoritaria" ? t.cenarios.disputaMajoritaria : t.cenarios.disputaProporcional}{" "}
         {baseTipo === "propria"
           ? t.cenarios.basePropria
-          : baseTipo === "apoios"
+          : baseTipo === "alcance"
             ? pt
-              ? "Base: fração transferível do voto dos políticos eleitos que apoiam a campanha."
-              : "Basis: transferable fraction of the vote of the elected officials backing the campaign."
-            : t.cenarios.basePartido}
+              ? "Base: alcance territorial do candidato (cidade-base, rede do partido, apoios) × captação amostrada."
+              : "Basis: the candidate's territorial reach (home base, party network, endorsements) × sampled capture rate."
+            : baseTipo === "apoios"
+              ? pt
+                ? "Base: fração transferível do voto dos políticos eleitos que apoiam a campanha."
+                : "Basis: transferable fraction of the vote of the elected officials backing the campaign."
+              : t.cenarios.basePartido}
         <IfetInfo />
       </p>
 
-      {/* barra + faltam */}
-      <div className="card mt-6">
-        <div className="flex flex-wrap items-baseline justify-between gap-2">
-          <p className="font-ui text-caption text-pebble">
-            {t.cenarios.projetadoBase}: <span className="text-ink">{fmt(cen.votosBase, locale)}</span>{" "}
-            · {t.cenarios.necessarios}: <span className="text-ink">{fmt(cen.votosNecessarios, locale)}</span>
-          </p>
-          <p
-            className="font-ui text-body font-medium"
-            style={{ color: falta > 0 ? urgVar("high") : urgVar("low") }}
-          >
-            {falta > 0 ? t.cenarios.faltam : t.cenarios.folga}: {fmt(Math.abs(falta), locale)} {t.cenarios.votos}
-          </p>
-        </div>
-        <div className="relative mt-3 h-3 rounded-[3px] bg-sand">
-          <div
-            className="h-full rounded-[3px]"
-            style={{
-              width: `${Math.min(100, (cen.votosBase / cen.votosNecessarios) * 100)}%`,
-              background: falta > 0 ? urgVar("high") : urgVar("low"),
-            }}
-          />
-          <div className="absolute inset-y-[-3px] w-px bg-ink" style={{ left: "100%" }} />
-        </div>
-      </div>
+      {/* distribuição + probabilidade */}
+      {(() => {
+        const d = cen.distribuicao;
+        const scaleMax = Math.max(d.p90, cen.votosNecessarios) * 1.12;
+        const pos = (v: number) => `${Math.min(100, (v / scaleMax) * 100)}%`;
+        const pv = Math.round(cen.probVitoria * 100);
+        return (
+          <div className="card mt-6">
+            <div className="flex flex-wrap items-baseline justify-between gap-2">
+              <p className="font-ui text-caption text-pebble">
+                {pt ? "Faixa provável" : "Likely range"} (p10–p90):{" "}
+                <span className="text-ink">
+                  {fmt(d.p10, locale)} – {fmt(d.p90, locale)}
+                </span>{" "}
+                · {t.cenarios.necessarios}:{" "}
+                <span className="text-ink">{fmt(cen.votosNecessarios, locale)}</span>
+              </p>
+              <p
+                className="font-ui flex items-center text-body font-medium"
+                style={{ color: pv >= 50 ? urgVar("low") : pv >= 25 ? urgVar("high") : urgVar("crit") }}
+              >
+                {pt ? "Chance de eleger" : "Chance to get elected"}: {pv}%
+                <Info label={pt ? "Chance de eleger" : "Chance to get elected"}>{t.cenarios.probHint}</Info>
+              </p>
+            </div>
+            <div className="relative mt-4 h-8">
+              {/* faixa p10–p90 */}
+              <div
+                className="absolute top-1/2 h-3 -translate-y-1/2 rounded-[3px] bg-sand"
+                style={{ left: pos(d.p10), width: `calc(${pos(d.p90)} - ${pos(d.p10)})` }}
+              />
+              {/* faixa p25–p75 (mais densa) */}
+              <div
+                className="absolute top-1/2 h-3 -translate-y-1/2 rounded-[3px]"
+                style={{
+                  left: pos(d.p25),
+                  width: `calc(${pos(d.p75)} - ${pos(d.p25)})`,
+                  background: "var(--color-cat-4)",
+                  opacity: 0.5,
+                }}
+              />
+              {/* mediana */}
+              <div className="absolute top-1/2 h-5 w-0.5 -translate-y-1/2 bg-ink" style={{ left: pos(d.p50) }} />
+              {/* barra p/ eleger */}
+              <div
+                className="absolute inset-y-0 w-px border-l border-dashed border-negative"
+                style={{ left: pos(cen.votosNecessarios) }}
+              />
+              <span
+                className="font-ui absolute -top-0.5 text-[10px] text-negative"
+                style={{ left: `calc(${pos(cen.votosNecessarios)} + 4px)` }}
+              >
+                {pt ? "eleito" : "elected"}
+              </span>
+            </div>
+            <p className="font-ui mt-2 text-caption text-pebble">
+              {pt
+                ? `Mediana ${fmt(cen.votosBase, locale)} · ${falta > 0 ? `faltam ${fmt(falta, locale)}` : `folga de ${fmt(-falta, locale)}`} · ${cen.sims.toLocaleString(locale)} simulações sobre premissas amostradas`
+                : `Median ${fmt(cen.votosBase, locale)} · ${falta > 0 ? `${fmt(falta, locale)} missing` : `${fmt(-falta, locale)}-vote cushion`} · ${cen.sims.toLocaleString(locale)} simulations over sampled assumptions`}
+            </p>
+          </div>
+        );
+      })()}
 
       {/* cenários */}
       <div className="mt-4 grid gap-4 md:grid-cols-3">

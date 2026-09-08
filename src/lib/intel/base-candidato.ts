@@ -21,7 +21,7 @@
  * `modo: "contexto"` quando NADA disso existe: aí a plataforma diz isso em voz alta
  * em vez de fingir um ranking.
  */
-import { distKm, type MunicipioGeo } from "@/lib/data-sources/geo";
+import { distKm, type MunicipioGeo } from "@/lib/geo-math";
 
 export const BASE_CANDIDATO_VERSION = "base-candidato-v1";
 

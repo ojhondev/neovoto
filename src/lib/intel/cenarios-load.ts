@@ -30,7 +30,7 @@ export const CARGO_REF: Record<Cargo, { ano: number; turno: number; cargo: strin
 };
 
 export type CenariosCarregado =
-  | { ok: true; cenarios: CenariosResultado; baseTipo: "propria" | "apoios" | "partido" }
+  | { ok: true; cenarios: CenariosResultado; baseTipo: "propria" | "alcance" | "apoios" | "partido" }
   | { ok: false; motivo: "sem-recorte" | "sem-dados" | "sem-historico-proprio" | "sem-base" };
 
 export async function carregarCenarios(
@@ -69,8 +69,7 @@ export async function carregarCenarios(
   }
 
   // sem histórico próprio → tenta a base pelos APOIOS declarados (padrinhos).
-  // (só na disputa estadual/municipal — os apoios são por município.)
-  let baseTipo: "propria" | "apoios" | "partido" = votosProprios ? "propria" : "partido";
+  let baseTipo: "propria" | "alcance" | "apoios" | "partido" = votosProprios ? "propria" : "partido";
   if (!votosProprios && !nacional) {
     const apoios = (candidacy.apoios as Apoio[] | null) ?? [];
     const base = await basePorApoios(apoios).catch(() => null);
@@ -80,14 +79,23 @@ export async function carregarCenarios(
     }
   }
 
-  // proporcional + sem histórico + sem apoios → não dá pra projetar voto com honestidade
-  if (ref.prop && !votosProprios) return { ok: false, motivo: "sem-base" };
+  // sem histórico E sem apoios: usa o ALCANCE da Base do Candidato (âncora + rede).
+  const alcanceByCode =
+    !votosProprios && !nacional && resumo.base?.modo === "candidato"
+      ? resumo.base.alcanceByCode
+      : null;
+  if (alcanceByCode && Object.values(alcanceByCode).some((v) => v > 0.05)) baseTipo = "alcance";
+
+  // proporcional sem NENHUM sinal do candidato (nem histórico, nem apoios, nem
+  // âncora/rede) → não dá pra projetar voto com honestidade.
+  if (ref.prop && !votosProprios && !alcanceByCode) return { ok: false, motivo: "sem-base" };
 
   const cenarios = computeCenarios(
     {
       cargo,
       partido: perfil.partido,
       votosCandidatoByCode: votosProprios,
+      alcanceByCode,
       votacaoPartido: votacao,
       ifetByCode: resumo.ifet.byCode,
       populacaoByCode: resumo.populacaoByCode,

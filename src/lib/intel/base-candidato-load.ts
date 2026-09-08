@@ -7,7 +7,14 @@ import type { Candidacy } from "@/db/schema";
 import type { PerfilPolitico } from "@/lib/politico";
 import type { Cargo } from "@/lib/cargos";
 import { getGeoUF, codeFromNome } from "@/lib/data-sources/geo";
-import { basedosdadosDisponivel, historicoDoCandidato, votacaoDeSequenciais, eleitosDoPartidoUF } from "@/lib/data-sources/basedosdados";
+import {
+  basedosdadosDisponivel,
+  historicoDoCandidato,
+  votacaoDeSequenciais,
+  eleitosDoPartidoUF,
+  apoiadoresNaRegiao,
+  type ApoiadorSugerido,
+} from "@/lib/data-sources/basedosdados";
 import { basePorApoios, type Apoio } from "@/lib/intel/apoios";
 import {
   computeBaseCandidato,
@@ -159,4 +166,62 @@ export async function getBaseCandidato(
     { revalidate: 60 * 60 * 24 * 7 },
   );
   return cached().catch(() => null);
+}
+
+export type ApoiadorSugestao = ApoiadorSugerido & { jaEApoio: boolean; cargoLabel: string };
+
+const CARGO_PT: Record<string, string> = {
+  "deputado estadual": "Deputado estadual",
+  "deputado federal": "Deputado federal",
+  "deputado distrital": "Deputado distrital",
+  vereador: "Vereador",
+  prefeito: "Prefeito",
+  "vice-prefeito": "Vice-prefeito",
+  senador: "Senador",
+  governador: "Governador",
+};
+
+async function buildApoiadores(
+  candidacy: Candidacy,
+  perfil: PerfilPolitico,
+): Promise<ApoiadorSugestao[]> {
+  const uf = (perfil.uf || candidacy.uf || "").toUpperCase();
+  const partido = (perfil.partido || candidacy.party || "").toUpperCase();
+  if (!uf || !partido || !basedosdadosDisponivel()) return [];
+  const base = await build(candidacy, perfil).catch(() => null);
+  const codes = [...new Set([...(base?.regImediataCodes ?? []), ...(base?.regIntermediariaCodes ?? [])])];
+  if (codes.length === 0) return [];
+
+  const lista = await apoiadoresNaRegiao({ uf, partido, codes }).catch(() => []);
+  const jaTem = new Set(
+    ((candidacy.apoios as { externalId?: string; nome?: string }[] | null) ?? []).flatMap((a) =>
+      [a.externalId, (a.nome ?? "").toUpperCase()].filter(Boolean) as string[],
+    ),
+  );
+  const eu = perfil.nome.toUpperCase();
+  const seen = new Set<string>();
+  const out: ApoiadorSugestao[] = [];
+  for (const a of lista) {
+    if (a.nome.toUpperCase() === eu) continue;
+    if (seen.has(a.nome.toUpperCase())) continue;
+    seen.add(a.nome.toUpperCase());
+    out.push({
+      ...a,
+      jaEApoio: jaTem.has(a.sequencial) || jaTem.has(a.nome.toUpperCase()),
+      cargoLabel: CARGO_PT[a.cargo] ?? a.cargo,
+    });
+  }
+  return out.slice(0, 8);
+}
+
+export async function getApoiadoresSugeridos(
+  candidacy: Candidacy,
+  perfil: PerfilPolitico,
+): Promise<ApoiadorSugestao[]> {
+  const cached = unstable_cache(
+    () => buildApoiadores(candidacy, perfil),
+    ["apoiadores-sugeridos-v1", candidacy.id, String(candidacy.refreshedAt ?? "")],
+    { revalidate: 60 * 60 * 24 * 7 },
+  );
+  return cached().catch(() => []);
 }
