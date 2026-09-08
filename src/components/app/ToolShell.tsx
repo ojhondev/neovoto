@@ -2,24 +2,27 @@ import type { ReactNode } from "react";
 import { getDictionary } from "@/lib/i18n";
 import { getTool, type ToolId } from "@/lib/tools";
 import { MockBanner } from "@/components/app/MockBanner";
+import { ClipButton } from "@/components/app/ClipButton";
 
 export async function ToolShell({
   id,
-  updatedAt,
   children,
   howItWorks,
   outputs,
   realData = false,
   conclusao,
+  conclusaoTexto,
 }: {
   id: ToolId;
-  updatedAt: string;
+  updatedAt?: string;
   children: ReactNode;
   howItWorks: string[];
   outputs: string[];
   realData?: boolean;
   /** Leitura objetiva no topo — "o que isto diz". */
   conclusao?: ReactNode;
+  /** versão texto-puro da conclusão, para o relatório */
+  conclusaoTexto?: string;
 }) {
   const { locale, t } = await getDictionary();
   const tool = getTool(id);
@@ -39,7 +42,14 @@ export async function ToolShell({
 
       {conclusao && (
         <div className="mt-6 rounded-[var(--radius-card)] border-l-2 border-olive bg-paper p-4">
-          <p className="t-eyebrow mb-1">{locale === "pt" ? "O que isto diz" : "What this says"}</p>
+          <div className="flex items-start justify-between gap-3">
+            <p className="t-eyebrow mb-1">{locale === "pt" ? "O que isto diz" : "What this says"}</p>
+            {conclusaoTexto && (
+              <ClipButton
+                item={{ modulo: meta.name, titulo: locale === "pt" ? "Leitura do módulo" : "Module reading", texto: conclusaoTexto }}
+              />
+            )}
+          </div>
           <div className="text-body-sm text-ink">{conclusao}</div>
         </div>
       )}
@@ -77,23 +87,6 @@ export async function ToolShell({
             ))}
           </ul>
         </div>
-      </div>
-
-      <div className="card mt-6">
-        <h2 className="t-heading text-[22px]">{t.toolPage.inputs}</h2>
-        <ul className="mt-4 flex flex-wrap gap-2">
-          {tool.sources.map((s) => (
-            <li
-              key={s}
-              className="font-ui rounded-[4px] bg-sand px-2.5 py-1 text-caption text-smoke"
-            >
-              {s}
-            </li>
-          ))}
-        </ul>
-        <p className="font-ui mt-4 text-caption text-pebble">
-          {t.common.lastUpdate}: {updatedAt}
-        </p>
       </div>
     </>
   );

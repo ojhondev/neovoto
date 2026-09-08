@@ -64,6 +64,7 @@ export default async function Page() {
       id="mapa-de-calor"
       realData
       conclusao={conclusao}
+      conclusaoTexto={conclusao}
       updatedAt={`IFET ${ifet.version}`}
       howItWorks={
         pt

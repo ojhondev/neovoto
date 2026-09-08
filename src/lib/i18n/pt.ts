@@ -611,6 +611,38 @@ const pt = {
     disclaimer:
       "Comparação de apoio interno a partir de dados oficiais. Não é pesquisa de opinião nem projeção de resultado; não deve ser divulgada.",
   },
+  relatorio: {
+    navLabel: "Relatório",
+    title: "Relatório NeoVoto",
+    intro:
+      "Os recortes que a equipe aplicou, mais o documento estratégico completo que a NeoVoto monta com os dados reais da candidatura.",
+    clipsTitle: "Recortes da equipe",
+    noClips: "Nenhum recorte ainda. Em qualquer módulo, clique em “Ao relatório” para trazer a conclusão para cá.",
+    clear: "Limpar recortes",
+    generate: "Gerar relatório",
+    generating: "Gerando…",
+    lastReports: "Relatórios gerados",
+    open: "abrir",
+    genError: "Não foi possível gerar o relatório agora.",
+    // documento
+    execSummary: "Resumo executivo",
+    generatedAt: "Gerado em",
+    verifyTitle: "Verificação",
+    verifyHint: "Aponte a câmera para conferir a autenticidade deste relatório.",
+    code: "Código",
+    print: "Baixar / Imprimir (PDF)",
+    disclaimer:
+      "Documento estratégico de uso interno da campanha. Baseado em dados abertos oficiais; não é pesquisa de opinião nem previsão de resultado e não deve ser divulgado publicamente (Lei 9.504/1997).",
+    forCandidate: "Candidatura",
+    // verificação pública
+    verifyPageTitle: "Verificação de relatório",
+    verifyOk: "Relatório autêntico, emitido pela NeoVoto.",
+    verifyNotFound: "Código não encontrado.",
+    verifyGeneratedFor: "Emitido para a candidatura de",
+    verifyOn: "em",
+    verifyHash: "Assinatura do conteúdo",
+    verifyNote: "A NeoVoto não publica o conteúdo dos relatórios. Esta página apenas confirma que o código existe e quando foi emitido.",
+  },
   comoGanhar: {
     navLabel: "Como Ganhar",
     title: "Como Ganhar",

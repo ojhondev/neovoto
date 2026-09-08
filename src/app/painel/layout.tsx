@@ -4,6 +4,8 @@ import { LocaleSwitcher } from "@/components/nav/LocaleSwitcher";
 import { ThemeToggle } from "@/components/nav/ThemeToggle";
 import { getDictionary } from "@/lib/i18n";
 import { buildToolNames } from "@/lib/tools";
+import { getCurrentCandidacyId } from "@/lib/candidacy";
+import { countInsights } from "@/lib/report";
 
 export default async function PainelLayout({
   children,
@@ -12,6 +14,8 @@ export default async function PainelLayout({
 }) {
   const { locale, t } = await getDictionary();
   const toolNames = buildToolNames(t);
+  const candId = await getCurrentCandidacyId();
+  const relatorioCount = candId ? await countInsights(candId).catch(() => 0) : 0;
 
   return (
     <div className="flex min-h-svh">
@@ -20,6 +24,7 @@ export default async function PainelLayout({
           dashboard: t.common.dashboard,
           comoGanhar: t.comoGanhar.navLabel,
           concorrentes: t.concorrentes.navLabel,
+          relatorio: t.relatorio.navLabel,
           partidos: t.partidos.navLabel,
           candidate: locale === "pt" ? "Candidato" : "Candidate",
           collapse: locale === "pt" ? "Recolher" : "Collapse",
@@ -29,6 +34,7 @@ export default async function PainelLayout({
           groupProjection: t.nav.groupProjection,
         }}
         toolNames={toolNames}
+        relatorioCount={relatorioCount}
       />
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-20 flex h-14 items-center justify-between border-b border-ash bg-bone/85 pl-16 pr-5 backdrop-blur lg:pl-5">

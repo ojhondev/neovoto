@@ -132,6 +132,34 @@ export const candidateSearchCache = pgTable("candidate_search_cache", {
   fetchedAt: timestamp("fetched_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
+/** Itens que a equipe recortou para o relatório (por candidatura). Sem PII. */
+export const reportItems = pgTable(
+  "report_items",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    candidacyId: uuid("candidacy_id").notNull(),
+    modulo: text("modulo").notNull(),
+    titulo: text("titulo").notNull(),
+    texto: text("texto").notNull(),
+    payload: jsonb("payload").$type<Record<string, unknown>>().default({}),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [index("report_items_candidacy_idx").on(t.candidacyId)],
+);
+
+/** Relatórios gerados (snapshot + código de verificação). */
+export const reports = pgTable("reports", {
+  code: text("code").primaryKey(), // curto, para o QR
+  candidacyId: uuid("candidacy_id").notNull(),
+  candidatoNome: text("candidato_nome").notNull(),
+  hash: text("hash").notNull(),
+  conteudo: jsonb("conteudo").$type<Record<string, unknown>>().notNull(),
+  generatedAt: timestamp("generated_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+export type ReportItem = typeof reportItems.$inferSelect;
+export type Report = typeof reports.$inferSelect;
+
 /** Análises salvas (recorte territorial + parâmetros). Sem PII. */
 export const analyses = pgTable(
   "analyses",

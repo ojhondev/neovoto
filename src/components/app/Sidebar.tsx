@@ -13,6 +13,7 @@ import {
   Menu,
   X,
   UserRound,
+  FileText,
   Flame,
   Network,
   MessageSquareText,
@@ -29,6 +30,7 @@ type Labels = {
   dashboard: string;
   comoGanhar: string;
   concorrentes: string;
+  relatorio: string;
   candidate: string;
   collapse: string;
   partidos: string;
@@ -38,9 +40,9 @@ type Labels = {
   groupProjection: string;
 };
 
-type Item = { href: string; label: string; icon: LucideIcon; exact?: boolean };
+type Item = { href: string; label: string; icon: LucideIcon; exact?: boolean; badge?: number };
 
-function buildGroups(labels: Labels, toolNames: Record<ToolId, string>) {
+function buildGroups(labels: Labels, toolNames: Record<ToolId, string>, relatorioCount: number) {
   const tool = (id: ToolId, icon: LucideIcon): Item => ({
     href: toolPath(id),
     label: toolNames[id],
@@ -53,6 +55,7 @@ function buildGroups(labels: Labels, toolNames: Record<ToolId, string>) {
         { href: "/painel", label: labels.dashboard, icon: LayoutDashboard, exact: true },
         { href: "/painel/como-ganhar", label: labels.comoGanhar, icon: Trophy },
         { href: "/painel/concorrentes", label: labels.concorrentes, icon: Users },
+        { href: "/painel/relatorio", label: labels.relatorio, icon: FileText, badge: relatorioCount || undefined },
         { href: "/painel/candidato", label: labels.candidate, icon: UserRound },
       ] as Item[],
     },
@@ -80,11 +83,13 @@ function NavItems({
   toolNames,
   collapsed,
   onNavigate,
+  relatorioCount,
 }: {
   labels: Labels;
   toolNames: Record<ToolId, string>;
   collapsed: boolean;
   onNavigate?: () => void;
+  relatorioCount: number;
 }) {
   const pathname = usePathname();
   const isActive = (href: string, exact = false) =>
@@ -95,7 +100,7 @@ function NavItems({
     (active ? "bg-sand text-ink" : "text-fossil hover:bg-sand/60 hover:text-ink") +
     (collapsed ? " justify-center px-0" : "");
 
-  const groups = buildGroups(labels, toolNames);
+  const groups = buildGroups(labels, toolNames, relatorioCount);
 
   return (
     <nav className="font-ui flex flex-1 flex-col gap-1 text-body-sm">
@@ -117,7 +122,12 @@ function NavItems({
                 title={it.label}
               >
                 <Icon size={16} strokeWidth={1.6} className="shrink-0" />
-                {!collapsed && <span className="truncate">{it.label}</span>}
+                {!collapsed && <span className="flex-1 truncate">{it.label}</span>}
+                {!collapsed && it.badge ? (
+                  <span className="font-ui rounded-full bg-olive px-1.5 text-[10px] leading-4 text-white">
+                    {it.badge}
+                  </span>
+                ) : null}
               </Link>
             );
           })}
@@ -130,9 +140,11 @@ function NavItems({
 export function Sidebar({
   labels,
   toolNames,
+  relatorioCount = 0,
 }: {
   labels: Labels;
   toolNames: Record<ToolId, string>;
+  relatorioCount?: number;
 }) {
   const [collapsed, setCollapsed] = useLocalStorageBoolean("neovoto:sidebar", false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -158,7 +170,7 @@ export function Sidebar({
           {collapsed ? <Logo markOnly height={22} /> : <Logo height={22} />}
         </div>
         <div className="mt-7 flex flex-1 flex-col overflow-y-auto">
-          <NavItems labels={labels} toolNames={toolNames} collapsed={collapsed} />
+          <NavItems labels={labels} toolNames={toolNames} collapsed={collapsed} relatorioCount={relatorioCount} />
         </div>
         <button
           type="button"
@@ -187,6 +199,7 @@ export function Sidebar({
                 toolNames={toolNames}
                 collapsed={false}
                 onNavigate={() => setMobileOpen(false)}
+                relatorioCount={relatorioCount}
               />
             </div>
           </div>

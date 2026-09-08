@@ -166,6 +166,7 @@ export default async function Page() {
       id="cenarios"
       realData
       conclusao={conclusao}
+      conclusaoTexto={conclusao}
       updatedAt={cen.version}
       howItWorks={howItWorks}
       outputs={outputs}

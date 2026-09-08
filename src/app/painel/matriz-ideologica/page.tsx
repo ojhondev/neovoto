@@ -103,6 +103,7 @@ export default async function Page() {
       id="matriz-ideologica"
       realData
       conclusao={conclusao}
+      conclusaoTexto={conclusao}
       updatedAt={matriz.version}
       howItWorks={howItWorks}
       outputs={outputs}

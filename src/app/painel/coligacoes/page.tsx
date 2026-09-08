@@ -111,6 +111,7 @@ export default async function Page() {
       id="coligacoes"
       realData
       conclusao={conclusao}
+      conclusaoTexto={conclusao}
       updatedAt={res.version}
       howItWorks={howItWorks}
       outputs={outputs}

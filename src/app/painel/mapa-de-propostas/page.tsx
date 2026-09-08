@@ -117,6 +117,7 @@ export default async function Page() {
       id="mapa-de-propostas"
       realData
       conclusao={conclusao}
+      conclusaoTexto={conclusao}
       updatedAt={radar.version}
       howItWorks={howItWorks}
       outputs={outputs}

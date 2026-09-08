@@ -97,6 +97,7 @@ export default async function Page() {
       id="mapa-de-influencia"
       realData
       conclusao={conclusao}
+      conclusaoTexto={conclusao}
       updatedAt={inf.version}
       howItWorks={howItWorks}
       outputs={outputs}
