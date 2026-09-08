@@ -10,12 +10,62 @@ import { compararCandidatos, type EixoRadar } from "@/lib/intel/comparar";
 import { ConcorrenteBusca } from "@/components/app/ConcorrenteBusca";
 import { CompareRadar } from "@/components/app/CompareRadar";
 import { CompareScatter } from "@/components/app/CompareScatter";
+import { ClipButton } from "@/components/app/ClipButton";
+import type { CandidatoComparado } from "@/lib/intel/comparar";
 import { removerConcorrenteAction, limparConcorrentesAction } from "./actions";
 
 export const metadata: Metadata = { title: "Concorrentes" };
 
 function num(v: number, locale: string) {
   return Math.round(v).toLocaleString(locale);
+}
+
+/** interpretação data-driven da comparação (você = candidatos[0]) */
+function interpretarComparacao(cs: CandidatoComparado[], pt: boolean, locale: string): string {
+  const you = cs[0];
+  const others = cs.slice(1);
+  const partes: string[] = [];
+  const maisVoto = [...cs].sort((a, b) => b.votos - a.votos)[0];
+  if (maisVoto.id === you.id) {
+    partes.push(
+      pt
+        ? `${you.nome} lidera em votos (${num(you.votos, locale)}).`
+        : `${you.nome} leads in votes (${num(you.votos, locale)}).`,
+    );
+  } else if (you.temVoto) {
+    partes.push(
+      pt
+        ? `${maisVoto.nome} tem mais votos (${num(maisVoto.votos, locale)}) que ${you.nome} (${num(you.votos, locale)}) — diferença de ${num(maisVoto.votos - you.votos, locale)}.`
+        : `${maisVoto.nome} has more votes (${num(maisVoto.votos, locale)}) than ${you.nome} (${num(you.votos, locale)}).`,
+    );
+  }
+  const maisEspalhado = [...cs].sort((a, b) => b.municipios - a.municipios)[0];
+  const maisConcentrado = [...cs].filter((c) => c.temVoto).sort((a, b) => b.concentracaoTop5 - a.concentracaoTop5)[0];
+  if (maisConcentrado && maisConcentrado.id !== you.id && you.temVoto) {
+    partes.push(
+      pt
+        ? `${maisConcentrado.nome} concentra ${Math.round(maisConcentrado.concentracaoTop5 * 100)}% do voto em 5 cidades — base geograficamente frágil, mais fácil de atacar. Sua base é ${you.concentracaoTop5 < maisConcentrado.concentracaoTop5 ? "mais distribuída" : "também concentrada"}.`
+        : `${maisConcentrado.nome} concentrates ${Math.round(maisConcentrado.concentracaoTop5 * 100)}% of the vote in 5 cities — geographically fragile.`,
+    );
+  }
+  void maisEspalhado;
+  for (const o of others) {
+    const d = Math.hypot(o.eco - you.eco, o.soc - you.soc);
+    if (d >= 1.0) {
+      partes.push(
+        pt
+          ? `${o.nome} está num campo ideológico oposto ao seu — a disputa com ${o.nome} é por polarização, não por sobreposição de base.`
+          : `${o.nome} is in an opposite ideological field — the contest is by polarisation.`,
+      );
+    } else if (d <= 0.4) {
+      partes.push(
+        pt
+          ? `${o.nome} disputa exatamente o seu eleitorado (mesmo campo). Diferenciação é por entrega e presença, não por discurso.`
+          : `${o.nome} competes for exactly your electorate. Differentiate by delivery and presence.`,
+      );
+    }
+  }
+  return partes.join(" ");
 }
 
 export default async function Page() {
@@ -117,8 +167,28 @@ export default async function Page() {
         <p className="font-ui mt-8 text-body-sm text-pebble">{t.concorrentes.needMore}</p>
       ) : (
         <>
+          {/* leitura */}
+          {(() => {
+            const leitura = interpretarComparacao(cmp.candidatos, locale === "pt", locale);
+            return leitura ? (
+              <div className="mt-8 rounded-[var(--radius-card)] border-l-2 border-olive bg-paper p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <p className="t-eyebrow mb-1">{locale === "pt" ? "O que a comparação diz" : "What the comparison says"}</p>
+                  <ClipButton
+                    item={{
+                      modulo: t.concorrentes.title,
+                      titulo: locale === "pt" ? "Comparação com concorrentes" : "Competitor comparison",
+                      texto: leitura,
+                    }}
+                  />
+                </div>
+                <p className="text-body-sm text-ink">{leitura}</p>
+              </div>
+            ) : null;
+          })()}
+
           {/* radar */}
-          <section className="card mt-8">
+          <section className="card mt-6">
             <h2 className="t-heading text-[20px]">{t.concorrentes.radarTitle}</h2>
             <div className="mt-4">
               <CompareRadar

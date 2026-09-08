@@ -288,6 +288,7 @@ export default async function Page() {
               pontos={cen.dispersao}
               labels={{ x: t.cenarios.scatterX, y: t.cenarios.scatterY, alvo: t.cenarios.scatterAlvo }}
               locale={locale}
+              nome={perfil.nome}
             />
           </div>
         </div>
