@@ -14,7 +14,7 @@ import {
 } from "@/lib/data-sources/eleitoral";
 import { CARGO_LABEL, anoEleicao, type Cargo } from "@/lib/cargos";
 
-export type Fonte = "camara" | "senado" | "tse";
+export type Fonte = "camara" | "senado" | "tse" | "manual";
 
 export type PoliticoBusca = {
   source: Fonte;
@@ -117,7 +117,7 @@ export async function buscarPoliticosTSE(q: string): Promise<CandidatoTSEDisplay
   });
 }
 
-async function territorioDaUF(uf: string) {
+export async function territorioDaUF(uf: string) {
   if (!uf) return null;
   try {
     const [estado, muns] = await Promise.all([
@@ -221,6 +221,34 @@ export async function perfilFromCandidatoEleitoral(
     nascimento: c.nascimento,
     situacao: c.situacao,
     escolaridade: c.escolaridade,
+    frentes: [],
+    proposicoes: null,
+    territorio,
+  };
+}
+
+/** Perfil de candidato cadastrado manualmente (1ª campanha, sem histórico). */
+export async function perfilManual(input: {
+  nome: string;
+  partido: string;
+  uf: string;
+  cargo: Cargo;
+}): Promise<PerfilPolitico> {
+  const territorio = await territorioDaUF(input.uf);
+  return {
+    source: "manual",
+    externalId: `manual-${Date.now()}`,
+    nome: input.nome,
+    partido: input.partido.toUpperCase(),
+    uf: input.uf.toUpperCase(),
+    casa: CARGO_LABEL[input.cargo]?.pt ?? input.cargo,
+    cargo: input.cargo,
+    ano: 2026,
+    foto: "",
+    email: null,
+    nascimento: null,
+    situacao: null,
+    escolaridade: null,
     frentes: [],
     proposicoes: null,
     territorio,

@@ -44,8 +44,9 @@ export async function carregarCenarios(
 
   if (!resumo || votacao.length < 100) return { ok: false, motivo: "sem-dados" };
 
+  const semHistorico = candidacy.source === "manual";
   let votosProprios = resumo.eleitoralByCode ?? null;
-  if (ref.prop && !votosProprios) {
+  if (ref.prop && !votosProprios && !semHistorico) {
     try {
       await ingestVotacao(candidacy.id);
       const v = await getVotosByIbge(candidacy.id);
@@ -66,6 +67,7 @@ export async function carregarCenarios(
       populacaoByCode: resumo.populacaoByCode,
       nomeByCode: resumo.nomeByCode,
       corteEleito: corte,
+      fracaoPartido: !votosProprios && ref.prop ? 0.12 : 1,
     },
     {
       base: t.cenarios.scenarioBase,

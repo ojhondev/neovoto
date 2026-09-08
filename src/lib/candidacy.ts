@@ -125,12 +125,41 @@ export async function selectCandidacy(
   source: "camara" | "senado",
   externalId: string,
   objective: string,
+  cargoAlvo?: string,
 ): Promise<{ ok: true; id: string } | { ok: false; error: string }> {
   const perfil = await montarPerfil(source, externalId);
   if (!perfil) return { ok: false, error: "Não foi possível carregar o perfil oficial." };
   try {
     const id = await persist(perfil, source, externalId, objective, {
-      cargo: perfil.cargo,
+      cargo: cargoAlvo || perfil.cargo,
+      electoralStatus: "na",
+    });
+    return { ok: true, id };
+  } catch {
+    return { ok: false, error: "Falha ao gravar a candidatura." };
+  }
+}
+
+/** Candidatura de um candidato cadastrado manualmente (1ª campanha). */
+export async function selectCandidacyManual(
+  input: { nome: string; partido: string; uf: string; cargo: string },
+  objective: string,
+): Promise<{ ok: true; id: string } | { ok: false; error: string }> {
+  const { perfilManual } = await import("@/lib/politico");
+  if (!input.nome.trim() || !input.partido.trim() || !input.uf.trim()) {
+    return { ok: false, error: "Preencha nome, partido e UF." };
+  }
+  try {
+    const perfil = await perfilManual({
+      nome: input.nome.trim(),
+      partido: input.partido,
+      uf: input.uf,
+      cargo: input.cargo as Cargo,
+    });
+    const ext = perfil.externalId;
+    const id = await persist(perfil, "manual", ext, objective, {
+      cargo: input.cargo,
+      electionYear: 2026,
       electoralStatus: "na",
     });
     return { ok: true, id };
@@ -143,11 +172,12 @@ export async function selectCandidacy(
 export async function selectCandidacyTSE(
   cand: CandidatoEleitoral,
   objective: string,
+  cargoAlvo?: string,
 ): Promise<{ ok: true; id: string; electoral: string } | { ok: false; error: string }> {
   try {
     const perfil = await perfilFromCandidatoEleitoral(cand);
     const id = await persist(perfil, "tse", cand.externalId, objective, {
-      cargo: cand.cargo,
+      cargo: cargoAlvo || cand.cargo,
       electionYear: cand.ano,
       electoralStatus: "pendente",
     });

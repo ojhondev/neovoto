@@ -33,9 +33,11 @@ type TseResult = {
   casa: string;
   foto: string;
 };
+type ManualData = { nome: string; partido: string; uf: string };
 type Picked =
   | { kind: "fed"; data: FedResult }
-  | { kind: "tse"; data: TseResult };
+  | { kind: "tse"; data: TseResult }
+  | { kind: "manual"; data: ManualData };
 
 type Dict = {
   step: string;
@@ -53,21 +55,43 @@ type Dict = {
   allOfficesEmpty: string;
   selected: string;
   change: string;
+  cargoTitle: string;
+  cargoSub: string;
+  manualCta: string;
+  manualTitle: string;
+  manualSub: string;
+  manualNome: string;
+  manualPartido: string;
+  manualUf: string;
+  manualNext: string;
+  manualBack: string;
   objectiveTitle: string;
   objectiveSub: string;
   objectives: { value: string; label: string }[];
+  cargos: { value: string; label: string }[];
   finish: string;
   creating: string;
   errorGeneric: string;
 };
+
+const UFS = "AC AL AP AM BA CE DF ES GO MA MT MS MG PA PB PR PE PI RJ RN RS RO RR SC SP SE TO".split(" ");
 
 export function OnboardingFlow({ dict }: { dict: Dict }) {
   const [q, setQ] = useState("");
   const [fed, setFed] = useState<FedResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [picked, setPicked] = useState<Picked | null>(null);
-  const [objective, setObjective] = useState(dict.objectives[3]?.value ?? "avaliando");
+  const [objective, setObjective] = useState(dict.objectives[0]?.value ?? "eleicao");
+  const [cargoAlvo, setCargoAlvo] = useState<string>("");
+  const [manualForm, setManualForm] = useState<ManualData>({ nome: "", partido: "", uf: "" });
+  const [showManual, setShowManual] = useState(false);
   const abort = useRef<AbortController | null>(null);
+
+  const pick = (p: Picked) => {
+    setPicked(p);
+    const c = p.kind === "fed" ? "deputado-federal" : p.kind === "tse" ? p.data.cargo : "";
+    setCargoAlvo(c || "deputado-estadual");
+  };
 
   const [tse, setTse] = useState<TseResult[] | null>(null);
   const [tseLoading, setTseLoading] = useState(false);
@@ -167,7 +191,7 @@ export function OnboardingFlow({ dict }: { dict: Dict }) {
               <button
                 key={`${r.source}-${r.externalId}`}
                 type="button"
-                onClick={() => setPicked({ kind: "fed", data: r })}
+                onClick={() => pick({ kind: "fed", data: r })}
                 className="flex w-full items-center gap-3 bg-paper px-3 py-2.5 text-left transition-colors hover:bg-bone"
               >
                 <Image
@@ -221,7 +245,7 @@ export function OnboardingFlow({ dict }: { dict: Dict }) {
                       <button
                         key={r.externalId}
                         type="button"
-                        onClick={() => setPicked({ kind: "tse", data: r })}
+                        onClick={() => pick({ kind: "tse", data: r })}
                         className="flex w-full items-center gap-3 bg-paper px-3 py-2.5 text-left transition-colors hover:bg-bone"
                       >
                         <span className="flex h-12 w-9 shrink-0 items-center justify-center rounded-[3px] bg-sand">
@@ -253,6 +277,63 @@ export function OnboardingFlow({ dict }: { dict: Dict }) {
           )}
 
           <p className="font-ui mt-4 text-caption text-pebble">{dict.hint}</p>
+
+          {/* cadastro manual — 1ª campanha / sem histórico */}
+          <div className="mt-6 border-t border-ash pt-5">
+            {!showManual ? (
+              <button
+                type="button"
+                onClick={() => setShowManual(true)}
+                className="nav-link text-body-sm"
+              >
+                {dict.manualCta} →
+              </button>
+            ) : (
+              <div>
+                <h2 className="t-heading text-[20px]">{dict.manualTitle}</h2>
+                <p className="mt-1 text-caption text-fossil">{dict.manualSub}</p>
+                <div className="mt-4 space-y-3">
+                  <input
+                    value={manualForm.nome}
+                    onChange={(e) => setManualForm((s) => ({ ...s, nome: e.target.value }))}
+                    placeholder={dict.manualNome}
+                    className="font-ui w-full rounded-[8px] border border-ash bg-paper px-3 py-2.5 text-body-sm outline-none"
+                  />
+                  <div className="flex gap-3">
+                    <input
+                      value={manualForm.partido}
+                      onChange={(e) => setManualForm((s) => ({ ...s, partido: e.target.value.toUpperCase() }))}
+                      placeholder={dict.manualPartido}
+                      className="font-ui w-full rounded-[8px] border border-ash bg-paper px-3 py-2.5 text-body-sm outline-none"
+                    />
+                    <select
+                      value={manualForm.uf}
+                      onChange={(e) => setManualForm((s) => ({ ...s, uf: e.target.value }))}
+                      className="font-ui w-28 shrink-0 rounded-[8px] border border-ash bg-paper px-3 py-2.5 text-body-sm outline-none"
+                    >
+                      <option value="">{dict.manualUf}</option>
+                      {UFS.map((u) => (
+                        <option key={u} value={u}>
+                          {u}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <button
+                    type="button"
+                    disabled={!manualForm.nome.trim() || !manualForm.partido.trim() || !manualForm.uf}
+                    onClick={() => pick({ kind: "manual", data: manualForm })}
+                    className="btn btn-primary w-full justify-center disabled:opacity-40"
+                  >
+                    {dict.manualNext} <ArrowRight size={15} />
+                  </button>
+                  <button type="button" onClick={() => setShowManual(false)} className="nav-link text-caption">
+                    {dict.manualBack}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </>
       )}
 
@@ -263,16 +344,24 @@ export function OnboardingFlow({ dict }: { dict: Dict }) {
               <input type="hidden" name="source" value={picked.data.source} />
               <input type="hidden" name="externalId" value={picked.data.externalId} />
             </>
-          ) : (
+          ) : picked.kind === "tse" ? (
             <>
               <input type="hidden" name="source" value="tse" />
               <input type="hidden" name="candidato" value={JSON.stringify(picked.data)} />
             </>
+          ) : (
+            <>
+              <input type="hidden" name="source" value="manual" />
+              <input type="hidden" name="nome" value={picked.data.nome} />
+              <input type="hidden" name="partido" value={picked.data.partido} />
+              <input type="hidden" name="uf" value={picked.data.uf} />
+            </>
           )}
           <input type="hidden" name="objective" value={objective} />
+          <input type="hidden" name="cargoAlvo" value={cargoAlvo} />
 
           <div className="flex items-center gap-3 rounded-[12px] border border-ash bg-paper p-3">
-            {picked.kind === "fed" ? (
+            {picked.kind === "fed" && picked.data.foto ? (
               <Image
                 src={picked.data.foto}
                 alt=""
@@ -290,7 +379,9 @@ export function OnboardingFlow({ dict }: { dict: Dict }) {
               <p className="font-ui text-caption text-fossil">{dict.selected}</p>
               <p className="font-ui truncate text-body text-ink">{picked.data.nome}</p>
               <p className="font-ui text-caption text-fossil">
-                {picked.data.partido}-{picked.data.uf} · {picked.data.casa}
+                {picked.data.partido}
+                {picked.data.uf ? `-${picked.data.uf}` : ""}
+                {picked.kind !== "manual" ? ` · ${picked.data.casa}` : ""}
               </p>
             </div>
             <button
@@ -300,6 +391,29 @@ export function OnboardingFlow({ dict }: { dict: Dict }) {
             >
               {dict.change}
             </button>
+          </div>
+
+          {/* cargo alvo em 2026 */}
+          <h2 className="t-heading mt-8">{dict.cargoTitle}</h2>
+          <p className="mt-2 text-body-sm text-fossil">{dict.cargoSub}</p>
+          <div className="mt-4 grid grid-cols-2 gap-2">
+            {dict.cargos.map((c) => (
+              <label
+                key={c.value}
+                className={
+                  "font-ui flex cursor-pointer items-center gap-2 rounded-[8px] border px-3 py-2 text-body-sm transition-colors " +
+                  (cargoAlvo === c.value ? "border-ink bg-sand" : "border-ash bg-paper hover:bg-bone")
+                }
+              >
+                <input
+                  type="radio"
+                  name="cargo-choice"
+                  checked={cargoAlvo === c.value}
+                  onChange={() => setCargoAlvo(c.value)}
+                />
+                {c.label}
+              </label>
+            ))}
           </div>
 
           <h2 className="t-heading mt-8">{dict.objectiveTitle}</h2>

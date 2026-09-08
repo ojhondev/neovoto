@@ -4,11 +4,24 @@ import { LocaleSwitcher } from "@/components/nav/LocaleSwitcher";
 import { ThemeToggle } from "@/components/nav/ThemeToggle";
 import { OnboardingFlow } from "@/components/onboarding/OnboardingFlow";
 import { getDictionary } from "@/lib/i18n";
+import { CARGO_LABEL, type Cargo } from "@/lib/cargos";
 
 export const metadata: Metadata = { title: "Onboarding" };
 
+const CARGOS: Cargo[] = [
+  "vereador",
+  "prefeito",
+  "deputado-estadual",
+  "deputado-distrital",
+  "deputado-federal",
+  "senador",
+  "governador",
+  "presidente",
+];
+
 export default async function OnboardingPage() {
   const { locale, t } = await getDictionary();
+  const cargos = CARGOS.map((c) => ({ value: c, label: CARGO_LABEL[c][locale] }));
   return (
     <div className="flex min-h-svh flex-col">
       <header className="flex items-center justify-between px-6 py-5 sm:px-10">
@@ -23,6 +36,7 @@ export default async function OnboardingPage() {
           dict={{
             ...t.onboarding,
             objectives: t.onboarding.objectives.map((o) => ({ ...o })),
+            cargos,
           }}
         />
       </main>

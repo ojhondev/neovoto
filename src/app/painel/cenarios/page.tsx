@@ -85,7 +85,8 @@ export default async function Page() {
   // sentido (o partido tem vários candidatos). Tenta carregar a votação própria
   // histórica do candidato antes de desistir.
   let votosProprios = resumo?.eleitoralByCode ?? null;
-  if (resumo && ref.prop && !votosProprios) {
+  const semHistorico = candidacy.source === "manual";
+  if (resumo && ref.prop && !votosProprios && !semHistorico) {
     try {
       await ingestVotacao(candidacy.id);
       const v = await getVotosByIbge(candidacy.id);
@@ -95,7 +96,7 @@ export default async function Page() {
     }
   }
 
-  if (!resumo || votacao.length < 100 || (ref.prop && !votosProprios)) {
+  if (!resumo || votacao.length < 100 || (ref.prop && !votosProprios && !semHistorico)) {
     return (
       <ToolShell id="cenarios" updatedAt="—" howItWorks={howItWorks} outputs={outputs}>
         <ModuloRoadmap
@@ -129,6 +130,7 @@ export default async function Page() {
       populacaoByCode: resumo.populacaoByCode,
       nomeByCode: resumo.nomeByCode,
       corteEleito: corte,
+      fracaoPartido: !votosProprios && ref.prop ? 0.12 : 1,
     },
     {
       base: t.cenarios.scenarioBase,

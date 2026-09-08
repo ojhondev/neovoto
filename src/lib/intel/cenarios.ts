@@ -86,6 +86,9 @@ export function computeCenarios(
     populacaoByCode: Record<string, number>;
     nomeByCode: Record<string, string>;
     corteEleito: number | null;
+    /** quando a base vem do partido (sem histórico próprio): fração plausível
+     *  do voto do partido que um candidato individual capta. 1 = usa o total. */
+    fracaoPartido?: number;
   },
   txt: Textos,
 ): CenariosResultado {
@@ -109,8 +112,9 @@ export function computeCenarios(
     !!args.votosCandidatoByCode && Object.keys(args.votosCandidatoByCode).length > 0;
   const baseProjecao = temVotoProprio ? "votacao-propria" : "votacao-do-partido";
 
+  const fp = temVotoProprio ? 1 : (args.fracaoPartido ?? 1);
   const candVotos = (code: string) =>
-    temVotoProprio ? args.votosCandidatoByCode![code] ?? 0 : partidoMun.get(code) ?? 0;
+    temVotoProprio ? args.votosCandidatoByCode![code] ?? 0 : (partidoMun.get(code) ?? 0) * fp;
 
   // teto realista por município:
   //  - com voto próprio: "se performasse em todo lugar como no seu melhor município"
@@ -128,7 +132,8 @@ export function computeCenarios(
     const tot = totalMun.get(code) ?? 0;
     const campo = campoMun.get(code) ?? 0;
     if (temVotoProprio) return Math.min(campo, melhorShare * tot);
-    return campo;
+    // sem histórico: teto = ~2,5× a projeção inicial, limitado pelo campo
+    return Math.min(campo, candVotos(code) * 2.5);
   };
 
   let votosBase = 0;
