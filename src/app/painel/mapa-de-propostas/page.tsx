@@ -5,6 +5,8 @@ import { ToolShell } from "@/components/app/ToolShell";
 import { Info } from "@/components/app/Info";
 import { URGENCIA_RADAR, urgVar } from "@/lib/viz/colors";
 import { getDictionary } from "@/lib/i18n";
+import { FichaMetodologica } from "@/components/app/FichaMetodologica";
+import { FICHAS } from "@/lib/intel/fichas";
 import { getCurrentCandidacy, perfilFrom } from "@/lib/candidacy";
 import { getAgendaCamara } from "@/lib/data-sources/agenda";
 import { getManchetes, getTendencias } from "@/lib/data-sources/imprensa";
@@ -188,30 +190,9 @@ export default async function Page() {
         </div>
       </div>
 
-      {/* ficha técnica */}
-      <div className="card mt-6">
-        <h3 className="t-heading text-[20px]">{t.radar.fichaTitle}</h3>
-        <dl className="font-ui mt-3 grid gap-x-8 gap-y-3 text-body-sm sm:grid-cols-2">
-          <div>
-            <dt className="text-pebble">{t.radar.version}</dt>
-            <dd className="text-smoke">{radar.version}</dd>
-          </div>
-          <div>
-            <dt className="text-pebble">{t.radar.sources}</dt>
-            <dd className="text-smoke">{radar.fontes.join(" · ")}</dd>
-          </div>
-          <div className="sm:col-span-2">
-            <dt className="text-pebble">{t.radar.pending}</dt>
-            <dd className="mt-1 space-y-1 text-caption text-fossil">
-              {t.radar.pendingItems.map((p) => (
-                <p key={p}>— {p}</p>
-              ))}
-            </dd>
-          </div>
-        </dl>
-      </div>
+      <FichaMetodologica ficha={FICHAS.radar(pt)} locale={locale} labels={t.ficha} />
 
-      <p className="font-ui mt-4 rounded-[4px] border border-ash bg-sand/60 p-3 text-caption text-smoke">
+      <p className="font-ui mt-3 rounded-[4px] border border-ash bg-sand/60 p-3 text-caption text-smoke">
         {t.radar.disclaimer}
       </p>
     </ToolShell>

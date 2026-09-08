@@ -375,6 +375,14 @@ const pt = {
     votesInRegion: "votos na sua região",
     add: "Adicionar",
   },
+  ficha: {
+    title: "Ficha metodológica",
+    method: "Método",
+    validation: "Validação",
+    uncertainty: "Incerteza",
+    sources: "Fontes",
+    limits: "Limites conhecidos",
+  },
   movimento: {
     title: "Movimento entre eleições",
     sub: "O voto do candidato na eleição mais recente vs. a anterior no mesmo cargo, normalizado pelo comparecimento de cada pleito. Mostra os bolsões onde ele cresceu e onde perdeu.",

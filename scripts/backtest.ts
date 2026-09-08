@@ -943,6 +943,90 @@ async function backtestMatrizContexto(ufs: string[]) {
   console.log(`   v3+ctx sd=${sd(socAdj).toFixed(3)}   [${Math.min(...socAdj).toFixed(2)} … ${Math.max(...socAdj).toFixed(2)}]`);
 }
 
+// ---------- F) COLIGAÇÕES — desconto de sobreposição ----------
+/**
+ * `ganho líquido = bruto × (1 − sobreposição × k)`. O `k` (=0,7 no ponto central)
+ * é um chute. Este teste usa as FEDERAÇÕES de 2022 (partidos que passaram a
+ * disputar como UMA lista) para estimar o `k` real: compara o voto combinado da
+ * federação em 2022 com a soma dos membros em 2018 (corrigida pelo crescimento de
+ * comparecimento), e o `k` implícito = (1 − razão) / sobreposição_média.
+ */
+async function backtestColigacoes(ufs: string[]) {
+  console.log("\n" + "=".repeat(70));
+  console.log("F) COLIGAÇÕES — o desconto de sobreposição k (=0,7) bate com as federações de 2022?");
+  console.log("=".repeat(70));
+
+  const FEDS: [string, string[]][] = [
+    ["FE Brasil da Esperança", ["PT", "PC DO B", "PV"]],
+    ["Federação PSDB Cidadania", ["PSDB", "CIDADANIA"]],
+    ["Federação PSOL Rede", ["PSOL", "REDE"]],
+  ];
+
+  // voto dep. federal por partido e município, 2018 e 2022, nas UFs
+  const carrega = async (ano: number) => {
+    const m = new Map<string, Map<string, number>>(); // sigla -> code -> votos
+    for (const uf of ufs) {
+      const vt = await votacaoPartidoPorMunicipio({ ano, turno: 1, uf, cargo: "deputado federal" });
+      for (const r of vt) {
+        if (!m.has(r.sigla)) m.set(r.sigla, new Map());
+        m.get(r.sigla)!.set(r.idMunicipio, (m.get(r.sigla)!.get(r.idMunicipio) ?? 0) + r.votos);
+      }
+    }
+    return m;
+  };
+  const [v18, v22] = await Promise.all([carrega(2018), carrega(2022)]);
+  const totalDe = (m: Map<string, number> | undefined) => (m ? [...m.values()].reduce((s, v) => s + v, 0) : 0);
+
+  // crescimento de comparecimento a dep. federal 2018→2022 nas UFs
+  const growRows = await bq(
+    `SELECT ano, SUM(comparecimento) c FROM \`${DATASET}.detalhes_votacao_municipio\`
+     WHERE cargo='deputado federal' AND turno=1 AND ano IN (2018,2022) AND sigla_uf IN (${ufs.map((u) => `'${u}'`).join(",")})
+     GROUP BY ano`,
+  );
+  const c18 = Number(growRows.find((r) => r.ano === "2018")?.c ?? 1);
+  const c22 = Number(growRows.find((r) => r.ano === "2022")?.c ?? 1);
+  const turnoutGrowth = c22 / c18;
+
+  console.log(`\n crescimento de comparecimento (dep. federal, ${ufs.join(",")}): ${turnoutGrowth.toFixed(3)}×\n`);
+  console.log(" federação                 | sobrep. média | soma 2018 (×cresc.) | combinado 2022 | razão | k implícito");
+  console.log(" --------------------------|---------------|--------------------|----------------|-------|------------");
+
+  for (const [nome, membros] of FEDS) {
+    const perfil = (sigla: string) => {
+      const raw = v18.get(sigla);
+      if (!raw) return new Map<string, number>();
+      const tot = totalDe(raw) || 1;
+      const p = new Map<string, number>();
+      for (const [c, n] of raw) p.set(c, n / tot);
+      return p;
+    };
+    // sobreposição média entre pares de membros (cosseno dos perfis 2018)
+    let somaOv = 0;
+    let pares = 0;
+    for (let i = 0; i < membros.length; i++)
+      for (let j = i + 1; j < membros.length; j++) {
+        const a = perfil(membros[i]);
+        const b = perfil(membros[j]);
+        let dot = 0, na = 0, nb = 0;
+        for (const v of a.values()) na += v * v;
+        for (const v of b.values()) nb += v * v;
+        for (const [k, v] of a) { const w = b.get(k); if (w) dot += v * w; }
+        if (na > 0 && nb > 0) { somaOv += dot / Math.sqrt(na * nb); pares++; }
+      }
+    const ov = pares > 0 ? somaOv / pares : 0;
+
+    const soma18 = membros.reduce((s, m) => s + totalDe(v18.get(m)), 0) * turnoutGrowth;
+    const comb22 = membros.reduce((s, m) => s + totalDe(v22.get(m)), 0);
+    const razao = soma18 > 0 ? comb22 / soma18 : 0;
+    // combinado ≈ soma18 × (1 − ov × k)  →  k = (1 − razao) / ov
+    const kImpl = ov > 0 ? (1 - razao) / ov : NaN;
+    console.log(
+      ` ${nome.padEnd(25)} | ${ov.toFixed(2).padStart(13)} | ${Math.round(soma18).toLocaleString("pt-BR").padStart(18)} | ${comb22.toLocaleString("pt-BR").padStart(14)} | ${razao.toFixed(2).padStart(5)} | ${Number.isNaN(kImpl) ? "  —" : kImpl.toFixed(2)}`,
+    );
+  }
+  console.log("\n → k implícito nas 3 federações deve cair na faixa 0,5–0,85 que a plataforma exibe.");
+}
+
 // ---------- main ----------
 async function main() {
   const args = process.argv.slice(2);
@@ -959,6 +1043,7 @@ async function main() {
   if (!only || only === "base") await backtestBaseCandidato(ufs.length ? ufs : ["SP", "MG", "RS"]);
   if (!only || only === "cenarios") await backtestCenariosV2(ufs.length ? ufs : ["SP", "MG", "RS"]);
   if (!only || only === "matriz-contexto") await backtestMatrizContexto(alvoUFs);
+  if (!only || only === "coligacoes") await backtestColigacoes(alvoUFs);
   process.exit(0);
 }
 main().catch((e) => {

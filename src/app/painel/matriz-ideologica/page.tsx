@@ -13,6 +13,8 @@ import { getVotacaoPartidoUF, getVotacaoPartidoNacional, getPerfilEleitoradoUF }
 import { escopoNacional, PLEITO_NACIONAL, pleitoNacionalLabel } from "@/lib/escopo";
 import type { Cargo } from "@/lib/cargos";
 import { computeMatriz, MATRIZ_PLEITO } from "@/lib/intel/matriz";
+import { FichaMetodologica } from "@/components/app/FichaMetodologica";
+import { FICHAS } from "@/lib/intel/fichas";
 
 export const metadata: Metadata = { title: "Matriz Ideológica por Região" };
 
@@ -208,22 +210,7 @@ export default async function Page() {
         ))}
       </div>
 
-      <div className="card mt-6">
-        <h3 className="t-heading text-[20px]">{t.matriz.fichaTitle}</h3>
-        <dl className="font-ui mt-3 grid gap-x-8 gap-y-3 text-body-sm sm:grid-cols-2">
-          <div>
-            <dt className="text-pebble">{t.matriz.version}</dt>
-            <dd className="text-smoke">{matriz.version}</dd>
-          </div>
-          <div>
-            <dt className="text-pebble">{t.matriz.sources}</dt>
-            <dd className="text-smoke">{matriz.fontes.join(" · ")}</dd>
-          </div>
-          <div className="sm:col-span-2">
-            <dt className="text-pebble">{t.matriz.pending}</dt>
-          </div>
-        </dl>
-      </div>
+      <FichaMetodologica ficha={FICHAS.matriz(pt)} locale={locale} labels={t.ficha} />
     </ToolShell>
   );
 }

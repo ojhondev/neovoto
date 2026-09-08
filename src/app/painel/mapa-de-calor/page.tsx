@@ -9,6 +9,8 @@ import { getDictionary } from "@/lib/i18n";
 import { getCurrentCandidacy, perfilFrom } from "@/lib/candidacy";
 import { getTerritorioUF, getTerritorioNacional } from "@/lib/territory";
 import { getMovimento } from "@/lib/intel/movimento-load";
+import { FichaMetodologica } from "@/components/app/FichaMetodologica";
+import { FICHAS } from "@/lib/intel/fichas";
 import { escopoNacional } from "@/lib/escopo";
 import type { Cargo } from "@/lib/cargos";
 import { QUADRANTE_INFO, type Quadrante } from "@/lib/intel/ifet";
@@ -180,47 +182,7 @@ export default async function Page() {
         />
       )}
 
-      {/* Ficha técnica */}
-      <div className="card mt-6">
-        <h3 className="t-heading text-[20px]">{t.ifet.fichaTitle}</h3>
-        <dl className="font-ui mt-3 grid gap-x-8 gap-y-3 text-body-sm sm:grid-cols-2">
-          <div>
-            <dt className="text-pebble">{t.ifet.version}</dt>
-            <dd className="text-smoke">IFET {ifet.version}</dd>
-          </div>
-          <div>
-            <dt className="text-pebble">{t.ifet.weights}</dt>
-            <dd className="text-smoke">
-              {t.ifet.pesoEleitoral} {Math.round(ifet.pesos.pesoEleitoral * 100)}% · {t.ifet.disputabilidade}{" "}
-              {Math.round(ifet.pesos.disputabilidade * 100)}%
-              {ifet.pesos.alcance > 0 && (
-                <>
-                  {" "}
-                  · {t.ifet.desempenhoHistorico} {Math.round(ifet.pesos.alcance * 100)}%
-                </>
-              )}
-            </dd>
-          </div>
-          <div className="sm:col-span-2">
-            <dt className="text-pebble">{t.ifet.sources}</dt>
-            <dd className="mt-1 flex flex-wrap gap-2">
-              {ifet.fontes.map((f) => (
-                <span key={f} className="rounded-[4px] bg-sand px-2 py-1 text-caption text-smoke">
-                  {f}
-                </span>
-              ))}
-            </dd>
-          </div>
-          <div className="sm:col-span-2">
-            <dt className="text-pebble">{t.ifet.pending}</dt>
-            <dd className="mt-1 space-y-1 text-caption text-fossil">
-              {ifet.pendencias.map((p) => (
-                <p key={p}>— {p}</p>
-              ))}
-            </dd>
-          </div>
-        </dl>
-      </div>
+      <FichaMetodologica ficha={FICHAS.ifet(pt)} locale={locale} labels={t.ficha} />
     </ToolShell>
   );
 }

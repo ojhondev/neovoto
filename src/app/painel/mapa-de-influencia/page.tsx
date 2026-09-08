@@ -16,6 +16,8 @@ import { escopoNacional, PLEITO_NACIONAL } from "@/lib/escopo";
 import type { Cargo } from "@/lib/cargos";
 import { computeInfluencia, INFLUENCIA_PLEITO } from "@/lib/intel/influencia";
 import { computeRedePessoas } from "@/lib/intel/rede-pessoas";
+import { FichaMetodologica } from "@/components/app/FichaMetodologica";
+import { FICHAS } from "@/lib/intel/fichas";
 
 export const metadata: Metadata = { title: "Mapa de Influência" };
 
@@ -308,22 +310,7 @@ export default async function Page() {
         </div>
       </div>
 
-      <div className="card mt-6">
-        <h3 className="t-heading text-[20px]">{t.influencia.fichaTitle}</h3>
-        <dl className="font-ui mt-3 grid gap-x-8 gap-y-3 text-body-sm sm:grid-cols-2">
-          <div>
-            <dt className="text-pebble">{t.influencia.version}</dt>
-            <dd className="text-smoke">{inf.version}</dd>
-          </div>
-          <div>
-            <dt className="text-pebble">{t.influencia.sources}</dt>
-            <dd className="text-smoke">{inf.fontes.join(" · ")}</dd>
-          </div>
-          <div className="sm:col-span-2">
-            <dt className="text-pebble">{t.influencia.pending}</dt>
-          </div>
-        </dl>
-      </div>
+      <FichaMetodologica ficha={FICHAS.influencia(pt)} locale={locale} labels={t.ficha} />
     </ToolShell>
   );
 }

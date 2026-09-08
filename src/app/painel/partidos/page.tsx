@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { getDictionary } from "@/lib/i18n";
+import { FichaMetodologica } from "@/components/app/FichaMetodologica";
+import { FICHAS } from "@/lib/intel/fichas";
 import { getCurrentCandidacy, perfilFrom } from "@/lib/candidacy";
 import { getEstadoPorSigla } from "@/lib/data-sources/ibge";
 import { getVotacaoPartidoUF, getVotacaoPartidoNacional } from "@/lib/data-sources/regional";
@@ -34,8 +36,8 @@ function interpretar(data: PartidosResultado, base: string, pt: boolean): string
   if (piorPar && piorPar.v <= -0.4) {
     out.push(
       pt
-        ? `${piorPar.a} e ${piorPar.b} dividem o estado em dois blocos praticamente opostos (${piorPar.v.toFixed(2)}): onde um é forte, o outro é fraco. É o eixo real da disputa territorial.`
-        : `${piorPar.a} and ${piorPar.b} split the state into two nearly opposite blocs (${piorPar.v.toFixed(2)}): where one is strong, the other is weak.`,
+        ? `${piorPar.a} e ${piorPar.b} dividem o estado em dois blocos praticamente opostos (${piorPar.v.toFixed(2)} ± ${data.margem95.toFixed(2)}): onde um é forte, o outro é fraco. É o eixo real da disputa territorial.`
+        : `${piorPar.a} and ${piorPar.b} split the state into two nearly opposite blocs (${piorPar.v.toFixed(2)} ± ${data.margem95.toFixed(2)}): where one is strong, the other is weak.`,
     );
   }
   const grande = [...clusters.entries()].sort((a, b) => b[1].length - a[1].length)[0];
@@ -216,7 +218,9 @@ export default async function Page() {
         </div>
       </div>
 
-      <p className="font-ui mt-6 border-t border-ash pt-4 text-caption text-pebble">
+      <FichaMetodologica ficha={FICHAS.partidos(pt)} locale={locale} labels={t.ficha} />
+
+      <p className="font-ui mt-3 border-t border-ash pt-4 text-caption text-pebble">
         {t.partidos.disclaimer}
       </p>
     </>

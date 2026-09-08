@@ -5,6 +5,8 @@ import { ToolShell } from "@/components/app/ToolShell";
 import { Info } from "@/components/app/Info";
 import { ModuloRoadmap } from "@/components/app/ModuloRoadmap";
 import { getDictionary } from "@/lib/i18n";
+import { FichaMetodologica } from "@/components/app/FichaMetodologica";
+import { FICHAS } from "@/lib/intel/fichas";
 import { getCurrentCandidacy, perfilFrom } from "@/lib/candidacy";
 import { getVotacaoPartidoUF, getVotacaoPartidoNacional } from "@/lib/data-sources/regional";
 import { getBancadaCamara } from "@/lib/data-sources/camara";
@@ -109,7 +111,7 @@ export default async function Page() {
 
   const conclusao = melhorAfim
     ? fill(t.coligacoes.conclusao, {
-        melhorAfim: `${melhorAfim.sigla} (+${melhorAfim.ganhoLiquido.toLocaleString(locale)} ${pt ? "votos novos" : "new votes"})`,
+        melhorAfim: `${melhorAfim.sigla} (+${melhorAfim.ganhoLiquidoMin.toLocaleString(locale)}–${melhorAfim.ganhoLiquidoMax.toLocaleString(locale)} ${pt ? "votos novos" : "new votes"})`,
         maiorVoto: maiorVoto.sigla,
         maiorVotoNota,
       })
@@ -183,8 +185,11 @@ export default async function Page() {
                         style={{ width: `${Math.round((p.ganhoLiquido / maxLiq) * 100)}%` }}
                       />
                     </span>
-                    <span className="w-20 text-right text-smoke">
-                      {p.ganhoLiquido.toLocaleString(locale)}
+                    <span className="w-32 text-right">
+                      <span className="text-smoke">{p.ganhoLiquido.toLocaleString(locale)}</span>
+                      <span className="block text-[11px] text-pebble">
+                        {p.ganhoLiquidoMin.toLocaleString(locale)}–{p.ganhoLiquidoMax.toLocaleString(locale)}
+                      </span>
                     </span>
                   </div>
                 </td>
@@ -196,22 +201,7 @@ export default async function Page() {
         </table>
       </div>
 
-      <div className="card mt-6">
-        <h3 className="t-heading text-[20px]">{t.coligacoes.fichaTitle}</h3>
-        <dl className="font-ui mt-3 grid gap-x-8 gap-y-3 text-body-sm sm:grid-cols-2">
-          <div>
-            <dt className="text-pebble">{t.coligacoes.version}</dt>
-            <dd className="text-smoke">{res.version}</dd>
-          </div>
-          <div>
-            <dt className="text-pebble">{t.coligacoes.sources}</dt>
-            <dd className="text-smoke">{res.fontes.join(" · ")}</dd>
-          </div>
-          <div className="sm:col-span-2">
-            <dt className="text-pebble">{t.coligacoes.pending}</dt>
-          </div>
-        </dl>
-      </div>
+      <FichaMetodologica ficha={FICHAS.coligacoes(pt)} locale={locale} labels={t.ficha} />
     </ToolShell>
   );
 }

@@ -238,6 +238,41 @@ eixo de costumes = nudge mínimo não validado; `MunicipioMatriz` passa a carreg
 `escolaridade` e `frac60` (perfil do eleitorado TSE), exibidos na recomendação
 de agenda por município.
 
+---
+
+## F) Coligações — desconto de sobreposição
+
+**Hipótese:** `ganho líquido = bruto × (1 − sobreposição × k)`, com `k ≈ 0,7`.
+Teste: as **federações de 2022** (partidos que passaram a disputar como uma lista)
+— o `k` implícito = `(1 − voto combinado 2022 / soma dos membros 2018 × crescimento
+de comparecimento) / sobreposição média`. `npm run backtest -- SP MG RS BA PR RJ CE --only=coligacoes`.
+
+| federação | sobrep. média (2018) | razão combinado/soma | k implícito |
+|---|---|---|---|
+| FE Brasil da Esperança (PT+PCdoB+PV) | 0,62 | **1,13** | −0,22 |
+| Federação PSDB Cidadania | 0,55 | 0,65 | 0,63 |
+| Federação PSOL Rede | 0,79 | **1,42** | −0,53 |
+
+**Conclusão:** o desconto de sobreposição **não se sustenta**. PT e PSOL trouxeram
+**mais** voto que a soma separada de 2018 — a onda Lula e a alta do PSOL entre
+2018 e 2022 pesaram muito mais que a geografia. A federação é um experimento
+confundido pelo momento próprio de cada partido. Só PSDB-Cidadania (dois partidos
+em queda) bate a faixa.
+
+**Ação:** o "ganho líquido" continua como heurística, mas exibido como **faixa
+larga** — do cenário de forte redundância (desconto 0,9) ao cenário em que o
+parceiro traz o **voto inteiro** — e a ficha metodológica diz explicitamente que
+o número não é validado.
+
+---
+
+## Correlação de Partidos — margem de confiança
+
+Cada correlação da matriz de base agora vem com uma **margem de 95%**
+(transformação de Fisher, `tanh(1,96/√(n−3))`, n = nº de municípios). Para SP
+(~645 municípios) a margem é ~0,08 — as correlações fortes (PT–PL = −0,99) são
+robustas; as fracas (|r| < 0,15) não se distinguem de zero.
+
 > **Nota:** os números de §C foram medidos com um casador de pessoa mais frouxo;
 > reexecução com o casamento exato (nome+nascimento) está pendente — a direção
 > (Base bate a população em precisão@10 de *share*) não muda.

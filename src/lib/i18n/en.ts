@@ -377,6 +377,14 @@ const en: Dictionary = {
     votesInRegion: "votes in your region",
     add: "Add",
   },
+  ficha: {
+    title: "Methodology sheet",
+    method: "Method",
+    validation: "Validation",
+    uncertainty: "Uncertainty",
+    sources: "Sources",
+    limits: "Known limits",
+  },
   movimento: {
     title: "Movement between elections",
     sub: "The candidate's vote in the most recent election vs. the previous one for the same office, normalised by each election's turnout. Shows where they grew and where they lost ground.",

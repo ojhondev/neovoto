@@ -27,6 +27,9 @@ export type PartidosResultado = {
   pleito: string;
   ordem: string[];
   matriz: number[][]; // Pearson −1..1, mesma ordem de `ordem`
+  /** ±margem de 95% da correlação (transformação de Fisher; ~igual p/ todos os pares) */
+  margem95: number;
+  nMunicipios: number;
   nos: NoPartidoAnalise[];
   fontes: string[];
 };
@@ -111,11 +114,17 @@ export function analisarPartidos(
     };
   });
 
+  // margem de 95% via transformação de Fisher (n = nº de municípios)
+  const nMun = codes.length;
+  const margem95 = nMun > 4 ? Math.round(Math.tanh(1.96 / Math.sqrt(nMun - 3)) * 100) / 100 : 0.2;
+
   return {
     version: PARTIDOS_ANALISE_VERSION,
     pleito: `${PARTIDOS_PLEITO.cargo} ${PARTIDOS_PLEITO.ano}`,
     ordem,
     matriz,
+    margem95,
+    nMunicipios: nMun,
     nos,
     fontes: [
       "TSE / Base dos Dados — votação por partido e município",

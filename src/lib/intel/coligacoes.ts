@@ -19,7 +19,9 @@ export type Parceiro = {
   sigla: string;
   ganhoBruto: number;
   sobreposicao: number; // 0..1
-  ganhoLiquido: number;
+  ganhoLiquido: number; // ponto central (desconto de sobreposição = 0,7)
+  ganhoLiquidoMin: number; // cenário de forte redundância (desconto 0,9)
+  ganhoLiquidoMax: number; // cenário sem perda — traz o voto inteiro (backtest §F: acontece)
   bancada: number;
   afinidade: Afinidade;
 };
@@ -94,12 +96,13 @@ export function computeColigacoes(
     const bruto = [...vetor.values()].reduce((s, v) => s + v, 0);
     if (bruto < 500) continue;
     const overlap = baseVotos > 0 ? cosine(perfil(vetor), perfilBase) : 0;
-    const liquido = Math.round(bruto * (1 - overlap * 0.7));
     parceiros.push({
       sigla,
       ganhoBruto: bruto,
       sobreposicao: Math.round(overlap * 100) / 100,
-      ganhoLiquido: liquido,
+      ganhoLiquido: Math.round(bruto * (1 - overlap * 0.7)),
+      ganhoLiquidoMin: Math.round(bruto * (1 - overlap * 0.9)),
+      ganhoLiquidoMax: bruto,
       bancada: bancada[sigla] ?? 0,
       afinidade: afinidadeEntre(base, sigla),
     });

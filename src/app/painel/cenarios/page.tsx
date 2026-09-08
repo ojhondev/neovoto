@@ -6,6 +6,8 @@ import { Info } from "@/components/app/Info";
 import { ModuloRoadmap } from "@/components/app/ModuloRoadmap";
 import { CenariosScatter } from "@/components/app/CenariosScatter";
 import { getDictionary } from "@/lib/i18n";
+import { FichaMetodologica } from "@/components/app/FichaMetodologica";
+import { FICHAS } from "@/lib/intel/fichas";
 import { getCurrentCandidacy, perfilFrom } from "@/lib/candidacy";
 import { carregarCenarios } from "@/lib/intel/cenarios-load";
 import { escopoNacional } from "@/lib/escopo";
@@ -304,22 +306,8 @@ export default async function Page() {
         </div>
       )}
 
-      <div className="card mt-6">
-        <h3 className="t-heading text-[20px]">{t.cenarios.fichaTitle}</h3>
-        <dl className="font-ui mt-3 grid gap-x-8 gap-y-3 text-body-sm sm:grid-cols-2">
-          <div>
-            <dt className="text-pebble">{t.cenarios.version}</dt>
-            <dd className="text-smoke">{cen.version}</dd>
-          </div>
-          <div>
-            <dt className="text-pebble">{t.cenarios.sources}</dt>
-            <dd className="text-smoke">{cen.fontes.join(" · ")}</dd>
-          </div>
-        </dl>
-        <p className="font-ui mt-4 border-t border-ash pt-3 text-caption text-pebble">
-          {t.cenarios.disclaimer}
-        </p>
-      </div>
+      <FichaMetodologica ficha={FICHAS.cenarios(pt)} locale={locale} labels={t.ficha} />
+      <p className="font-ui mt-3 text-caption text-pebble">{t.cenarios.disclaimer}</p>
     </ToolShell>
   );
 }
