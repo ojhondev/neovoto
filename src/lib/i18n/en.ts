@@ -497,7 +497,7 @@ const en: Dictionary = {
     version: "Version",
     sources: "Sources",
     method:
-      "Municipality position = vote-weighted average of party positions, with a light GDP-per-capita adjustment. The party scale is calibrated against the Bolognesi, Ribeiro & Codato expert survey (2022 round, 0–10) — max divergence 0.1 point. It's editable, not TSE data.",
+      "Municipality position = vote-weighted average of party positions. The economic axis gets a small GDP-per-capita adjustment (±0.06 — validated in the 2nd-round backtest). The social-values axis gets a minimal adjustment for electorate education, urbanisation and age (a classic finding in political behaviour; not backtestable here). The party scale is calibrated against the Bolognesi, Ribeiro & Codato expert survey (2022). It's editable, not TSE data.",
     pending: "Next phases: specific thematic axes (safety, environment), historical series, region clustering.",
     quadrants: {
       pp: "Statist + conservative",

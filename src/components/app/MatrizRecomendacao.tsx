@@ -71,6 +71,8 @@ export function MatrizRecomendacao({
       <p className="font-ui mt-3 border-t border-ash pt-2 text-caption text-pebble">
         {pt ? "posição" : "position"}: eco {m.eco} · soc {m.soc} · {distanceLabel} {m.distancia} ·{" "}
         {m.populacao.toLocaleString(locale)} {pt ? "hab." : "inhab."}
+        {m.escolaridade != null && ` · ${pt ? "escolaridade" : "education"} ${m.escolaridade}`}
+        {m.frac60 != null && ` · ${Math.round(m.frac60 * 100)}% 60+`}
       </p>
     </div>
   );

@@ -19,7 +19,7 @@
 import { createSign } from "node:crypto";
 import { config } from "dotenv";
 import { votacaoPartidoPorMunicipio } from "@/lib/data-sources/basedosdados";
-import { lrDoPartido, BOLOGNESI_2022 } from "@/lib/intel/partidos";
+import { lrDoPartido, eixoDoPartido, BOLOGNESI_2022 } from "@/lib/intel/partidos";
 import { computeBaseCandidato, type CampanhaPropria } from "@/lib/intel/base-candidato";
 import { computeIFET } from "@/lib/intel/ifet";
 import { computeCenarios } from "@/lib/intel/cenarios";
@@ -833,6 +833,116 @@ async function backtestCenariosV2(ufs: string[]) {
   report("Tier B — só âncora/rede (sem histórico no cargo)", recs.filter((r) => r.tier === "B"));
 }
 
+// ---------- E) MATRIZ + CONTEXTO ----------
+/**
+ * O ajuste de contexto socioeconômico (renda, escolaridade, urbanização, idade)
+ * NÃO pode piorar a previsão do 2º turno presidencial (que valida o eixo
+ * econômico). Testa a posição-base (voto por partido) vs. a posição ajustada.
+ * Também mede se o contexto abre o eixo de costumes (que o método aditivo
+ * comprime).
+ */
+function pctRank(vals: number[]) {
+  const s = [...vals].filter((v) => v > 0).sort((a, b) => a - b);
+  const lo = s[Math.floor(s.length * 0.05)] ?? s[0] ?? 0;
+  const hi = s[Math.ceil(s.length * 0.95) - 1] ?? s[s.length - 1] ?? 1;
+  return (v: number) => (hi > lo ? Math.min(1, Math.max(0, (v - lo) / (hi - lo))) : 0.5);
+}
+
+async function backtestMatrizContexto(ufs: string[]) {
+  console.log("\n" + "=".repeat(70));
+  console.log("E) MATRIZ + CONTEXTO — o ajuste socioeconômico piora o 2º turno? abre o eixo soc?");
+  console.log("=".repeat(70));
+
+  const alvoRows = await bq(
+    `SELECT sigla_uf, id_municipio, numero_candidato, SUM(votos) v
+     FROM \`${DATASET}.resultados_candidato_municipio\`
+     WHERE ano=2022 AND turno=2 AND cargo='presidente' AND sigla_uf IN (${ufs.map((u) => `'${u}'`).join(",")})
+     GROUP BY 1,2,3`,
+  );
+  const alvo = new Map<string, number>(); // code -> share Bolsonaro
+  const tmp = new Map<string, { l: number; b: number }>();
+  for (const r of alvoRows) {
+    const c = tmp.get(r.id_municipio!) ?? { l: 0, b: 0 };
+    if (r.numero_candidato === "13") c.l += Number(r.v);
+    if (r.numero_candidato === "22") c.b += Number(r.v);
+    tmp.set(r.id_municipio!, c);
+  }
+  for (const [c, { l, b }] of tmp) if (l + b > 0) alvo.set(c, b / (l + b));
+
+  const linhas: { eco: number; soc: number; sh: number; pib: number; esc: number; pop: number; ido: number }[] = [];
+  for (const uf of ufs) {
+    const [vt, perfil, pop, pib] = await Promise.all([
+      votacaoPartidoPorMunicipio({ ano: 2022, turno: 1, uf, cargo: "presidente" }),
+      bq(`SELECT id_municipio, SUM(SAFE_CAST(instrucao AS INT64)*eleitores) si, SUM(eleitores) tot,
+                 SUM(CASE WHEN grupo_idade IN ('6064','6569','7074','7579','8084','8589','9094','9599','9999') THEN eleitores ELSE 0 END) idosos
+          FROM \`${DATASET}.perfil_eleitorado_municipio_zona\` WHERE ano=2022 AND sigla_uf='${uf}' AND instrucao!='0' GROUP BY 1`),
+      bq(`SELECT id_municipio, populacao FROM \`basedosdados.br_ibge_populacao.municipio\` WHERE sigla_uf='${uf}' AND ano=(SELECT MAX(ano) FROM \`basedosdados.br_ibge_populacao.municipio\` WHERE sigla_uf='${uf}')`),
+      bq(`SELECT id_municipio, pib FROM \`basedosdados.br_ibge_pib.municipio\` WHERE sigla_uf='${uf}' AND ano=(SELECT MAX(ano) FROM \`basedosdados.br_ibge_pib.municipio\` WHERE sigla_uf='${uf}')`).catch(() => []),
+    ]);
+    const escM = new Map(perfil.map((r) => [r.id_municipio!, Number(r.si) / Math.max(1, Number(r.tot)) / 8]));
+    const idoM = new Map(perfil.map((r) => [r.id_municipio!, Number(r.idosos) / Math.max(1, Number(r.tot))]));
+    const popM = new Map(pop.map((r) => [r.id_municipio!, Number(r.populacao)]));
+    const pibM = new Map(pib.map((r) => [r.id_municipio!, Number(r.pib)]));
+    const porMun = new Map<string, Map<string, number>>();
+    for (const r of vt) {
+      if (!porMun.has(r.idMunicipio)) porMun.set(r.idMunicipio, new Map());
+      porMun.get(r.idMunicipio)!.set(r.sigla, (porMun.get(r.idMunicipio)!.get(r.sigla) ?? 0) + r.votos);
+    }
+    for (const [code, votos] of porMun) {
+      const sh = alvo.get(code);
+      if (sh == null) continue;
+      let ea = 0, sa = 0, cls = 0;
+      for (const [sig, v] of votos) {
+        const e = eixoDoPartido(sig);
+        if (e) { ea += v * e.eco; sa += v * e.soc; cls += v; }
+      }
+      if (cls < 50) continue;
+      const p = popM.get(code) ?? 0;
+      linhas.push({
+        eco: ea / cls, soc: sa / cls, sh,
+        pib: p > 0 ? (pibM.get(code) ?? 0) / p : 0,
+        esc: escM.get(code) ?? 0.5, pop: p, ido: idoM.get(code) ?? 0.15,
+      });
+    }
+  }
+
+  const rPib = pctRank(linhas.map((l) => l.pib));
+  const rEsc = pctRank(linhas.map((l) => l.esc));
+  const rIdo = pctRank(linhas.map((l) => l.ido));
+  const rUrb = pctRank(linhas.map((l) => Math.log(l.pop + 1)));
+
+  const target = linhas.map((l) => 2 * l.sh - 1); // -1 Lula .. +1 Bolsonaro
+  const ecoBase = linhas.map((l) => l.eco);
+  const ecoV3 = linhas.map((l) => l.eco + 0.06 * (rPib(l.pib) - 0.5) * 2); // v3: só renda
+  const ecoEsc = linhas.map((l) => l.eco + 0.06 * (rPib(l.pib) - 0.5) * 2 + 0.03 * (rEsc(l.esc) - 0.5) * 2); // descartado
+  const socBase = linhas.map((l) => l.soc);
+  const socAdj = linhas.map(
+    (l) => l.soc - 0.08 * (rEsc(l.esc) - 0.5) * 2 - 0.04 * (rUrb(Math.log(l.pop + 1)) - 0.5) * 2 + 0.04 * (rIdo(l.ido) - 0.5) * 2,
+  );
+  const sd = (xs: number[]) => {
+    const m = xs.reduce((s, v) => s + v, 0) / xs.length;
+    return Math.sqrt(xs.reduce((s, v) => s + (v - m) ** 2, 0) / xs.length);
+  };
+  const acc = (pred: number[]) => {
+    let ok = 0;
+    for (let i = 0; i < pred.length; i++) if ((pred[i] > 0) === (linhas[i].sh > 0.5)) ok++;
+    return ok / pred.length;
+  };
+  console.log(`\n n=${linhas.length} municípios (${ufs.join(", ")})`);
+  console.log("\n eixo econômico vs. 2º turno presidencial (alvo: share Bolsonaro):");
+  for (const [nome, v] of [
+    ["base (só voto por partido)", ecoBase],
+    ["v3: + renda (PIB p/c) ±0,06", ecoV3],
+    ["+ renda + escolaridade (DESCARTADO)", ecoEsc],
+  ] as const) {
+    const r = pearson(v, target);
+    console.log(`   ${nome.padEnd(38)} r=${r.toFixed(3)}  R²=${(r * r).toFixed(3)}  dir=${(acc(v) * 100).toFixed(1)}%`);
+  }
+  console.log("\n eixo de costumes — abertura da distribuição (sd):");
+  console.log(`   base   sd=${sd(socBase).toFixed(3)}   [${Math.min(...socBase).toFixed(2)} … ${Math.max(...socBase).toFixed(2)}]`);
+  console.log(`   v3+ctx sd=${sd(socAdj).toFixed(3)}   [${Math.min(...socAdj).toFixed(2)} … ${Math.max(...socAdj).toFixed(2)}]`);
+}
+
 // ---------- main ----------
 async function main() {
   const args = process.argv.slice(2);
@@ -848,6 +958,7 @@ async function main() {
   }
   if (!only || only === "base") await backtestBaseCandidato(ufs.length ? ufs : ["SP", "MG", "RS"]);
   if (!only || only === "cenarios") await backtestCenariosV2(ufs.length ? ufs : ["SP", "MG", "RS"]);
+  if (!only || only === "matriz-contexto") await backtestMatrizContexto(alvoUFs);
   process.exit(0);
 }
 main().catch((e) => {

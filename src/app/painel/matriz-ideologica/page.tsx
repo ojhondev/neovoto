@@ -9,7 +9,7 @@ import { getDictionary } from "@/lib/i18n";
 import { getCurrentCandidacy, perfilFrom } from "@/lib/candidacy";
 import { getEstadoPorSigla, getPopulacaoMunicipiosUF, getPibMunicipiosUF } from "@/lib/data-sources/ibge";
 import { getIfetResumoNacional } from "@/lib/territory";
-import { getVotacaoPartidoUF, getVotacaoPartidoNacional } from "@/lib/data-sources/regional";
+import { getVotacaoPartidoUF, getVotacaoPartidoNacional, getPerfilEleitoradoUF } from "@/lib/data-sources/regional";
 import { escopoNacional, PLEITO_NACIONAL, pleitoNacionalLabel } from "@/lib/escopo";
 import type { Cargo } from "@/lib/cargos";
 import { computeMatriz, MATRIZ_PLEITO } from "@/lib/intel/matriz";
@@ -30,13 +30,13 @@ export default async function Page() {
     ? [
         "Puxa a votação por partido em cada município no último pleito presidencial (Base dos Dados).",
         "Aplica a escala ideológica de partido — transparente e editável.",
-        "Ajusta levemente o eixo econômico pelo PIB per capita do município (IBGE).",
+        "Ajusta pelo contexto socioeconômico: renda (PIB p/c) e escolaridade do eleitorado no eixo econômico; escolaridade, urbanização e idade no eixo de costumes.",
         "Projeta cada município nos eixos e mede a distância até o candidato.",
       ]
     : [
         "Pulls party vote in each municipality in the last presidential election (Base dos Dados).",
         "Applies the party ideology scale — transparent and editable.",
-        "Lightly adjusts the economic axis by the municipality's GDP per capita (IBGE).",
+        "Adjusts by socioeconomic context: income (GDP p/c) and electorate education on the economic axis; education, urbanisation and age on the social-values axis.",
         "Projects each municipality onto the axes and measures the distance to the candidate.",
       ];
   const outputs = pt
@@ -107,9 +107,17 @@ export default async function Page() {
     populacaoByCode[code] = (v as { populacao: number }).populacao;
   }
 
+  const perfilEl = nacional ? [] : await getPerfilEleitoradoUF(2022, perfil.uf!).catch(() => []);
+  const escolaridadeByCode: Record<string, number> = {};
+  const frac60ByCode: Record<string, number> = {};
+  for (const p of perfilEl) {
+    escolaridadeByCode[p.idMunicipio] = p.escolaridade;
+    frac60ByCode[p.idMunicipio] = p.frac60mais;
+  }
+
   const matriz = computeMatriz(
     votacao,
-    { nomeByCode, populacaoByCode, pibByCode: pib },
+    { nomeByCode, populacaoByCode, pibByCode: pib, escolaridadeByCode, frac60ByCode },
     perfil.partido,
   );
 

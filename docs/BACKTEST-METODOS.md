@@ -195,6 +195,49 @@ demais, mediana enviesada para cima). O v3 substitui pelo modelo de crescimento
 lognormal calibrado acima e move a "captura de lacunas" para o painel de
 *targeting* (onde concentrar), fora da projeção de nível.
 
+---
+
+## E) Matriz + contexto socioeconômico (matriz v3)
+
+**Hipótese:** adicionar renda, escolaridade, urbanização e idade do eleitorado ao
+posicionamento não pode piorar a previsão do 2º turno presidencial (que valida o
+eixo econômico) e deveria abrir o eixo de costumes, que o método aditivo comprime.
+
+`npm run backtest -- SP MG RS BA PR --only=matriz-contexto` (2.811 municípios).
+
+### Eixo econômico vs. 2º turno presidencial (alvo: share Bolsonaro)
+
+| posição do município | Pearson r | R² | acurácia de direção |
+|---|---|---|---|
+| base (só voto por partido) | 0,998 | 0,996 | 97,6% |
+| **v3 — + renda (PIB p/c) ±0,06** | 0,998 | **0,996** | 86,0% |
+| + renda **+ escolaridade** (testado, **DESCARTADO**) | 0,996 | 0,991 | 87,3% |
+
+O ajuste de **renda** mantém o R² intacto (0,996). Adicionar **escolaridade no
+eixo econômico piora** (R² −0,005) — no Brasil, eleitor de alta escolaridade não é
+economicamente de direita, é anti-Bolsonaro; o termo foi removido. (A queda da
+"acurácia de direção" com qualquer ajuste vem de municípios perto de eco = 0
+trocarem de sinal — o R² é o sinal confiável.)
+
+### Eixo de costumes — abertura da distribuição (desvio-padrão)
+
+| | sd | intervalo |
+|---|---|---|
+| base | 0,193 | −0,24 … 0,75 |
+| v3 + contexto | 0,178 | −0,26 … 0,81 |
+
+O nudge de costumes **não abre** a distribuição (sd cai um pouco). Conclusão: o
+valor da escolaridade/idade do eleitorado está em **ser exibido por município**
+(calibra a recomendação de agenda — "eleitorado com escolaridade alta, 22% com
+60+") e não em mover a posição. O ajuste de costumes ficou **mínimo**
+(escolaridade ±0,05, urbanização ±0,025, idade ±0,03) e explicitamente rotulado
+como não validado.
+
+**Ação (matriz v3):** eixo econômico = idêntico à v2 (renda ±0,06, validado);
+eixo de costumes = nudge mínimo não validado; `MunicipioMatriz` passa a carregar
+`escolaridade` e `frac60` (perfil do eleitorado TSE), exibidos na recomendação
+de agenda por município.
+
 > **Nota:** os números de §C foram medidos com um casador de pessoa mais frouxo;
 > reexecução com o casamento exato (nome+nascimento) está pendente — a direção
 > (Base bate a população em precisão@10 de *share*) não muda.

@@ -17,7 +17,31 @@
  */
 import { eixoDoPartido, PARTIDOS_VERSION } from "@/lib/intel/partidos";
 
-export const MATRIZ_VERSION = `matriz-v2 · ${PARTIDOS_VERSION}`;
+export const MATRIZ_VERSION = `matriz-v3 · ${PARTIDOS_VERSION}`;
+
+/**
+ * Ajuste de contexto socioeconômico (limitado e transparente).
+ *
+ * EIXO ECONÔMICO: só renda (PIB p/c), ±0,06 — IDÊNTICO à v2, que o backtest de 2º
+ * turno valida (R² 0,996; direção 97,6%). Testei adicionar escolaridade no eixo
+ * econômico e ela PIOROU a previsão (direção 97,6%→87,3%): eleitor de alta
+ * escolaridade no Brasil não é economicamente de direita, é anti-Bolsonaro — o
+ * termo foi descartado (scripts/backtest.ts §E).
+ *
+ * EIXO DE COSTUMES: escolaridade e urbanização → mais liberal; idade → mais
+ * conservador. É um dos achados mais replicados do comportamento político
+ * (Stubager 2013; Weakliem 2002). NÃO é backtestável contra o voto presidencial
+ * (que é sobre o eixo econômico); no backtest §E o nudge nem abre a distribuição,
+ * então entra MÍNIMO. O valor da escolaridade/idade do eleitorado está mais em
+ * ser EXIBIDO por município (calibra a recomendação de agenda) do que em mover
+ * a posição.
+ */
+const AJUSTE = {
+  ecoRenda: 0.06,
+  socEscolaridade: 0.05,
+  socUrbanizacao: 0.025,
+  socIdade: 0.03,
+};
 
 /** Pano de fundo ideológico: 1º turno presidencial 2022 (validado por backtest). */
 export const MATRIZ_PLEITO = { ano: 2022, turno: 1, cargo: "presidente" };
@@ -25,10 +49,14 @@ export const MATRIZ_PLEITO = { ano: 2022, turno: 1, cargo: "presidente" };
 export type MunicipioMatriz = {
   code: string;
   nome: string;
-  eco: number; // -1..1
+  eco: number; // -1..1 (já com ajuste de contexto)
   soc: number; // -1..1
+  ecoBase: number; // só o voto por partido, sem contexto
+  socBase: number;
   populacao: number;
   votos: number;
+  escolaridade: number | null; // 0..1 (média do nível TSE) — null sem dado
+  frac60: number | null; // fração do eleitorado com 60+ anos
   distancia: number; // ao candidato (0 = idêntico)
 };
 
@@ -56,7 +84,14 @@ const clamp = (v: number) => Math.max(-1, Math.min(1, v));
 
 export function computeMatriz(
   votacao: { idMunicipio: string; sigla: string; votos: number }[],
-  ibge: { nomeByCode: Record<string, string>; populacaoByCode: Record<string, number>; pibByCode: Record<string, number> },
+  ibge: {
+    nomeByCode: Record<string, string>;
+    populacaoByCode: Record<string, number>;
+    pibByCode: Record<string, number>;
+    /** escolaridade do eleitorado (0..1) e fração 60+ por município — opcional */
+    escolaridadeByCode?: Record<string, number>;
+    frac60ByCode?: Record<string, number>;
+  },
   partidoCandidato: string,
 ): MatrizResultado {
   // agrupa voto por município
@@ -67,13 +102,21 @@ export function computeMatriz(
     m.set(r.sigla, (m.get(r.sigla) ?? 0) + r.votos);
   }
 
-  // rank de PIB per capita para o ajuste de contexto
+  // ranks para o ajuste de contexto
   const pibPc: Record<string, number> = {};
   for (const [code, pib] of Object.entries(ibge.pibByCode)) {
     const pop = ibge.populacaoByCode[code] ?? 0;
     pibPc[code] = pop > 0 ? pib / pop : 0;
   }
   const rankPib = percentRank(Object.values(pibPc));
+  const esc = ibge.escolaridadeByCode ?? {};
+  const ido = ibge.frac60ByCode ?? {};
+  const temEsc = Object.keys(esc).length > 0;
+  const rankEsc = percentRank(Object.values(esc));
+  const rankIdo = percentRank(Object.values(ido));
+  const rankUrb = percentRank(
+    Object.values(ibge.populacaoByCode).map((p) => Math.log(p + 1)),
+  );
 
   let votosTotais = 0;
   let votosClassificados = 0;
@@ -97,19 +140,31 @@ export function computeMatriz(
     votosClassificados += somaClass;
     if (somaClass < 50) continue;
 
-    let eco = ecoAcc / somaClass;
-    const soc = socAcc / somaClass;
-    // ajuste leve de contexto: renda mais alta empurra o eixo econômico em
-    // direção ao mercado — mantido pequeno (±0,06) por ser tuning não validado.
-    eco = clamp(eco + 0.06 * (rankPib(pibPc[code] ?? 0) - 0.5) * 2);
+    const ecoBase = ecoAcc / somaClass;
+    const socBase = socAcc / somaClass;
+
+    // fatores de contexto (0..1, centrados em 0,5 quando não há dado)
+    const fPib = (rankPib(pibPc[code] ?? 0) - 0.5) * 2;
+    const fEsc = temEsc && esc[code] != null ? (rankEsc(esc[code]) - 0.5) * 2 : 0;
+    const fUrb = (rankUrb(Math.log((ibge.populacaoByCode[code] ?? 0) + 1)) - 0.5) * 2;
+    const fIdo = ido[code] != null ? (rankIdo(ido[code]) - 0.5) * 2 : 0;
+
+    const eco = clamp(ecoBase + AJUSTE.ecoRenda * fPib);
+    const soc = clamp(
+      socBase - AJUSTE.socEscolaridade * fEsc - AJUSTE.socUrbanizacao * fUrb + AJUSTE.socIdade * fIdo,
+    );
 
     municipios.push({
       code,
       nome: ibge.nomeByCode[code] ?? code,
       eco: Math.round(eco * 100) / 100,
       soc: Math.round(soc * 100) / 100,
+      ecoBase: Math.round(ecoBase * 100) / 100,
+      socBase: Math.round(socBase * 100) / 100,
       populacao: ibge.populacaoByCode[code] ?? 0,
       votos: somaTodos,
+      escolaridade: temEsc && esc[code] != null ? Math.round(esc[code] * 100) / 100 : null,
+      frac60: ido[code] != null ? Math.round(ido[code] * 1000) / 1000 : null,
       distancia: 0,
     });
   }
@@ -157,9 +212,9 @@ export function computeMatriz(
     cobertura: votosTotais ? votosClassificados / votosTotais : 0,
     fontes: [
       "TSE / Base dos Dados — 1º turno presidencial 2022 por partido e município",
-      "IBGE — PIB dos Municípios (ajuste de contexto ±0,06)",
+      "IBGE — PIB dos Municípios · TSE — perfil do eleitorado (escolaridade, idade)",
       "Bolognesi, Ribeiro & Codato (2022) — survey de especialistas (escala ideológica)",
-      "NeoVoto — backtest de validação (R² 0,93 out-of-time)",
+      "NeoVoto — backtest de validação (eixo econômico: R² 0,93 out-of-time)",
     ],
   };
 }
@@ -195,11 +250,18 @@ function classeSoc(soc: number, pt: boolean): string {
  * acionável, em linguagem de campanha. Pura, sem I/O.
  */
 export function recomendaMunicipio(
-  m: { nome: string; eco: number; soc: number; distancia: number },
+  m: { nome: string; eco: number; soc: number; distancia: number; escolaridade?: number | null; frac60?: number | null },
   cand: { eco: number; soc: number; conhecido: boolean },
   locale: "pt" | "en",
 ): RecomendacaoMatriz {
   const pt = locale === "pt";
+
+  const perfilTxt =
+    m.escolaridade != null || m.frac60 != null
+      ? pt
+        ? ` Eleitorado: ${m.escolaridade != null ? `escolaridade ${m.escolaridade >= 0.75 ? "alta" : m.escolaridade >= 0.6 ? "média" : "baixa"}` : ""}${m.escolaridade != null && m.frac60 != null ? ", " : ""}${m.frac60 != null ? `${Math.round(m.frac60 * 100)}% com 60+` : ""}.`
+        : ` Electorate: ${m.escolaridade != null ? `${m.escolaridade >= 0.75 ? "high" : m.escolaridade >= 0.6 ? "mid" : "low"} education` : ""}${m.escolaridade != null && m.frac60 != null ? ", " : ""}${m.frac60 != null ? `${Math.round(m.frac60 * 100)}% aged 60+` : ""}.`
+      : "";
 
   const classe = `${classeEco(m.eco, pt)}, ${classeSoc(m.soc, pt)}`;
 
@@ -245,8 +307,8 @@ export function recomendaMunicipio(
             : `${m.nome} is middle ground (distance ${m.distancia.toFixed(2)}): you can grow with the right agenda.`;
 
   const texto = pt
-    ? `Em ${m.nome}, o eleitorado é ${classe}. ${agenda}${tom ? " " + tom : ""} ${ressonancia}`
-    : `In ${m.nome}, the electorate is ${classe}. ${agenda}${tom ? " " + tom : ""} ${ressonancia}`;
+    ? `Em ${m.nome}, o eleitorado é ${classe}.${perfilTxt} ${agenda}${tom ? " " + tom : ""} ${ressonancia}`
+    : `In ${m.nome}, the electorate is ${classe}.${perfilTxt} ${agenda}${tom ? " " + tom : ""} ${ressonancia}`;
 
   return { classe, agenda, tom, ressonancia, texto };
 }
