@@ -57,7 +57,7 @@ export function RadarLista({
           type="button"
           onClick={() => setEixo("")}
           className={
-            "font-ui rounded-[4px] px-2.5 py-1 text-caption transition-colors " +
+            "font-ui rounded-none px-2.5 py-1 text-caption transition-colors " +
             (eixo === "" ? "bg-ink text-paper" : "border border-ash text-fossil hover:text-ink")
           }
         >
@@ -69,7 +69,7 @@ export function RadarLista({
             type="button"
             onClick={() => setEixo(eixo === e ? "" : e)}
             className={
-              "font-ui rounded-[4px] px-2.5 py-1 text-caption transition-colors " +
+              "font-ui rounded-none px-2.5 py-1 text-caption transition-colors " +
               (eixo === e ? "bg-ink text-paper" : "border border-ash text-fossil hover:text-ink")
             }
           >
@@ -87,9 +87,9 @@ export function RadarLista({
                   <span className="text-pebble">{labels.heat}</span>
                   <span className="text-fossil">{tema.heat}</span>
                 </div>
-                <div className="mt-1 h-2 rounded-[2px] bg-sand">
+                <div className="mt-1 h-2 rounded-none bg-sand">
                   <div
-                    className="bar-grow h-full rounded-[2px]"
+                    className="bar-grow h-full rounded-none"
                     style={{
                       width: `${tema.heat}%`,
                       background: urgVar(tema.heat >= 60 ? "high" : tema.heat >= 30 ? "med" : "none"),
@@ -101,14 +101,14 @@ export function RadarLista({
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="font-ui text-body text-ink">{tema.label}</span>
                   <span
-                    className="font-ui rounded-[3px] px-1.5 py-0.5 text-[11px] text-white"
+                    className="font-ui rounded-none px-1.5 py-0.5 text-[11px] text-white"
                     style={{ background: urgVar(URGENCIA_RADAR[tema.tipo] ?? "none") }}
                   >
                     {labels.tipo[tema.tipo]}
                   </span>
                   <span
                     className={
-                      "font-ui rounded-[3px] px-1.5 py-0.5 text-[11px] " +
+                      "font-ui rounded-none px-1.5 py-0.5 text-[11px] " +
                       (tema.alinhamento === "tensao"
                         ? "bg-[#c9772f]/20 text-smoke"
                         : tema.alinhamento === "afim"
@@ -119,7 +119,7 @@ export function RadarLista({
                     {labels.align[tema.alinhamento]}
                   </span>
                   {tema.naImprensa > 0 && (
-                    <span className="font-ui inline-flex items-center gap-1 rounded-[3px] bg-cat-1/15 px-1.5 py-0.5 text-[11px] text-smoke" style={{ background: "var(--color-cat-1)", color: "#fff" }}>
+                    <span className="font-ui inline-flex items-center gap-1 rounded-none bg-cat-1/15 px-1.5 py-0.5 text-[11px] text-smoke" style={{ background: "var(--color-cat-1)", color: "#fff" }}>
                       <Newspaper size={10} /> {labels.inPress} {tema.naImprensa}
                     </span>
                   )}

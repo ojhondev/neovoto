@@ -33,7 +33,7 @@ const pt = {
   announce: "NeoVoto — a inteligência eleitoral que ajuda candidatos a vencer. Somente dados abertos oficiais, dentro da LGPD.",
   landing: {
     heroKicker: "A inteligência que elege",
-    heroTitle: "Inteligência Eleitoral",
+    heroTitle: "Inteligência política e eleitoral",
     heroTitleAccent: "com dados e IA",
     heroSub:
       "A NeoVoto transforma dados oficiais em vantagem de campanha: onde estão seus votos, onde o adversário é fraco, com quem coligar e o que dizer em cada região para ganhar a eleição — de vereador a presidente.",

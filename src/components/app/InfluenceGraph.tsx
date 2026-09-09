@@ -119,7 +119,7 @@ export function InfluenceGraph({
           </div>
         ))}
         {hover && (
-          <div className="mt-3 rounded-[6px] border border-ash bg-paper p-3">
+          <div className="mt-3 rounded-none border border-ash bg-paper p-3">
             <p className="flex items-center gap-2 text-body text-ink">
               <span className="inline-block h-3 w-3 rounded-full" style={{ background: partidoColor(hover.sigla) }} />
               {hover.sigla}

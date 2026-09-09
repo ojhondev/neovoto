@@ -23,7 +23,10 @@ import {
   Landmark,
   type LucideIcon,
 } from "lucide-react";
+import Image from "next/image";
 import { toolPath, type ToolId } from "@/lib/tools";
+import markDark from "../../../public/brand/mark-dark.png";
+import logoDark from "../../../public/brand/logo-dark.png";
 
 type Labels = {
   dashboard: string;
@@ -77,12 +80,26 @@ function buildGroups(labels: Labels, toolNames: Record<ToolId, string>, relatori
   ];
 }
 
-function RailMark() {
+function RailMark({ withWordmark = false }: { withWordmark?: boolean }) {
+  if (withWordmark) {
+    return (
+      <Image
+        src={logoDark}
+        alt="NeoVoto"
+        height={20}
+        width={Math.round((logoDark.width / logoDark.height) * 20)}
+        priority
+      />
+    );
+  }
   return (
-    <svg width="26" height="26" viewBox="0 0 28 28" fill="none" aria-hidden="true">
-      <rect width="28" height="28" rx="7" fill="#11b981" />
-      <ellipse cx="14" cy="14" rx="5.5" ry="10" transform="rotate(-32 14 14)" fill="#04211a" />
-    </svg>
+    <Image
+      src={markDark}
+      alt="NeoVoto"
+      height={22}
+      width={Math.round((markDark.width / markDark.height) * 22)}
+      priority
+    />
   );
 }
 
@@ -126,7 +143,7 @@ function NavItems({
                 onClick={onNavigate}
                 title={it.label}
                 className={
-                  "group relative flex items-center gap-2.5 rounded-[8px] px-2.5 py-2 transition-colors " +
+                  "group relative flex items-center gap-2.5 rounded-none px-2.5 py-2 transition-colors " +
                   (active
                     ? "bg-white/10 text-white"
                     : "text-white/60 hover:bg-white/[0.06] hover:text-white") +
@@ -174,7 +191,7 @@ export function Sidebar({
         type="button"
         aria-label="Menu"
         onClick={() => setMobileOpen(true)}
-        className="fixed left-3 top-3 z-30 rounded-[8px] border border-line bg-surface p-2 text-ink shadow-[var(--shadow-card)] lg:hidden"
+        className="fixed left-3 top-3 z-30 rounded-none border border-line bg-surface p-2 text-ink shadow-[var(--shadow-card)] lg:hidden"
       >
         <Menu size={18} />
       </button>
@@ -185,13 +202,8 @@ export function Sidebar({
           (collapsed ? "w-[64px]" : "w-[236px]")
         }
       >
-        <div className={"flex items-center gap-2.5 px-4 pb-4 " + (collapsed ? "justify-center px-0" : "")}>
-          <RailMark />
-          {!collapsed && (
-            <span className="font-ui text-[15px] font-semibold tracking-[-0.01em] text-white">
-              NeoVoto
-            </span>
-          )}
+        <div className={"flex items-center px-4 pb-5 pt-1 " + (collapsed ? "justify-center px-0" : "")}>
+          <RailMark withWordmark={!collapsed} />
         </div>
         <div className="flex flex-1 flex-col overflow-y-auto">
           <NavItems labels={labels} toolNames={toolNames} collapsed={collapsed} relatorioCount={relatorioCount} />
@@ -201,7 +213,7 @@ export function Sidebar({
           onClick={() => setCollapsed(!collapsed)}
           title={labels.collapse}
           className={
-            "font-ui mx-2 mt-2 flex items-center gap-2 rounded-[8px] px-2.5 py-2 text-caption text-white/45 transition-colors hover:bg-white/[0.06] hover:text-white/80 " +
+            "font-ui mx-2 mt-2 flex items-center gap-2 rounded-none px-2.5 py-2 text-caption text-white/45 transition-colors hover:bg-white/[0.06] hover:text-white/80 " +
             (collapsed ? "justify-center" : "")
           }
         >
@@ -214,11 +226,8 @@ export function Sidebar({
         <div className="fixed inset-0 z-50 lg:hidden">
           <div className="absolute inset-0 bg-black/45" onClick={() => setMobileOpen(false)} />
           <div className="thin-scroll absolute inset-y-0 left-0 flex w-[264px] flex-col overflow-y-auto bg-rail py-4">
-            <div className="flex items-center justify-between px-4 pb-3">
-              <div className="flex items-center gap-2.5">
-                <RailMark />
-                <span className="font-ui text-[15px] font-semibold text-white">NeoVoto</span>
-              </div>
+            <div className="flex items-center justify-between px-4 pb-4 pt-1">
+              <RailMark withWordmark />
               <button type="button" aria-label="Fechar" onClick={() => setMobileOpen(false)} className="p-1.5 text-white/70">
                 <X size={20} />
               </button>

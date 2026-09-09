@@ -39,7 +39,7 @@ export default async function SourcesPage() {
                   <h2 className="t-heading">{s.name}</h2>
                   <p className="font-ui mt-1 text-body-sm text-fossil">{s.org}</p>
                 </div>
-                <span className="font-ui rounded-[4px] border border-ash bg-bone px-2 py-1 text-caption uppercase tracking-wider text-smoke">
+                <span className="font-ui rounded-none border border-ash bg-bone px-2 py-1 text-caption uppercase tracking-wider text-smoke">
                   {statusLabel[s.status][locale]}
                 </span>
               </div>
@@ -65,7 +65,7 @@ export default async function SourcesPage() {
                   {s.feeds.map((f) => (
                     <li
                       key={f}
-                      className="font-ui rounded-[4px] bg-sand px-2 py-1 text-caption text-smoke"
+                      className="font-ui rounded-none bg-sand px-2 py-1 text-caption text-smoke"
                     >
                       {f}
                     </li>

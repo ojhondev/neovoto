@@ -142,7 +142,7 @@ export default async function Page() {
       </p>
 
       {noBase && (noBase.maisAfim || noBase.maisOposto) && (
-        <p className="mt-4 border-l-2 border-olive pl-4 text-body-sm text-ink">
+        <p className="mt-4 border-l-2 border-l-brand pl-4 text-body-sm text-ink">
           {pt
             ? `Em ${ufNome}, a base do ${base}${noBase.maisOposto ? ` se opõe frontalmente à do ${noBase.maisOposto.sigla} (${noBase.maisOposto.forca.toFixed(2)})` : ""}${noBase.maisAfim ? `${noBase.maisOposto ? " e" : ""} disputa o mesmo território do ${noBase.maisAfim.sigla} (${noBase.maisAfim.forca.toFixed(2)})` : ""}.`
             : `In ${ufNome}, ${base}'s base${noBase.maisOposto ? ` directly opposes ${noBase.maisOposto.sigla}'s (${noBase.maisOposto.forca.toFixed(2)})` : ""}${noBase.maisAfim ? `${noBase.maisOposto ? " and" : ""} shares territory with ${noBase.maisAfim.sigla} (${noBase.maisAfim.forca.toFixed(2)})` : ""}.`}
@@ -172,7 +172,7 @@ export default async function Page() {
       </section>
 
       <section className="card mt-6 overflow-x-auto">
-        <h2 className="t-heading text-[20px]">{t.partidos.tableTitle}</h2>
+        <h2 className="t-heading">{t.partidos.tableTitle}</h2>
         <table className="mt-4 w-full min-w-[620px] text-left text-body-sm">
           <thead>
             <tr className="font-ui text-caption uppercase tracking-wider text-pebble">
@@ -209,7 +209,7 @@ export default async function Page() {
       </section>
 
       {/* interpretação */}
-      <div className="card mt-6 border-l-2 border-olive">
+      <div className="card mt-6 border-l-2 border-l-brand">
         <p className="t-eyebrow mb-2">{pt ? "O que a correlação diz" : "What the correlation says"}</p>
         <div className="space-y-2 text-body-sm text-smoke">
           {interpretar(data, base, pt).map((linha, i) => (

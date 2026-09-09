@@ -40,7 +40,7 @@ function MarqueeRow({
         {doubled.map((it, i) => (
           <li
             key={i}
-            className="font-ui whitespace-nowrap rounded-[999px] border border-black/10 bg-[#fbfaf4] px-4 py-2 text-body-sm text-ink-accent"
+            className="font-ui whitespace-nowrap rounded-none border border-black/10 bg-[#fbfaf4] px-4 py-2 text-body-sm text-ink-accent"
           >
             {it}
           </li>
@@ -54,7 +54,7 @@ function MarqueeRow({
         {doubled.map((it, i) => (
           <li
             key={i}
-            className="font-ui whitespace-nowrap rounded-[999px] border border-black/10 bg-[#fbfaf4] px-4 py-2 text-body-sm text-ink-accent"
+            className="font-ui whitespace-nowrap rounded-none border border-black/10 bg-[#fbfaf4] px-4 py-2 text-body-sm text-ink-accent"
           >
             {it}
           </li>

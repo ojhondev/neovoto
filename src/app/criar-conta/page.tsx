@@ -18,7 +18,7 @@ export default async function SignUpPage() {
           <input
             type="email"
             disabled
-            className="mt-1.5 w-full rounded-[8px] border border-pebble bg-paper px-3 py-2.5 text-body-sm disabled:opacity-60"
+            className="mt-1.5 w-full rounded-none border border-pebble bg-paper px-3 py-2.5 text-body-sm disabled:opacity-60"
           />
         </label>
         <label className="block">
@@ -26,7 +26,7 @@ export default async function SignUpPage() {
           <input
             type="password"
             disabled
-            className="mt-1.5 w-full rounded-[8px] border border-pebble bg-paper px-3 py-2.5 text-body-sm disabled:opacity-60"
+            className="mt-1.5 w-full rounded-none border border-pebble bg-paper px-3 py-2.5 text-body-sm disabled:opacity-60"
           />
         </label>
         <label className="flex items-start gap-2 text-body-sm text-smoke">
@@ -36,7 +36,7 @@ export default async function SignUpPage() {
         <button
           type="button"
           disabled
-          className="w-full rounded-[8px] bg-sand px-4 py-2.5 text-body-sm text-fossil"
+          className="w-full rounded-none bg-sand px-4 py-2.5 text-body-sm text-fossil"
         >
           {t.auth.signUpCta}
         </button>

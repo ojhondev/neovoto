@@ -46,7 +46,7 @@ export async function AuthShell({
             <div className="absolute left-0 top-4 w-[62%] -rotate-2">
               <InfluenceNetwork compact withCallouts={false} />
             </div>
-            <div className="absolute right-0 top-0 w-[42%] rotate-3 rounded-[12px] border border-ink/10 bg-paper p-3">
+            <div className="absolute right-0 top-0 w-[42%] rotate-3 rounded-none border border-ink/10 bg-paper p-3">
               <ProposalBars />
             </div>
             <div className="absolute bottom-16 left-8 w-[40%] -rotate-1">
@@ -75,7 +75,7 @@ export function GoogleButton({ label }: { label: string }) {
     <button
       type="button"
       disabled
-      className="font-ui flex w-full items-center justify-center gap-2 rounded-[8px] border border-pebble bg-paper px-4 py-2.5 text-body-sm text-ink opacity-70"
+      className="font-ui flex w-full items-center justify-center gap-2 rounded-none border border-pebble bg-paper px-4 py-2.5 text-body-sm text-ink opacity-70"
     >
       <svg width="16" height="16" viewBox="0 0 48 48" aria-hidden="true">
         <path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.6l6.7-6.7C35.6 2.6 30.1 0 24 0 14.6 0 6.4 5.4 2.5 13.3l7.9 6.1C12.3 13.2 17.6 9.5 24 9.5z" />

@@ -49,7 +49,7 @@ export default async function CandidatoPage() {
             width={96}
             height={128}
             unoptimized
-            className="h-32 w-24 shrink-0 rounded-[8px] border border-ash object-cover"
+            className="h-32 w-24 shrink-0 rounded-none border border-ash object-cover"
           />
         )}
         <div className="min-w-0 flex-1">
@@ -62,7 +62,7 @@ export default async function CandidatoPage() {
             {perfil.partido}
             {perfil.uf ? `-${perfil.uf}` : ""}
           </p>
-          <p className="font-ui mt-2 inline-block rounded-[4px] bg-sand px-2 py-1 text-caption text-smoke">
+          <p className="font-ui mt-2 inline-block rounded-none bg-sand px-2 py-1 text-caption text-smoke">
             {t.dash.objectiveLabel}: {objectiveLabel}
           </p>
         </div>
@@ -75,7 +75,7 @@ export default async function CandidatoPage() {
 
       <div className="mt-8 grid gap-4 md:grid-cols-2">
         <section className="card">
-          <h2 className="t-heading text-[22px]">{t.dash.profile}</h2>
+          <h2 className="t-heading">{t.dash.profile}</h2>
           <dl className="font-ui mt-3 space-y-1.5 text-body-sm">
             {[
               [t.dash.situation, perfil.situacao],
@@ -95,7 +95,7 @@ export default async function CandidatoPage() {
 
         {perfil.territorio && (
           <section className="card">
-            <h2 className="t-heading text-[22px]">{t.dash.territory}</h2>
+            <h2 className="t-heading">{t.dash.territory}</h2>
             <dl className="font-ui mt-3 space-y-1.5 text-body-sm">
               <div className="flex justify-between">
                 <dt className="text-pebble">UF</dt>
@@ -127,7 +127,7 @@ export default async function CandidatoPage() {
 
       {(apoiadores.length > 0 || apoiosAtuais.length > 0) && (
         <section className="card mt-4">
-          <h2 className="t-heading text-[22px]">{t.apoiadores.title}</h2>
+          <h2 className="t-heading">{t.apoiadores.title}</h2>
           <p className="mt-2 text-body-sm text-fossil">{t.apoiadores.body}</p>
 
           {apoiosAtuais.length > 0 && (
@@ -135,7 +135,7 @@ export default async function CandidatoPage() {
               {apoiosAtuais.map((a, i) => (
                 <li
                   key={`${a.nome}-${i}`}
-                  className="font-ui rounded-[4px] bg-sand px-2 py-1 text-caption text-smoke"
+                  className="font-ui rounded-none bg-sand px-2 py-1 text-caption text-smoke"
                 >
                   {a.nome}
                   {a.uf ? ` (${a.uf})` : ""}
@@ -178,7 +178,7 @@ export default async function CandidatoPage() {
 
       {perfil.proposicoes && perfil.proposicoes.recentes.length > 0 && (
         <section className="card mt-4">
-          <h2 className="t-heading text-[22px]">{t.dash.recent}</h2>
+          <h2 className="t-heading">{t.dash.recent}</h2>
           <ul className="mt-3 divide-y divide-ash">
             {perfil.proposicoes.recentes.map((r) => (
               <li key={r.titulo} className="font-ui py-2.5 text-body-sm">
@@ -192,14 +192,14 @@ export default async function CandidatoPage() {
 
       {perfil.frentes.length > 0 && (
         <section className="card mt-4">
-          <h2 className="t-heading text-[22px]">
+          <h2 className="t-heading">
             {t.dash.fronts} ({perfil.frentes.length})
           </h2>
           <ul className="mt-3 flex flex-wrap gap-2">
             {perfil.frentes.map((f) => (
               <li
                 key={f.id}
-                className="font-ui rounded-[4px] bg-sand px-2.5 py-1 text-caption text-smoke"
+                className="font-ui rounded-none bg-sand px-2.5 py-1 text-caption text-smoke"
               >
                 {f.titulo}
               </li>

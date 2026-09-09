@@ -70,12 +70,12 @@ export default async function Page() {
       <p className="mt-3 max-w-2xl text-body text-fossil">
         {t.comoGanhar.intro.replace("{nome}", perfil.nome)}
       </p>
-      <p className="font-ui mt-2 inline-block rounded-[4px] bg-sand px-2 py-1 text-caption text-smoke">
+      <p className="font-ui mt-2 inline-block rounded-none bg-sand px-2 py-1 text-caption text-smoke">
         {t.comoGanhar.objetivo}: {plano.objetivo}
       </p>
 
       {/* ---- FRASE ---- */}
-      <p className="mt-5 border-l-2 border-olive pl-4 text-body text-ink">{plano.frase}</p>
+      <p className="mt-5 border-l-2 border-l-brand pl-4 text-body text-ink">{plano.frase}</p>
 
       {/* ---- PLACAR ---- */}
       {placar && (
@@ -90,7 +90,7 @@ export default async function Page() {
               </Info>
             </p>
             <span
-              className="font-ui rounded-[3px] px-2 py-0.5 text-caption text-white"
+              className="font-ui rounded-none px-2 py-0.5 text-caption text-white"
               style={{ background: sitCor }}
             >
               {sitLabel}
@@ -99,13 +99,13 @@ export default async function Page() {
           <div className="mt-4 flex flex-wrap items-end gap-x-8 gap-y-2">
             <div>
               <p className="font-ui text-caption text-pebble">{t.comoGanhar.projetado}</p>
-              <p className="font-ui text-[34px] font-light leading-none text-ink">
+              <p className="font-ui text-[34px] font-semibold leading-none text-ink">
                 {n(placar.votosBase, locale)}
               </p>
             </div>
             <div>
               <p className="font-ui text-caption text-pebble">{t.comoGanhar.necessarios}</p>
-              <p className="font-ui text-[34px] font-light leading-none text-fossil">
+              <p className="font-ui text-[34px] font-semibold leading-none text-fossil">
                 {n(placar.votosNecessarios, locale)}
               </p>
             </div>
@@ -114,16 +114,16 @@ export default async function Page() {
                 {placar.faltam > 0 ? t.comoGanhar.faltam : t.comoGanhar.folga}
               </p>
               <p
-                className="font-ui text-[34px] font-light leading-none"
+                className="font-ui text-[34px] font-semibold leading-none"
                 style={{ color: placar.faltam > 0 ? urgVar("high") : urgVar("low") }}
               >
                 {n(Math.abs(placar.faltam), locale)}
               </p>
             </div>
           </div>
-          <div className="relative mt-4 h-3 rounded-[3px] bg-sand">
+          <div className="relative mt-4 h-3 rounded-none bg-sand">
             <div
-              className="h-full rounded-[3px]"
+              className="h-full rounded-none"
               style={{
                 width: `${Math.min(100, (placar.votosBase / placar.votosNecessarios) * 100)}%`,
                 background: placar.faltam > 0 ? urgVar("high") : urgVar("low"),
@@ -133,7 +133,7 @@ export default async function Page() {
           </div>
           <div className="mt-4 grid gap-2 sm:grid-cols-3">
             {placar.cenarios.map((c) => (
-              <div key={c.nome} className="font-ui rounded-[6px] border border-ash p-3">
+              <div key={c.nome} className="font-ui rounded-none border border-ash p-3">
                 <p className="text-caption text-pebble">{c.nome}</p>
                 <p className="mt-1 text-body text-ink">{n(c.votos, locale)}</p>
               </div>
@@ -144,7 +144,7 @@ export default async function Page() {
 
       {/* ---- O PLANO ---- */}
       <section className="mt-8">
-        <h2 className="t-heading flex items-center text-[22px]">
+        <h2 className="t-heading flex items-center">
           {t.comoGanhar.planTitle} — {plano.passos.length}
           <IfetInfo />
         </h2>
@@ -167,7 +167,7 @@ export default async function Page() {
                       <span className="t-eyebrow">{eixoLabel[p.eixo]}</span>
                       {p.ganho && (
                         <span
-                          className="font-ui rounded-[3px] px-1.5 py-0.5 text-[11px] text-white"
+                          className="font-ui rounded-none px-1.5 py-0.5 text-[11px] text-white"
                           style={{ background: urgVar("low") }}
                         >
                           {p.ganho}
@@ -181,7 +181,7 @@ export default async function Page() {
                         {p.alvos.map((a) => (
                           <li
                             key={a.nome}
-                            className="rounded-[4px] bg-sand px-2 py-1 text-[12px] text-smoke"
+                            className="rounded-none bg-sand px-2 py-1 text-[12px] text-smoke"
                           >
                             {a.nome}
                             {a.valor && <span className="text-pebble"> · {a.valor}</span>}

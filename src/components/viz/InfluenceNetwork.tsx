@@ -77,7 +77,7 @@ export function InfluenceNetwork({
         callouts.map((c, i) => (
           <div
             key={i}
-            className="pointer-events-none absolute hidden rounded-[6px] border border-ash bg-paper px-2.5 py-1.5 shadow-[0_1px_2px_rgba(0,0,0,0.04)] sm:block"
+            className="pointer-events-none absolute hidden rounded-none border border-ash bg-paper px-2.5 py-1.5 shadow-[0_1px_2px_rgba(0,0,0,0.04)] sm:block"
             style={{ left: `${c.x * 100}%`, top: `${c.y * 100}%`, transform: "translate(-50%,-130%)" }}
           >
             <span className="font-ui text-[12px] font-medium text-ink">{c.label}</span>

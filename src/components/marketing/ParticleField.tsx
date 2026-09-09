@@ -129,8 +129,8 @@ export function ParticleField({ children }: { children: React.ReactNode }) {
 
       if (formed > 0.06) {
         const g = ctx.createRadialGradient(cx, cy, R * 0.15, cx, cy, R * 1.6);
-        g.addColorStop(0, `rgba(219,245,112,${(0.13 * formed * visible).toFixed(3)})`);
-        g.addColorStop(1, "rgba(219,245,112,0)");
+        g.addColorStop(0, `rgba(17,185,129,${(0.12 * formed * visible).toFixed(3)})`);
+        g.addColorStop(1, "rgba(17,185,129,0)");
         ctx.fillStyle = g;
         ctx.fillRect(0, 0, w, h);
       }
@@ -149,11 +149,11 @@ export function ParticleField({ children }: { children: React.ReactNode }) {
         const y = spy + (gpy - spy) * formed;
 
         const depth = (rz + 1) / 2;
-        let alpha = pt.land ? 0.4 + depth * 0.55 : 0.14 + depth * 0.26;
-        alpha = (0.16 + (alpha - 0.16) * formed) * visible;
+        let alpha = pt.land ? 0.55 + depth * 0.4 : 0.22 + depth * 0.3;
+        alpha = (0.24 + (alpha - 0.24) * formed) * visible;
 
         const s = pt.size * (0.7 + depth * 0.5);
-        ctx.fillStyle = `rgba(219,245,112,${alpha.toFixed(3)})`;
+        ctx.fillStyle = `rgba(17,185,129,${alpha.toFixed(3)})`;
         ctx.fillRect(x - s / 2, y - s / 2, s, s);
       }
       raf = requestAnimationFrame(draw);

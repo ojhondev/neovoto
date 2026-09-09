@@ -21,7 +21,7 @@ export default async function PlanosPage() {
           <p className="t-eyebrow mb-3">{p.kicker}</p>
           <h1 className="t-display max-w-3xl">{p.title}</h1>
           <p className="mt-5 max-w-xl text-body text-fossil">{p.sub}</p>
-          <p className="font-ui mt-4 inline-block rounded-[4px] bg-sand px-2 py-1 text-caption text-smoke">
+          <p className="font-ui mt-4 inline-block rounded-none bg-sand px-2 py-1 text-caption text-smoke">
             {p.mock}
           </p>
         </section>
@@ -35,7 +35,7 @@ export default async function PlanosPage() {
               return (
                 <div key={plan.name} className="relative flex flex-col bg-paper p-6">
                   {i === 1 && (
-                    <span className="font-ui absolute right-4 top-4 rounded-[4px] bg-chartreuse px-2 py-0.5 text-[11px] text-ink-accent">
+                    <span className="font-ui absolute right-4 top-4 rounded-none bg-chartreuse px-2 py-0.5 text-[11px] text-ink-accent">
                       {p.mostPopular}
                     </span>
                   )}

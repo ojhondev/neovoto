@@ -215,7 +215,7 @@ export function OnboardingFlow({ dict }: { dict: Dict }) {
           <h1 className="t-heading-lg">{dict.title}</h1>
           <p className="mt-4 text-body text-fossil">{dict.sub}</p>
 
-          <div className="mt-8 flex items-center gap-2 rounded-[8px] border border-pebble bg-paper px-3">
+          <div className="mt-8 flex items-center gap-2 rounded-none border border-pebble bg-paper px-3">
             <Search size={16} className="text-fossil" />
             <input
               autoFocus
@@ -232,7 +232,7 @@ export function OnboardingFlow({ dict }: { dict: Dict }) {
           </div>
 
           <div
-            className="mt-3 divide-y divide-ash overflow-hidden rounded-[8px] border border-ash"
+            className="mt-3 divide-y divide-ash overflow-hidden rounded-none border border-ash"
             hidden={!canSearch}
           >
             {fed.map((r) => (
@@ -247,7 +247,7 @@ export function OnboardingFlow({ dict }: { dict: Dict }) {
                   alt=""
                   width={36}
                   height={48}
-                  className="h-12 w-9 shrink-0 rounded-[3px] object-cover"
+                  className="h-12 w-9 shrink-0 rounded-none object-cover"
                   unoptimized
                 />
                 <span className="min-w-0">
@@ -273,7 +273,7 @@ export function OnboardingFlow({ dict }: { dict: Dict }) {
                   type="button"
                   onClick={buscarTodosCargos}
                   disabled={tseLoading}
-                  className="font-ui inline-flex items-center gap-2 rounded-[8px] border border-ash bg-paper px-3 py-2 text-body-sm text-smoke hover:bg-bone"
+                  className="font-ui inline-flex items-center gap-2 rounded-none border border-ash bg-paper px-3 py-2 text-body-sm text-smoke hover:bg-bone"
                 >
                   {tseLoading ? (
                     <>
@@ -288,7 +288,7 @@ export function OnboardingFlow({ dict }: { dict: Dict }) {
               ) : (
                 <>
                   <p className="t-eyebrow mb-2">TSE · 1996–2022</p>
-                  <div className="divide-y divide-ash overflow-hidden rounded-[8px] border border-ash">
+                  <div className="divide-y divide-ash overflow-hidden rounded-none border border-ash">
                     {tse.map((r) => (
                       <button
                         key={r.externalId}
@@ -296,7 +296,7 @@ export function OnboardingFlow({ dict }: { dict: Dict }) {
                         onClick={() => pick({ kind: "tse", data: r })}
                         className="flex w-full items-center gap-3 bg-paper px-3 py-2.5 text-left transition-colors hover:bg-bone"
                       >
-                        <span className="flex h-12 w-9 shrink-0 items-center justify-center rounded-[3px] bg-sand">
+                        <span className="flex h-12 w-9 shrink-0 items-center justify-center rounded-none bg-sand">
                           <UserRound size={16} className="text-fossil" />
                         </span>
                         <span className="min-w-0">
@@ -307,7 +307,7 @@ export function OnboardingFlow({ dict }: { dict: Dict }) {
                             {r.partido}-{r.uf} · {r.casa}
                           </span>
                           {r.situacao && (
-                            <span className="font-ui mt-0.5 inline-block rounded-[3px] bg-sand px-1.5 text-[11px] text-smoke">
+                            <span className="font-ui mt-0.5 inline-block rounded-none bg-sand px-1.5 text-[11px] text-smoke">
                               {r.situacao}
                             </span>
                           )}
@@ -345,19 +345,19 @@ export function OnboardingFlow({ dict }: { dict: Dict }) {
                     value={manualForm.nome}
                     onChange={(e) => setManualForm((s) => ({ ...s, nome: e.target.value }))}
                     placeholder={dict.manualNome}
-                    className="font-ui w-full rounded-[8px] border border-ash bg-paper px-3 py-2.5 text-body-sm outline-none"
+                    className="font-ui w-full rounded-none border border-ash bg-paper px-3 py-2.5 text-body-sm outline-none"
                   />
                   <div className="flex gap-3">
                     <input
                       value={manualForm.partido}
                       onChange={(e) => setManualForm((s) => ({ ...s, partido: e.target.value.toUpperCase() }))}
                       placeholder={dict.manualPartido}
-                      className="font-ui w-full rounded-[8px] border border-ash bg-paper px-3 py-2.5 text-body-sm outline-none"
+                      className="font-ui w-full rounded-none border border-ash bg-paper px-3 py-2.5 text-body-sm outline-none"
                     />
                     <select
                       value={manualForm.uf}
                       onChange={(e) => setManualForm((s) => ({ ...s, uf: e.target.value }))}
-                      className="font-ui w-28 shrink-0 rounded-[8px] border border-ash bg-paper px-3 py-2.5 text-body-sm outline-none"
+                      className="font-ui w-28 shrink-0 rounded-none border border-ash bg-paper px-3 py-2.5 text-body-sm outline-none"
                     >
                       <option value="">{dict.manualUf}</option>
                       {UFS.map((u) => (
@@ -372,7 +372,7 @@ export function OnboardingFlow({ dict }: { dict: Dict }) {
                       value={manualForm.municipioBase}
                       onChange={(e) => setManualForm((s) => ({ ...s, municipioBase: e.target.value }))}
                       placeholder={dict.manualBase}
-                      className="font-ui w-full rounded-[8px] border border-ash bg-paper px-3 py-2.5 text-body-sm outline-none"
+                      className="font-ui w-full rounded-none border border-ash bg-paper px-3 py-2.5 text-body-sm outline-none"
                     />
                     <p className="font-ui mt-1 text-caption text-pebble">{dict.manualBaseHint}</p>
                   </div>
@@ -424,18 +424,18 @@ export function OnboardingFlow({ dict }: { dict: Dict }) {
           <input type="hidden" name="cargoAlvo" value={cargoAlvo} />
           <input type="hidden" name="apoios" value={JSON.stringify(apoios)} />
 
-          <div className="flex items-center gap-3 rounded-[12px] border border-ash bg-paper p-3">
+          <div className="flex items-center gap-3 rounded-none border border-ash bg-paper p-3">
             {picked.kind === "fed" && picked.data.foto ? (
               <Image
                 src={picked.data.foto}
                 alt=""
                 width={44}
                 height={58}
-                className="h-[58px] w-11 shrink-0 rounded-[4px] object-cover"
+                className="h-[58px] w-11 shrink-0 rounded-none object-cover"
                 unoptimized
               />
             ) : (
-              <span className="flex h-[58px] w-11 shrink-0 items-center justify-center rounded-[4px] bg-sand">
+              <span className="flex h-[58px] w-11 shrink-0 items-center justify-center rounded-none bg-sand">
                 <UserRound size={20} className="text-fossil" />
               </span>
             )}
@@ -465,7 +465,7 @@ export function OnboardingFlow({ dict }: { dict: Dict }) {
               <label
                 key={c.value}
                 className={
-                  "font-ui flex cursor-pointer items-center gap-2 rounded-[8px] border px-3 py-2 text-body-sm transition-colors " +
+                  "font-ui flex cursor-pointer items-center gap-2 rounded-none border px-3 py-2 text-body-sm transition-colors " +
                   (cargoAlvo === c.value ? "border-ink bg-sand" : "border-ash bg-paper hover:bg-bone")
                 }
               >
@@ -488,7 +488,7 @@ export function OnboardingFlow({ dict }: { dict: Dict }) {
               {apoios.map((a) => (
                 <li
                   key={a.externalId}
-                  className="font-ui inline-flex items-center gap-1.5 rounded-[4px] bg-sand px-2 py-1 text-caption text-smoke"
+                  className="font-ui inline-flex items-center gap-1.5 rounded-none bg-sand px-2 py-1 text-caption text-smoke"
                 >
                   {a.nome}
                   {a.uf ? ` (${a.uf})` : ""}
@@ -503,7 +503,7 @@ export function OnboardingFlow({ dict }: { dict: Dict }) {
               ))}
             </ul>
           )}
-          <div className="mt-3 flex items-center gap-2 rounded-[8px] border border-ash bg-paper px-3">
+          <div className="mt-3 flex items-center gap-2 rounded-none border border-ash bg-paper px-3">
             <Search size={15} className="text-fossil" />
             <input
               value={apq}
@@ -514,7 +514,7 @@ export function OnboardingFlow({ dict }: { dict: Dict }) {
             {apLoading && <Loader2 size={14} className="animate-spin text-fossil" />}
           </div>
           {apHits.length > 0 && (
-            <ul className="mt-2 divide-y divide-ash overflow-hidden rounded-[8px] border border-ash">
+            <ul className="mt-2 divide-y divide-ash overflow-hidden rounded-none border border-ash">
               {apHits.map((h, i) => (
                 <li key={i}>
                   <button
@@ -546,7 +546,7 @@ export function OnboardingFlow({ dict }: { dict: Dict }) {
               <label
                 key={o.value}
                 className={
-                  "font-ui flex cursor-pointer items-center gap-3 rounded-[8px] border px-3 py-2.5 text-body-sm transition-colors " +
+                  "font-ui flex cursor-pointer items-center gap-3 rounded-none border px-3 py-2.5 text-body-sm transition-colors " +
                   (objective === o.value
                     ? "border-ink bg-sand"
                     : "border-ash bg-paper hover:bg-bone")

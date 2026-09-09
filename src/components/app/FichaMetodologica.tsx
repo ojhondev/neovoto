@@ -36,7 +36,7 @@ export function FichaMetodologica({
         <h3 className="t-heading text-[20px]">{labels.title}</h3>
         <span className="flex items-center gap-2">
           <span
-            className="font-ui rounded-[4px] px-2 py-0.5 text-[11px] font-medium text-white"
+            className="font-ui rounded-none px-2 py-0.5 text-[11px] font-medium text-white"
             style={{ background: st.cor }}
           >
             {pt ? st.pt : st.en}
@@ -62,7 +62,7 @@ export function FichaMetodologica({
           <p className="t-eyebrow mb-1">{labels.sources}</p>
           <div className="mt-1 flex flex-wrap gap-2">
             {ficha.fontes.map((f) => (
-              <span key={f} className="font-ui rounded-[4px] bg-sand px-2 py-1 text-caption text-smoke">
+              <span key={f} className="font-ui rounded-none bg-sand px-2 py-1 text-caption text-smoke">
                 {f}
               </span>
             ))}

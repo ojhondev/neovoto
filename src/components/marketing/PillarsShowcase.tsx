@@ -23,13 +23,13 @@ const PANEL_BG: Record<Pillar["panel"], string> = {
 
 function MiniTerritorio() {
   return (
-    <div className="w-full max-w-xs rounded-[12px] border border-ash bg-paper p-4">
+    <div className="w-full max-w-xs rounded-none border border-ash bg-paper p-4">
       <p className="font-ui text-caption text-fossil">Perfil territorial</p>
       <div className="mt-3 grid grid-cols-8 gap-1">
         {Array.from({ length: 40 }).map((_, i) => (
           <div
             key={i}
-            className="aspect-square rounded-[2px]"
+            className="aspect-square rounded-none"
             style={{
               background: i % 5 === 0 ? "var(--color-negative)" : i % 3 === 0 ? "#c9a227" : "var(--color-olive)",
               opacity: 0.3 + ((i * 7) % 10) / 14,
@@ -56,7 +56,7 @@ function MiniCenario() {
     { n: "Sem coligação", a: 31, b: 44, m: 37 },
   ];
   return (
-    <div className="w-full max-w-xs rounded-[12px] border border-ash bg-paper p-4">
+    <div className="w-full max-w-xs rounded-none border border-ash bg-paper p-4">
       <p className="font-ui text-caption text-fossil">Cenário estatístico</p>
       <div className="mt-3 space-y-3">
         {rows.map((r) => (
@@ -65,8 +65,8 @@ function MiniCenario() {
               <span>{r.n}</span>
               <span className="text-fossil">{r.a}–{r.b}%</span>
             </div>
-            <div className="relative h-3 rounded-[3px] bg-sand">
-              <div className="absolute inset-y-0 rounded-[3px] bg-olive/25" style={{ left: `${r.a}%`, width: `${r.b - r.a}%` }} />
+            <div className="relative h-3 rounded-none bg-sand">
+              <div className="absolute inset-y-0 rounded-none bg-olive/25" style={{ left: `${r.a}%`, width: `${r.b - r.a}%` }} />
               <div className="absolute inset-y-0 w-0.5 bg-ink" style={{ left: `${r.m}%` }} />
               <div className="absolute inset-y-0 w-px bg-negative" style={{ left: "50%" }} />
             </div>
@@ -85,7 +85,7 @@ function MiniPropostas() {
     { t: "Emprego", p: 30, d: 70 },
   ];
   return (
-    <div className="w-full max-w-xs rounded-[12px] border border-ash bg-paper p-4">
+    <div className="w-full max-w-xs rounded-none border border-ash bg-paper p-4">
       <p className="font-ui text-caption text-fossil">Mapa de propostas</p>
       <div className="mt-3 space-y-2.5">
         {rows.map((r) => (
@@ -94,9 +94,9 @@ function MiniPropostas() {
               <span>{r.t}</span>
               {r.d - r.p > 25 && <span className="text-negative">lacuna</span>}
             </div>
-            <div className="relative h-3 rounded-[3px] bg-sand">
-              <div className="absolute inset-y-0 left-0 rounded-[3px] bg-chartreuse" style={{ width: `${r.d}%` }} />
-              <div className="absolute inset-y-0 left-0 rounded-[3px] bg-ink/85" style={{ width: `${r.p}%` }} />
+            <div className="relative h-3 rounded-none bg-sand">
+              <div className="absolute inset-y-0 left-0 rounded-none bg-chartreuse" style={{ width: `${r.d}%` }} />
+              <div className="absolute inset-y-0 left-0 rounded-none bg-ink/85" style={{ width: `${r.p}%` }} />
             </div>
           </div>
         ))}
@@ -158,7 +158,7 @@ export function PillarsShowcase({
               onClick={() => setActive(i)}
               aria-pressed={i === active}
               className={
-                "font-display rounded-[8px] px-4 py-2 text-[clamp(1.6rem,4vw,2.6rem)] font-light tracking-[-0.03em] transition-colors " +
+                "font-display rounded-none px-4 py-2 text-[clamp(1.6rem,4vw,2.6rem)] font-light tracking-[-0.03em] transition-colors " +
                 (i === active ? "bg-sand text-ink" : "text-pebble hover:text-fossil")
               }
             >
@@ -176,7 +176,7 @@ export function PillarsShowcase({
             </Link>
           </div>
           <div
-            className="on-light flex min-h-[300px] items-center justify-center rounded-[12px] p-8"
+            className="on-light flex min-h-[300px] items-center justify-center rounded-none p-8"
             style={{ background: PANEL_BG[p.panel] }}
           >
             {p.panel === "territorio" && <MiniTerritorio />}

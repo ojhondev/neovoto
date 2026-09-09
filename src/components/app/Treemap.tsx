@@ -144,7 +144,7 @@ export function Treemap({
       </div>
       <div className="font-ui self-start text-body-sm">
         {hover ? (
-          <div className="rounded-[6px] border border-ash bg-paper p-3">
+          <div className="rounded-none border border-ash bg-paper p-3">
             <p className="text-body text-ink">{hover.label}</p>
             <p className="mt-1 text-caption text-fossil">{hover.grupo}</p>
             {hover.sub && <p className="text-caption text-fossil">{hover.sub}</p>}

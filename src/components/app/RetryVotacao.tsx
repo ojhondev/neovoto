@@ -19,7 +19,7 @@ export function RetryVotacao({ label }: { label: string }) {
             setDone(r);
           })
         }
-        className="font-ui inline-flex items-center gap-2 rounded-[8px] border border-ash bg-paper px-3 py-1.5 text-body-sm text-smoke hover:bg-bone"
+        className="font-ui inline-flex items-center gap-2 rounded-none border border-ash bg-paper px-3 py-1.5 text-body-sm text-smoke hover:bg-bone"
       >
         {pending ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />}
         {label}

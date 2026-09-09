@@ -75,7 +75,7 @@ export function Donut({
       <ul className="min-w-0 flex-1 space-y-2">
         {segments.map((seg) => (
           <li key={seg.label} className="flex items-center gap-2 text-body-sm">
-            <span className="h-2.5 w-2.5 shrink-0 rounded-[3px]" style={{ background: seg.color }} />
+            <span className="h-2.5 w-2.5 shrink-0 rounded-none" style={{ background: seg.color }} />
             <span className="flex-1 truncate text-body">{seg.label}</span>
             <span className="font-semibold tabular-nums text-ink">{seg.value}</span>
           </li>

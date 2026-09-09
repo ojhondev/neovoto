@@ -274,7 +274,7 @@ export function TerritoryMap({
 
       {hover && (
         <div
-          className="pointer-events-none absolute z-10 rounded-[6px] border border-ash bg-paper px-2.5 py-1.5 shadow-[0_1px_3px_rgba(0,0,0,0.08)]"
+          className="pointer-events-none absolute z-10 rounded-none border border-ash bg-paper px-2.5 py-1.5 shadow-[0_1px_3px_rgba(0,0,0,0.08)]"
           style={{ left: hover.x + 12, top: hover.y + 12 }}
         >
           <span className="font-ui block text-[12px] font-medium text-ink">{hover.nome}</span>
@@ -282,7 +282,7 @@ export function TerritoryMap({
         </div>
       )}
 
-      <div className="absolute right-3 top-3 z-10 flex flex-col overflow-hidden rounded-[6px] border border-ash bg-paper">
+      <div className="absolute right-3 top-3 z-10 flex flex-col overflow-hidden rounded-none border border-ash bg-paper">
         <button
           type="button"
           aria-label="Aproximar"
@@ -307,12 +307,12 @@ export function TerritoryMap({
       </div>
 
       {hasData && (
-        <div className="font-ui absolute bottom-3 left-3 z-10 rounded-[6px] border border-ash bg-paper/90 px-2.5 py-1.5 text-[11px] text-fossil backdrop-blur">
+        <div className="font-ui absolute bottom-3 left-3 z-10 rounded-none border border-ash bg-paper/90 px-2.5 py-1.5 text-[11px] text-fossil backdrop-blur">
           <span className="mb-1 block uppercase tracking-wider text-pebble">{metricLabel}</span>
           <span className="flex items-center gap-1.5">
             {formatValue(minV)}
             <span
-              className="inline-block h-2 w-20 rounded-[2px]"
+              className="inline-block h-2 w-20 rounded-none"
               style={{
                 background: `linear-gradient(90deg, ${RAMP[scale].join(", ")})`,
               }}

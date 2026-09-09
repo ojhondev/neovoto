@@ -14,7 +14,7 @@ export function LocaleSwitcher({ current }: { current: Locale }) {
             value={loc}
             aria-pressed={active}
             className={
-              "rounded-[4px] px-1.5 py-0.5 uppercase tracking-wider transition-colors " +
+              "rounded-none px-1.5 py-0.5 uppercase tracking-wider transition-colors " +
               (active
                 ? "bg-ink text-paper"
                 : "text-fossil hover:text-ink")

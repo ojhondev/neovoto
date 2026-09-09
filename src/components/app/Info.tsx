@@ -29,7 +29,7 @@ export function Info({
       <span
         role="tooltip"
         className={
-          "pointer-events-none absolute left-1/2 z-40 w-64 -translate-x-1/2 rounded-[6px] border border-ash bg-paper p-3 text-left text-caption leading-snug text-smoke opacity-0 shadow-[0_8px_24px_rgba(0,0,0,0.12)] transition-opacity duration-150 group-hover/info:opacity-100 group-focus-within/info:opacity-100 " +
+          "pointer-events-none absolute left-1/2 z-40 w-64 -translate-x-1/2 rounded-none border border-ash bg-paper p-3 text-left text-caption leading-snug text-smoke opacity-0 shadow-[0_8px_24px_rgba(0,0,0,0.12)] transition-opacity duration-150 group-hover/info:opacity-100 group-focus-within/info:opacity-100 " +
           (side === "top" ? "bottom-full mb-2" : "top-full mt-2")
         }
       >

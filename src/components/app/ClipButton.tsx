@@ -32,7 +32,7 @@ export function ClipButton({
       onClick={go}
       disabled={pending}
       className={
-        "font-ui inline-flex shrink-0 items-center gap-1.5 rounded-[4px] border px-2 py-1 text-[11px] transition-colors " +
+        "font-ui inline-flex shrink-0 items-center gap-1.5 rounded-none border px-2 py-1 text-[11px] transition-colors " +
         (done
           ? "border-olive text-olive"
           : "border-ash text-fossil hover:border-fossil hover:text-ink") +

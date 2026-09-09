@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowRight, ArrowDown } from "lucide-react";
 import { SiteHeader } from "@/components/marketing/SiteHeader";
+import { HeroPreview } from "@/components/marketing/HeroPreview";
 import { SiteFooter } from "@/components/marketing/SiteFooter";
 import { Reveal } from "@/components/marketing/Reveal";
 import { ParticleField } from "@/components/marketing/ParticleField";
@@ -8,7 +9,6 @@ import { PillarsShowcase, type Pillar } from "@/components/marketing/PillarsShow
 import { Marquee } from "@/components/marketing/Marquee";
 import { Testimonials } from "@/components/marketing/Testimonials";
 import { Faq } from "@/components/marketing/Faq";
-import { InfluenceNetwork } from "@/components/viz/InfluenceNetwork";
 import { getDictionary } from "@/lib/i18n";
 import { TOOLS, toolPath } from "@/lib/tools";
 
@@ -34,34 +34,27 @@ export default async function LandingPage() {
         <main>
           <ParticleField>
           {/* HERO — fundo transparente, partículas atrás */}
-          <section className={`${FLUID} flex min-h-[86vh] flex-col justify-center py-16`}>
-            <div className="grid items-center gap-12 lg:grid-cols-[1.1fr_0.9fr]">
+          <section className={`${FLUID} flex min-h-[82vh] flex-col justify-center py-16`}>
+            <div className="grid items-center gap-14 lg:grid-cols-[1fr_1.05fr]">
               <div>
-                <p className="t-eyebrow mb-5">{t.landing.heroKicker}</p>
-                <h1 className="t-display max-w-[14ch]">
-                  {t.landing.heroTitle}{" "}
-                  <span className="mark">{t.landing.heroTitleAccent}</span>
+                <h1 className="t-display max-w-[16ch]">
+                  {t.landing.heroTitle} {t.landing.heroTitleAccent}
                 </h1>
-                <p className="mt-7 max-w-xl text-body text-fossil">{t.landing.heroSub}</p>
-                <div className="mt-9 flex flex-wrap gap-3">
-                  <Link href="/onboarding" className="btn btn-primary">
+                <p className="mt-8 max-w-lg text-body leading-relaxed text-body">{t.landing.heroSub}</p>
+                <div className="mt-10 flex flex-wrap items-center gap-6">
+                  <Link href="/onboarding" className="btn btn-lg btn-dark">
                     {t.landing.heroPrimary} <ArrowRight size={16} />
                   </Link>
-                  <Link href="/#ferramentas" className="btn btn-ghost">
+                  <Link href="/#ferramentas" className="nav-link text-body-sm font-medium">
                     {t.landing.heroSecondary}
                   </Link>
                 </div>
               </div>
               <Reveal delay={80}>
-                <div className="rotate-[0.6deg]">
-                  <p className="font-ui mb-2 text-caption text-fossil">
-                    {t.tools.influenceMap.name} — {t.common.preview}
-                  </p>
-                  <InfluenceNetwork compact />
-                </div>
+                <HeroPreview />
               </Reveal>
             </div>
-            <div className="mt-14 flex items-center gap-2 text-fossil">
+            <div className="mt-16 flex items-center gap-2 text-faint">
               <ArrowDown size={14} />
               <span className="font-ui text-caption uppercase tracking-[0.14em]">
                 {t.landing.scrollCue}

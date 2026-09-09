@@ -53,7 +53,7 @@ export default async function PainelLayout({
             <button
               type="button"
               aria-label={locale === "pt" ? "Notificações" : "Notifications"}
-              className="relative rounded-[8px] p-1.5 text-muted transition-colors hover:bg-sand hover:text-ink"
+              className="relative rounded-none p-1.5 text-muted transition-colors hover:bg-sand hover:text-ink"
             >
               <Bell size={17} />
               <span className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-danger" />

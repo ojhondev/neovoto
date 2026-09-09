@@ -140,7 +140,7 @@ export default async function Page() {
       howItWorks={howItWorks}
       outputs={outputs}
     >
-      <h2 className="t-heading flex items-center text-[22px]">
+      <h2 className="t-heading flex items-center">
         {t.tools.influenceMap.name} <span className="mark ml-1 text-caption">{t.influencia.tag}</span>
         <Info label={t.influencia.tag}>{t.tools.influenceMap.desc}</Info>
       </h2>
@@ -148,7 +148,7 @@ export default async function Page() {
         {fill(t.influencia.intro, { uf: ufNome, pleito })}
       </p>
 
-      <div className="mt-4 rounded-[10px] border border-ash bg-paper p-4">
+      <div className="mt-4 rounded-none border border-ash bg-paper p-4">
         <p className="t-eyebrow">
           {pt ? "Sua influência como candidato" : "Your reach as a candidate"}
         </p>
@@ -167,7 +167,7 @@ export default async function Page() {
             </p>
             <ul className="mt-2 flex flex-wrap gap-1.5">
               {topAlcance.map((m) => (
-                <li key={m.nome} className="font-ui rounded-[4px] bg-sand px-2 py-1 text-caption text-smoke">
+                <li key={m.nome} className="font-ui rounded-none bg-sand px-2 py-1 text-caption text-smoke">
                   {m.nome} · {Math.round(m.v * 100)}
                 </li>
               ))}
@@ -178,7 +178,7 @@ export default async function Page() {
 
       {rede && rede.nos.length >= 3 && (
         <div className="card mt-6">
-          <h3 className="t-heading flex items-center text-[20px]">
+          <h3 className="t-heading flex items-center">
             {pt ? "Rede de mandatos — bancada federal de " : "Mandate network — federal delegation of "}
             {ufNome}
           </h3>
@@ -257,7 +257,7 @@ export default async function Page() {
                 <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ background: cor }} />
                 <p className="t-eyebrow">{info}</p>
               </div>
-              <p className="font-ui mt-2 text-[26px] font-light leading-none text-ink">
+              <p className="font-ui mt-2 text-[26px] font-semibold leading-none text-ink">
                 {Math.round(b.share * 100)}%
               </p>
               <p className="font-ui mt-1 text-caption text-pebble">
@@ -265,7 +265,7 @@ export default async function Page() {
               </p>
               <p className="font-ui mt-2 flex flex-wrap gap-1">
                 {b.partidos.slice(0, 8).map((p) => (
-                  <span key={p} className="rounded-[3px] bg-sand px-1.5 py-0.5 text-[11px] text-smoke">
+                  <span key={p} className="rounded-none bg-sand px-1.5 py-0.5 text-[11px] text-smoke">
                     {p}
                   </span>
                 ))}

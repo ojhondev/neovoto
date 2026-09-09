@@ -131,14 +131,14 @@ export default async function Page() {
       howItWorks={howItWorks}
       outputs={outputs}
     >
-      <h2 className="t-heading flex items-center text-[22px]">
+      <h2 className="t-heading flex items-center">
         {t.tools.coalitions.name} <span className="mark ml-1 text-caption">{t.coligacoes.tag}</span>
         <Info label={t.coligacoes.tag}>{t.coligacoes.note}</Info>
       </h2>
       <p className="mt-2 max-w-2xl text-body-sm text-fossil">
         {fill(t.coligacoes.intro, { nome: perfil.nome, partido: res.partidoBase, uf: ufNome, pleito })}
       </p>
-      <p className="font-ui mt-3 inline-block rounded-[4px] bg-sand px-2 py-1 text-caption text-smoke">
+      <p className="font-ui mt-3 inline-block rounded-none bg-sand px-2 py-1 text-caption text-smoke">
         {fill(t.coligacoes.base, { partido: res.partidoBase })}: {res.baseVotos.toLocaleString(locale)}{" "}
         {fill(t.coligacoes.baseVotes, { uf: ufNome, pleito })}
       </p>
@@ -166,9 +166,9 @@ export default async function Page() {
                 <td className="py-2.5 pr-3">
                   <span
                     className={
-                      "rounded-[3px] px-1.5 py-0.5 text-[11px] " +
+                      "rounded-none px-1.5 py-0.5 text-[11px] " +
                       (p.afinidade === "afim"
-                        ? "bg-olive/20 text-smoke"
+                        ? "bg-brand-tint text-smoke"
                         : p.afinidade === "tensao"
                           ? "bg-[#c9772f]/20 text-smoke"
                           : "bg-sand text-smoke")
@@ -179,9 +179,9 @@ export default async function Page() {
                 </td>
                 <td className="py-2.5 pr-3">
                   <div className="flex items-center justify-end gap-2">
-                    <span className="h-1.5 w-16 rounded-[2px] bg-sand">
+                    <span className="h-1.5 w-16 rounded-none bg-sand">
                       <span
-                        className="block h-full rounded-[2px] bg-olive"
+                        className="block h-full rounded-none bg-brand"
                         style={{ width: `${Math.round((p.ganhoLiquido / maxLiq) * 100)}%` }}
                       />
                     </span>

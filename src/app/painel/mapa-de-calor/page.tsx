@@ -118,7 +118,7 @@ export default async function Page() {
             ]
       }
     >
-      <h2 className="t-heading flex items-center text-[22px]">
+      <h2 className="t-heading flex items-center">
         {t.ifet.name} <span className="mark ml-1 text-caption">{t.ifet.tag} {ifet.version}</span>
         <IfetInfo />
       </h2>

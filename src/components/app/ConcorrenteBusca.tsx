@@ -89,7 +89,7 @@ export function ConcorrenteBusca({
 
   return (
     <div>
-      <div className="flex items-center gap-2 rounded-[8px] border border-ash bg-paper px-3 py-2">
+      <div className="flex items-center gap-2 rounded-none border border-ash bg-paper px-3 py-2">
         <Search size={15} className="shrink-0 text-pebble" />
         <input
           value={q}
@@ -105,7 +105,7 @@ export function ConcorrenteBusca({
       </label>
       {err && <p className="font-ui mt-2 text-caption text-urg-crit">{err}</p>}
       {hits.length > 0 && (
-        <ul className="mt-2 divide-y divide-ash rounded-[8px] border border-ash">
+        <ul className="mt-2 divide-y divide-ash rounded-none border border-ash">
           {hits.map((h) => (
             <li key={`${h.source}-${h.externalId}`}>
               <button

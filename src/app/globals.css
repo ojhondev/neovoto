@@ -12,8 +12,8 @@
   --color-canvas: #f4f6f7;        /* fundo da página */
   --color-surface: #ffffff;       /* cartão */
   --color-surface-2: #fafbfc;     /* cartão recuado / cabeçalho de tabela */
-  --color-rail: #0c0f13;          /* barra lateral escura */
-  --color-rail-2: #161a20;        /* item ativo na barra */
+  --color-rail: #000000;          /* barra lateral escura */
+  --color-rail-2: #141414;        /* item ativo na barra */
   --color-line: #e5e8eb;          /* hairline padrão */
   --color-line-strong: #d3d8dd;   /* divisor mais forte */
 
@@ -86,7 +86,7 @@
   /* ---- Aliases legados (mantêm o restante do produto coerente) ---- */
   --color-bone: #f4f6f7;
   --color-paper: #ffffff;
-  --color-charcoal: #0c0f13;
+  --color-charcoal: #000000;
   --color-fossil: #667180;
   --color-pebble: #97a1ad;
   --color-smoke: #39424d;
@@ -109,23 +109,23 @@
   --text-body: 14px;
   --text-heading-sm: 16px;
   --text-heading: 20px;
-  --text-heading-lg: 28px;
-  --text-display: 40px;
-  --text-display-lg: 52px;
-  --text-hero: 60px;
+  --text-heading-lg: 34px;
+  --text-display: 52px;
+  --text-display-lg: 72px;
+  --text-hero: 88px;
 
   /* ---- Espaçamento ---- */
   --spacing-section: 72px;
 
   /* ---- Raios ---- */
-  --radius-badge: 6px;
-  --radius-input: 8px;
-  --radius-button: 8px;
-  --radius-card: 12px;
-  --radius-card-lg: 14px;
+  --radius-badge: 0px;
+  --radius-input: 0px;
+  --radius-button: 0px;
+  --radius-card: 0px;
+  --radius-card-lg: 0px;
 
-  /* ---- Sombra ---- */
-  --shadow-card: 0 1px 2px rgba(12, 17, 23, 0.04), 0 1px 3px rgba(12, 17, 23, 0.05);
+  /* ---- Sombra — cartões planos, definidos por borda de 1px ---- */
+  --shadow-card: none;
   --shadow-pop: 0 8px 24px rgba(12, 17, 23, 0.12), 0 2px 6px rgba(12, 17, 23, 0.08);
 
   /* ---- Layout ---- */
@@ -139,13 +139,13 @@
 /* ---- Tema escuro — slate limpo, verde mantém ---- */
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --color-canvas: #0e1216;
-  --color-surface: #161b21;
-  --color-surface-2: #1b2128;
-  --color-rail: #0a0d10;
-  --color-rail-2: #1c222a;
-  --color-line: #262d36;
-  --color-line-strong: #333c47;
+  --color-canvas: #000000;
+  --color-surface: #121212;
+  --color-surface-2: #191919;
+  --color-rail: #000000;
+  --color-rail-2: #1e1e1e;
+  --color-line: #2a2a2a;
+  --color-line-strong: #3a3a3a;
   --color-ink: #eef1f4;
   --color-body: #c2c9d1;
   --color-muted: #939ca7;
@@ -168,11 +168,11 @@
   --color-q-priority: #2ecb8f;
   --color-q-expansion: #e7a24d;
   --color-q-stronghold: #7f8ce6;
-  --color-q-out: #3a424d;
+  --color-q-out: #2f2f2f;
   --color-risk-veryhigh: #7a72f0;
   --color-risk-high: #2ecb8f;
   --color-risk-medium: #8b95a2;
-  --color-risk-low: #3a424d;
+  --color-risk-low: #2f2f2f;
   --color-signal-left: #7ea6e6;
   --color-signal-center: #8b93a0;
   --color-signal-right: #e2957e;
@@ -196,18 +196,18 @@
   --color-cmp-self: #5b90f5;
   --color-cmp-other: #f05f9a;
   --color-cmp-third: #2ecb8f;
-  --color-bone: #0e1216;
-  --color-paper: #161b21;
-  --color-charcoal: #0a0d10;
+  --color-bone: #000000;
+  --color-paper: #121212;
+  --color-charcoal: #000000;
   --color-fossil: #939ca7;
   --color-pebble: #6b7580;
   --color-smoke: #c2c9d1;
-  --color-sand: #1f262e;
-  --color-ash: #262d36;
+  --color-sand: #1e1e1e;
+  --color-ash: #2a2a2a;
   --color-chartreuse: #2ecb8f;
   --color-olive: #25b981;
   --color-lavender: #8b7cf3;
-  --color-map-bg: #1b2128;
+  --color-map-bg: #191919;
   --color-mark: #1e4a3c;
   --color-ink-accent: #04211a;
   --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.3), 0 1px 3px rgba(0, 0, 0, 0.35);
@@ -216,13 +216,13 @@
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     color-scheme: dark;
-    --color-canvas: #0e1216;
-    --color-surface: #161b21;
-    --color-surface-2: #1b2128;
-    --color-rail: #0a0d10;
-    --color-rail-2: #1c222a;
-    --color-line: #262d36;
-    --color-line-strong: #333c47;
+    --color-canvas: #000000;
+    --color-surface: #121212;
+    --color-surface-2: #191919;
+    --color-rail: #000000;
+    --color-rail-2: #1e1e1e;
+    --color-line: #2a2a2a;
+    --color-line-strong: #3a3a3a;
     --color-ink: #eef1f4;
     --color-body: #c2c9d1;
     --color-muted: #939ca7;
@@ -245,11 +245,11 @@
     --color-q-priority: #2ecb8f;
     --color-q-expansion: #e7a24d;
     --color-q-stronghold: #7f8ce6;
-    --color-q-out: #3a424d;
+    --color-q-out: #2f2f2f;
     --color-risk-veryhigh: #7a72f0;
     --color-risk-high: #2ecb8f;
     --color-risk-medium: #8b95a2;
-    --color-risk-low: #3a424d;
+    --color-risk-low: #2f2f2f;
     --color-signal-left: #7ea6e6;
     --color-signal-center: #8b93a0;
     --color-signal-right: #e2957e;
@@ -273,18 +273,18 @@
     --color-cmp-self: #5b90f5;
     --color-cmp-other: #f05f9a;
     --color-cmp-third: #2ecb8f;
-    --color-bone: #0e1216;
-    --color-paper: #161b21;
-    --color-charcoal: #0a0d10;
+    --color-bone: #000000;
+    --color-paper: #121212;
+    --color-charcoal: #000000;
     --color-fossil: #939ca7;
     --color-pebble: #6b7580;
     --color-smoke: #c2c9d1;
-    --color-sand: #1f262e;
-    --color-ash: #262d36;
+    --color-sand: #1e1e1e;
+    --color-ash: #2a2a2a;
     --color-chartreuse: #2ecb8f;
     --color-olive: #25b981;
     --color-lavender: #8b7cf3;
-    --color-map-bg: #1b2128;
+    --color-map-bg: #191919;
     --color-mark: #1e4a3c;
     --color-ink-accent: #04211a;
     --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.3), 0 1px 3px rgba(0, 0, 0, 0.35);
@@ -357,21 +357,21 @@ h1, h2, h3, h4 {
 .t-hero {
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: clamp(2.4rem, 6vw, var(--text-hero));
+  font-size: clamp(2.9rem, 7vw, var(--text-hero));
   line-height: 1.04;
   letter-spacing: -0.03em;
 }
 .t-display {
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: clamp(2rem, 4.5vw, var(--text-display-lg));
+  font-size: clamp(2.4rem, 5.5vw, var(--text-display-lg));
   line-height: 1.08;
   letter-spacing: -0.025em;
 }
 .t-heading-lg {
   font-family: var(--font-display);
   font-weight: 600;
-  font-size: clamp(1.5rem, 3vw, var(--text-heading-lg));
+  font-size: clamp(1.9rem, 3.6vw, var(--text-heading-lg));
   line-height: 1.15;
   letter-spacing: -0.02em;
 }
@@ -409,7 +409,7 @@ h1, h2, h3, h4 {
   --color-faint: #97a1ad;
   --color-paper: #ffffff;
   --color-bone: #f4f6f7;
-  --color-charcoal: #0c0f13;
+  --color-charcoal: #000000;
   --color-fossil: #667180;
   --color-pebble: #97a1ad;
   --color-smoke: #39424d;
@@ -455,11 +455,15 @@ h1, h2, h3, h4 {
   border-color: var(--color-faint);
 }
 .btn-dark {
-  background: var(--color-ink);
-  color: var(--color-surface);
+  background: #000;
+  color: #fff;
 }
 .btn-dark:hover {
-  background: #000;
+  background: #1c1c1c;
+}
+.btn-lg {
+  padding: 14px 26px;
+  font-size: var(--text-body);
 }
 
 /* ---------- Cartões ---------- */

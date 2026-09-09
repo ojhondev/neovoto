@@ -137,13 +137,13 @@ export default async function Page() {
       howItWorks={howItWorks}
       outputs={outputs}
     >
-      <h2 className="t-heading text-[22px]">
+      <h2 className="t-heading">
         {t.radar.name} <span className="mark ml-1 text-caption">{t.radar.tag}</span>
       </h2>
       <p className="mt-2 max-w-2xl text-body-sm text-fossil">
         {fill(t.radar.intro, { dias: radar.janelaDias, n: radar.itensAnalisados, nome: perfil.nome })}
       </p>
-      <p className="font-ui mt-3 inline-block rounded-[4px] bg-sand px-2 py-1 text-caption text-smoke">
+      <p className="font-ui mt-3 inline-block rounded-none bg-sand px-2 py-1 text-caption text-smoke">
         {fill(t.radar.fieldNote, { partido: perfil.partido || "—", campo: campoLabel })}
       </p>
 
@@ -156,7 +156,7 @@ export default async function Page() {
                 className="inline-block h-2.5 w-2.5 shrink-0 rounded-full"
                 style={{ background: urgVar(URGENCIA_RADAR[k] ?? "none") }}
               />
-              <p className="font-ui text-[24px] font-light text-ink">{n}</p>
+              <p className="font-ui text-[24px] font-semibold text-ink">{n}</p>
             </div>
             <p className="font-ui mt-1 text-caption text-fossil">{tipoLabel[k]}</p>
           </div>
@@ -165,7 +165,7 @@ export default async function Page() {
 
       {/* ranking */}
       <div className="card mt-6">
-        <h3 className="t-heading flex items-center text-[20px]">
+        <h3 className="t-heading flex items-center">
           {t.radar.ranking}
           <Info label={t.radar.colHeat}>
             {pt
@@ -192,7 +192,7 @@ export default async function Page() {
 
       <FichaMetodologica ficha={FICHAS.radar(pt)} locale={locale} labels={t.ficha} />
 
-      <p className="font-ui mt-3 rounded-[4px] border border-ash bg-sand/60 p-3 text-caption text-smoke">
+      <p className="font-ui mt-3 rounded-none border border-ash bg-sand/60 p-3 text-caption text-smoke">
         {t.radar.disclaimer}
       </p>
     </ToolShell>

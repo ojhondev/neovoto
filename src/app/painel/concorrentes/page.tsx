@@ -171,7 +171,7 @@ export default async function Page() {
           {(() => {
             const leitura = interpretarComparacao(cmp.candidatos, locale === "pt", locale);
             return leitura ? (
-              <div className="mt-8 rounded-[var(--radius-card)] border-l-2 border-olive bg-paper p-4">
+              <div className="mt-8 rounded-[var(--radius-card)] border-l-2 border-l-brand bg-paper p-4">
                 <div className="flex items-start justify-between gap-3">
                   <p className="t-eyebrow mb-1">{locale === "pt" ? "O que a comparação diz" : "What the comparison says"}</p>
                   <ClipButton
@@ -189,7 +189,7 @@ export default async function Page() {
 
           {/* radar */}
           <section className="card mt-6">
-            <h2 className="t-heading text-[20px]">{t.concorrentes.radarTitle}</h2>
+            <h2 className="t-heading">{t.concorrentes.radarTitle}</h2>
             <div className="mt-4">
               <CompareRadar
                 candidatos={cmp.candidatos}
@@ -202,7 +202,7 @@ export default async function Page() {
 
           {/* scatter */}
           <section className="card mt-6">
-            <h2 className="t-heading text-[20px]">{t.concorrentes.scatterTitle}</h2>
+            <h2 className="t-heading">{t.concorrentes.scatterTitle}</h2>
             <div className="mt-4 overflow-x-auto rounded-[var(--radius-card)] border border-ash bg-map-bg p-2">
               <CompareScatter
                 candidatos={cmp.candidatos}
@@ -218,7 +218,7 @@ export default async function Page() {
 
           {/* tabela */}
           <section className="card mt-6 overflow-x-auto">
-            <h2 className="t-heading text-[20px]">{t.concorrentes.tableTitle}</h2>
+            <h2 className="t-heading">{t.concorrentes.tableTitle}</h2>
             <table className="mt-4 w-full min-w-[640px] text-left text-body-sm">
               <thead>
                 <tr className="font-ui text-caption uppercase tracking-wider text-pebble">

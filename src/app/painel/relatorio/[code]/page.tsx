@@ -58,14 +58,14 @@ export default async function Page({ params }: { params: Promise<{ code: string 
 
       {/* resumo executivo */}
       <section className="mt-6">
-        <h2 className="t-heading text-[20px]">{t.relatorio.execSummary}</h2>
+        <h2 className="t-heading">{t.relatorio.execSummary}</h2>
         <p className="mt-2 text-body text-ink">{rel.resumoExecutivo}</p>
       </section>
 
       {/* seções */}
       {rel.secoes.map((s) => (
         <section key={s.chave} className="mt-6">
-          <h2 className="t-heading text-[20px]">{s.titulo}</h2>
+          <h2 className="t-heading">{s.titulo}</h2>
           <div className="mt-2 space-y-2">
             {s.paragrafos.map((p, i) => (
               <p key={i} className="text-body-sm text-smoke">
@@ -76,7 +76,7 @@ export default async function Page({ params }: { params: Promise<{ code: string 
           {s.itens && s.itens.length > 0 && (
             <ul className="font-ui mt-3 flex flex-wrap gap-1.5">
               {s.itens.map((it) => (
-                <li key={it.label} className="rounded-[4px] bg-sand px-2 py-1 text-[12px] text-smoke">
+                <li key={it.label} className="rounded-none bg-sand px-2 py-1 text-[12px] text-smoke">
                   {it.label}
                   {it.valor && <span className="text-pebble"> · {it.valor}</span>}
                 </li>
@@ -89,7 +89,7 @@ export default async function Page({ params }: { params: Promise<{ code: string 
       {/* recortes da equipe */}
       {conteudo.recortes.length > 0 && (
         <section className="mt-6">
-          <h2 className="t-heading text-[20px]">{t.relatorio.clipsTitle}</h2>
+          <h2 className="t-heading">{t.relatorio.clipsTitle}</h2>
           <ul className="mt-3 space-y-3">
             {conteudo.recortes.map((r, i) => (
               <li key={i}>

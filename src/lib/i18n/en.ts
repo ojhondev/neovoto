@@ -36,7 +36,7 @@ const en: Dictionary = {
     "NeoVoto — the electoral intelligence that helps candidates win. Official open data only, within Brazil's data-protection law.",
   landing: {
     heroKicker: "The intelligence that wins elections",
-    heroTitle: "Electoral Intelligence",
+    heroTitle: "Political and electoral intelligence",
     heroTitleAccent: "with data and AI",
     heroSub:
       "NeoVoto turns official data into campaign advantage: where your votes are, where the opponent is weak, who to ally with and what to say in each region to win the election — from councillor to president.",

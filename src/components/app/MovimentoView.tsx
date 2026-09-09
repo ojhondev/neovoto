@@ -78,7 +78,7 @@ export function MovimentoView({
             </div>
 
             {sel && (
-              <div className="rounded-[10px] border border-ash bg-paper p-4 self-start">
+              <div className="rounded-none border border-ash bg-paper p-4 self-start">
                 <p className="font-ui text-caption uppercase tracking-wider text-pebble">{dict.selMun}</p>
                 <p className="font-ui mt-1 text-body text-ink">{sel.nome}</p>
                 <div className="mt-3 flex items-baseline gap-2">

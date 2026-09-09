@@ -145,7 +145,7 @@ export default async function Page() {
       howItWorks={howItWorks}
       outputs={outputs}
     >
-      <h2 className="t-heading flex items-center text-[22px]">
+      <h2 className="t-heading flex items-center">
         {t.tools.ideologicalMatrix.name} <span className="mark ml-1 text-caption">{t.matriz.tag}</span>
         <Info label={t.matriz.tag}>{t.matriz.method}</Info>
       </h2>
@@ -160,7 +160,7 @@ export default async function Page() {
         )}
       </p>
       {!matriz.candidato.conhecido && (
-        <p className="font-ui mt-2 rounded-[4px] bg-sand px-2 py-1 text-caption text-smoke">
+        <p className="font-ui mt-2 rounded-none bg-sand px-2 py-1 text-caption text-smoke">
           {fill(t.matriz.unknownParty, { partido: matriz.candidato.partido })}
         </p>
       )}

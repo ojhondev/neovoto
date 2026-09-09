@@ -69,7 +69,7 @@ export default async function PainelHome() {
   if (!candidacy || !perfil) {
     return (
       <div className="mx-auto max-w-xl py-16 text-center">
-        <span className="grid h-11 w-11 place-items-center rounded-[10px] border border-line bg-surface text-brand">
+        <span className="grid h-11 w-11 place-items-center rounded-none border border-line bg-surface text-brand">
           <Sparkles size={20} />
         </span>
         <h1 className="t-heading-lg mt-5">{t.dash.emptyTitle}</h1>
@@ -230,10 +230,10 @@ export default async function PainelHome() {
             width={52}
             height={66}
             unoptimized
-            className="h-[66px] w-[52px] shrink-0 rounded-[8px] border border-line object-cover"
+            className="h-[66px] w-[52px] shrink-0 rounded-none border border-line object-cover"
           />
         ) : (
-          <span className="grid h-[66px] w-[52px] shrink-0 place-items-center rounded-[8px] border border-line bg-sand">
+          <span className="grid h-[66px] w-[52px] shrink-0 place-items-center rounded-none border border-line bg-sand">
             <UserRound size={22} className="text-faint" />
           </span>
         )}
@@ -388,7 +388,7 @@ export default async function PainelHome() {
           <p className="mt-0.5 text-body-sm text-muted">{t.motor.actionsSub}</p>
           <ol className="mt-4 space-y-2.5">
             {leitura.acoes.map((a) => (
-              <li key={a.ordem} className="rounded-[10px] border border-line bg-surface-2 p-3.5">
+              <li key={a.ordem} className="rounded-none border border-line bg-surface-2 p-3.5">
                 <div className="flex items-start gap-3">
                   <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-brand text-[12px] font-semibold text-[#04211a]">
                     {a.ordem}
@@ -430,7 +430,7 @@ export default async function PainelHome() {
               );
             })}
           </ul>
-          <div className="mt-5 rounded-[10px] border border-line bg-surface-2 p-3">
+          <div className="mt-5 rounded-none border border-line bg-surface-2 p-3">
             <p className="text-caption font-semibold uppercase tracking-[0.06em] text-faint">
               {pt ? "Prontidão — tendência" : "Readiness — trend"}
             </p>

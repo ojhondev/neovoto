@@ -25,7 +25,7 @@ export function HeatGrid({ cols = 14, rows = 8 }: { cols?: number; rows?: number
           return (
             <div
               key={k}
-              className="aspect-square rounded-[3px]"
+              className="aspect-square rounded-none"
               style={{ background: color(v), opacity: 0.35 + ((v + 1) / 2) * 0.6 }}
             />
           );
@@ -92,10 +92,10 @@ export function ProposalBars() {
     <div className="rounded-[var(--radius-card)] border border-ash bg-paper p-5">
       <div className="font-ui flex justify-end gap-4 text-caption text-fossil">
         <span className="flex items-center gap-1.5">
-          <span className="h-2 w-3 rounded-[2px] bg-ink" /> ênfase da candidatura
+          <span className="h-2 w-3 rounded-none bg-ink" /> ênfase da candidatura
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="h-2 w-3 rounded-[2px] bg-chartreuse" /> demanda observada
+          <span className="h-2 w-3 rounded-none bg-chartreuse" /> demanda observada
         </span>
       </div>
       <div className="mt-4 space-y-3">
@@ -107,13 +107,13 @@ export function ProposalBars() {
                 <span className="text-negative">lacuna</span>
               )}
             </div>
-            <div className="relative h-4 rounded-[3px] bg-sand">
+            <div className="relative h-4 rounded-none bg-sand">
               <div
-                className="absolute inset-y-0 left-0 rounded-[3px] bg-chartreuse"
+                className="absolute inset-y-0 left-0 rounded-none bg-chartreuse"
                 style={{ width: `${r.demand}%` }}
               />
               <div
-                className="absolute inset-y-0 left-0 rounded-[3px] bg-ink"
+                className="absolute inset-y-0 left-0 rounded-none bg-ink"
                 style={{ width: `${r.proposal}%`, opacity: 0.85 }}
               />
             </div>
@@ -142,9 +142,9 @@ export function ScenarioBands() {
                 {s.p10}–{s.p90}% · mediana {s.p50}%
               </span>
             </div>
-            <div className="relative h-6 rounded-[3px] bg-sand">
+            <div className="relative h-6 rounded-none bg-sand">
               <div
-                className="absolute inset-y-0 rounded-[3px] bg-olive/25"
+                className="absolute inset-y-0 rounded-none bg-olive/25"
                 style={{ left: `${s.p10}%`, width: `${s.p90 - s.p10}%` }}
               />
               <div
@@ -187,8 +187,8 @@ export function CoalitionBars() {
               <td className="py-2.5 pr-4">{r.name}</td>
               <td className="py-2.5 pr-4">
                 <div className="flex items-center gap-2">
-                  <div className="h-2 w-24 rounded-[2px] bg-sand">
-                    <div className="h-full rounded-[2px] bg-olive" style={{ width: `${r.seats * 100}%` }} />
+                  <div className="h-2 w-24 rounded-none bg-sand">
+                    <div className="h-full rounded-none bg-olive" style={{ width: `${r.seats * 100}%` }} />
                   </div>
                   {Math.round(r.seats * 100)}%
                 </div>

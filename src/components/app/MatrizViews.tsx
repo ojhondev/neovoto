@@ -56,14 +56,14 @@ export function MatrizViews({
 
   return (
     <div>
-      <div className="font-ui mb-3 inline-flex rounded-[4px] border border-ash p-0.5 text-caption">
+      <div className="font-ui mb-3 inline-flex rounded-none border border-ash p-0.5 text-caption">
         {(["scatter", "treemap"] as const).map((v) => (
           <button
             key={v}
             type="button"
             onClick={() => setView(v)}
             className={
-              "rounded-[3px] px-3 py-1 transition-colors " +
+              "rounded-none px-3 py-1 transition-colors " +
               (view === v ? "bg-ink text-paper" : "text-fossil hover:text-ink")
             }
           >

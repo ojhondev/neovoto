@@ -58,7 +58,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ e
 
       {/* recortes */}
       <section className="mt-8">
-        <h2 className="t-heading text-[20px]">
+        <h2 className="t-heading">
           {t.relatorio.clipsTitle} {itens.length > 0 && <span className="text-fossil">· {itens.length}</span>}
         </h2>
         {itens.length === 0 ? (
@@ -86,7 +86,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ e
 
       {gerados.length > 0 && (
         <section className="mt-8">
-          <h2 className="t-heading text-[20px]">{t.relatorio.lastReports}</h2>
+          <h2 className="t-heading">{t.relatorio.lastReports}</h2>
           <ul className="font-ui mt-3 divide-y divide-ash text-body-sm">
             {gerados.map((r) => (
               <li key={r.code} className="flex items-center justify-between py-2.5">

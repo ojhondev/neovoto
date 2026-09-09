@@ -65,8 +65,8 @@ function Bar({ label, hint, v, color }: { label: string; hint: string; v: number
         <span className="text-smoke">{label}</span>
         <span className="text-fossil">{Math.round(v * 100)}</span>
       </div>
-      <div className="h-2 rounded-[2px] bg-sand">
-        <div className="h-full rounded-[2px]" style={{ width: `${v * 100}%`, background: color }} />
+      <div className="h-2 rounded-none bg-sand">
+        <div className="h-full rounded-none" style={{ width: `${v * 100}%`, background: color }} />
       </div>
       <p className="font-ui mt-1 text-[11px] text-pebble">{hint}</p>
     </div>
@@ -146,14 +146,14 @@ export function HeatmapExplorer({
   return (
     <>
       {contexto && (
-        <div className="mb-4 rounded-[10px] border-l-[3px] border-negative bg-sand p-4">
+        <div className="mb-4 rounded-none border-l-[3px] border-negative bg-sand p-4">
           <p className="font-ui text-body-sm font-semibold text-ink">{dict.contextoTitle}</p>
           <p className="mt-1.5 max-w-2xl text-body-sm text-fossil">{dict.contextoBody}</p>
         </div>
       )}
 
       {!contexto && (anc || camadas) && (
-        <div className="mb-4 rounded-[10px] border border-ash bg-paper p-4">
+        <div className="mb-4 rounded-none border border-ash bg-paper p-4">
           <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
             <span className="t-eyebrow">{dict.camadasTitle}</span>
             {anc && (
@@ -165,24 +165,24 @@ export function HeatmapExplorer({
           </div>
           <ul className="mt-2 flex flex-wrap gap-1.5">
             {camadas?.propria && (
-              <li className="font-ui rounded-[4px] bg-sand px-2 py-1 text-caption text-smoke">
+              <li className="font-ui rounded-none bg-sand px-2 py-1 text-caption text-smoke">
                 {dict.camadaPropria}: {camadas.propria.cargo || "—"} {camadas.propria.ano} ·{" "}
                 {camadas.propria.votos.toLocaleString(locale)} {pt ? "votos" : "votes"} ·{" "}
                 {camadas.propria.municipios} {pt ? "mun." : "mun."}
               </li>
             )}
             {camadas?.ancora && (
-              <li className="font-ui rounded-[4px] bg-sand px-2 py-1 text-caption text-smoke">
+              <li className="font-ui rounded-none bg-sand px-2 py-1 text-caption text-smoke">
                 {dict.camadaAncora}: {camadas.ancora.regImediata} ({camadas.ancora.municipios})
               </li>
             )}
             {camadas?.redePartido && (
-              <li className="font-ui rounded-[4px] bg-sand px-2 py-1 text-caption text-smoke">
+              <li className="font-ui rounded-none bg-sand px-2 py-1 text-caption text-smoke">
                 {dict.camadaRede}: {camadas.redePartido.municipios} {pt ? "mun." : "mun."}
               </li>
             )}
             {camadas?.apoios && (
-              <li className="font-ui rounded-[4px] bg-sand px-2 py-1 text-caption text-smoke">
+              <li className="font-ui rounded-none bg-sand px-2 py-1 text-caption text-smoke">
                 {dict.camadaApoios}: {camadas.apoios.nomes.slice(0, 3).join(", ")}
               </li>
             )}
@@ -191,14 +191,14 @@ export function HeatmapExplorer({
       )}
 
       {layers.length > 1 && (
-        <div className="font-ui mb-3 inline-flex flex-wrap rounded-[4px] border border-ash p-0.5 text-caption">
+        <div className="font-ui mb-3 inline-flex flex-wrap rounded-none border border-ash p-0.5 text-caption">
           {layers.map(({ k, label }) => (
             <button
               key={k}
               type="button"
               onClick={() => setLayer(k)}
               className={
-                "rounded-[3px] px-3 py-1 transition-colors " +
+                "rounded-none px-3 py-1 transition-colors " +
                 (layer === k ? "bg-ink text-paper" : "text-fossil hover:text-ink")
               }
             >
@@ -258,7 +258,7 @@ export function HeatmapExplorer({
               <>
                 <span className="mt-3 inline-flex items-center">
                   <span
-                    className="font-ui rounded-[4px] px-2 py-1 text-caption text-white"
+                    className="font-ui rounded-none px-2 py-1 text-caption text-white"
                     style={{ background: urgVar(URGENCIA_QUADRANTE[sel.quadrante] ?? "none") }}
                   >
                     {quad[sel.quadrante].label}

@@ -56,7 +56,7 @@ export function BaseTerritorialEditor({
             name="municipioBase"
             list="mun-list"
             defaultValue={anchorNome ?? ""}
-            className="font-ui w-full rounded-[8px] border border-ash bg-paper px-3 py-2.5 text-body-sm outline-none"
+            className="font-ui w-full rounded-none border border-ash bg-paper px-3 py-2.5 text-body-sm outline-none"
           />
         </div>
         <div>
@@ -65,7 +65,7 @@ export function BaseTerritorialEditor({
             name="extras"
             defaultValue={extrasNomes.join(", ")}
             placeholder={dict.extrasHint}
-            className="font-ui w-full rounded-[8px] border border-ash bg-paper px-3 py-2.5 text-body-sm outline-none"
+            className="font-ui w-full rounded-none border border-ash bg-paper px-3 py-2.5 text-body-sm outline-none"
           />
         </div>
         <button type="submit" disabled={pending} className="btn btn-primary justify-center">

@@ -57,7 +57,7 @@ export function Testimonials({
               type="button"
               onClick={() => go(-1)}
               aria-label="Anterior"
-              className="rounded-[8px] border border-ink p-2 text-ink transition-colors hover:bg-sand"
+              className="rounded-none border border-ink p-2 text-ink transition-colors hover:bg-sand"
             >
               <ArrowLeft size={16} />
             </button>
@@ -65,7 +65,7 @@ export function Testimonials({
               type="button"
               onClick={() => go(1)}
               aria-label="Próximo"
-              className="rounded-[8px] border border-ink p-2 text-ink transition-colors hover:bg-sand"
+              className="rounded-none border border-ink p-2 text-ink transition-colors hover:bg-sand"
             >
               <ArrowRight size={16} />
             </button>

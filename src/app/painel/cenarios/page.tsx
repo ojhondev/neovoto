@@ -122,7 +122,7 @@ export default async function Page() {
       howItWorks={howItWorks}
       outputs={outputs}
     >
-      <h2 className="t-heading flex items-center text-[22px]">
+      <h2 className="t-heading flex items-center">
         {t.tools.scenarios.name} <span className="mark ml-1 text-caption">{t.cenarios.tag}</span>
         <Info label={t.cenarios.tag}>{t.cenarios.disclaimer}</Info>
       </h2>
@@ -174,12 +174,12 @@ export default async function Page() {
             <div className="relative mt-4 h-8">
               {/* faixa p10–p90 */}
               <div
-                className="absolute top-1/2 h-3 -translate-y-1/2 rounded-[3px] bg-sand"
+                className="absolute top-1/2 h-3 -translate-y-1/2 rounded-none bg-sand"
                 style={{ left: pos(d.p10), width: `calc(${pos(d.p90)} - ${pos(d.p10)})` }}
               />
               {/* faixa p25–p75 (mais densa) */}
               <div
-                className="absolute top-1/2 h-3 -translate-y-1/2 rounded-[3px]"
+                className="absolute top-1/2 h-3 -translate-y-1/2 rounded-none"
                 style={{
                   left: pos(d.p25),
                   width: `calc(${pos(d.p75)} - ${pos(d.p25)})`,
@@ -207,7 +207,7 @@ export default async function Page() {
                 : `Median ${fmt(cen.votosBase, locale)} · ${falta > 0 ? `${fmt(falta, locale)} missing` : `${fmt(-falta, locale)}-vote cushion`} · ${cen.sims.toLocaleString(locale)} simulations over sampled assumptions`}
             </p>
             <p
-              className="font-ui mt-2 rounded-[6px] border-l-2 px-3 py-2 text-caption"
+              className="font-ui mt-2 rounded-none border-l-2 px-3 py-2 text-caption"
               style={{
                 borderColor: baseTipo === "propria" ? "var(--color-olive)" : "var(--color-negative)",
                 background: "var(--color-sand)",
@@ -226,13 +226,13 @@ export default async function Page() {
             <div className="flex items-center justify-between">
               <p className="t-eyebrow">{c.nome}</p>
               <span
-                className="font-ui rounded-[3px] px-1.5 py-0.5 text-[11px] text-paper"
+                className="font-ui rounded-none px-1.5 py-0.5 text-[11px] text-paper"
                 style={{ background: RES_COR[c.resultado] }}
               >
                 {resLabel[c.resultado]}
               </span>
             </div>
-            <p className="font-ui mt-3 text-[26px] font-light leading-none text-ink">
+            <p className="font-ui mt-3 text-[26px] font-semibold leading-none text-ink">
               {fmt(c.votos, locale)}
             </p>
             <p className="font-ui mt-1 text-caption text-pebble">
@@ -249,14 +249,14 @@ export default async function Page() {
 
       {/* sensibilidade */}
       <div className="card mt-6">
-        <h3 className="t-heading text-[20px]">{t.cenarios.sensTitle}</h3>
+        <h3 className="t-heading">{t.cenarios.sensTitle}</h3>
         <div className="mt-3 space-y-2">
           {cen.sensibilidade.map((s) => (
             <div key={s.fator} className="font-ui flex items-center gap-3 text-body-sm">
               <span className="w-52 shrink-0 text-smoke">{s.fator}</span>
-              <span className="h-2 flex-1 rounded-[2px] bg-sand">
+              <span className="h-2 flex-1 rounded-none bg-sand">
                 <span
-                  className="block h-full rounded-[2px]"
+                  className="block h-full rounded-none"
                   style={{
                     width: `${Math.round((s.impacto / maxSens) * 100)}%`,
                     background: "var(--color-cat-4)",
@@ -274,7 +274,7 @@ export default async function Page() {
       {/* dispersão */}
       {cen.dispersao.length > 5 && (
         <div className="card mt-6">
-          <h3 className="t-heading text-[20px]">{t.cenarios.scatterTitle}</h3>
+          <h3 className="t-heading">{t.cenarios.scatterTitle}</h3>
           <div className="mt-3">
             <CenariosScatter
               pontos={cen.dispersao}
@@ -289,7 +289,7 @@ export default async function Page() {
       {/* municípios-alvo */}
       {cen.municipiosAlvo.length > 0 && (
         <div className="card mt-6">
-          <h3 className="t-heading text-[20px]">{t.cenarios.targetTitle}</h3>
+          <h3 className="t-heading">{t.cenarios.targetTitle}</h3>
           <p className="font-ui mt-1 text-caption text-pebble">{t.cenarios.targetSub}</p>
           <ol className="font-ui mt-3 divide-y divide-ash text-body-sm">
             {cen.municipiosAlvo.map((m, i) => (
