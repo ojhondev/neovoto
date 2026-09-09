@@ -1,50 +1,76 @@
 @import "tailwindcss";
 
 /*
-  NeoVoto — Sistema visual "Maze"
-  Jornal de pesquisa editorial: papel cor de osso, tinta serifada, marca-texto chartreuse.
-  Referência completa em docs/DESIGN.md.
+  NeoVoto — Sistema visual "Trust" (v2)
+  Plataforma de governança eleitoral: superfície clara, sans compacta,
+  verde esmeralda como cor de confiança, cartões de 1px, dados em primeiro plano.
+  Categoria: ferramentas de trust/governança enterprise. Ver docs/DESIGN.md.
 */
 
 @theme {
-  /* ---- Cores ---- */
-  --color-bone: #f5f4f0;
-  --color-paper: #ffffff;
-  --color-ink: #1c1c1c;
-  --color-charcoal: #000000;
-  --color-fossil: #706f6c;
-  --color-pebble: #9e9b94;
-  --color-smoke: #3c3c3c;
-  --color-sand: #eae6e1;
-  --color-ash: #d2cec6;
-  --color-chartreuse: #dbf570;
-  --color-olive: #4b5b0a;
-  --color-lavender: #b8a3ff;
-  --color-map-bg: #efece5;
-  /* marca-texto (muda por tema) */
-  --color-mark: #dbf570;
-  /* texto sobre fundo chartreuse — fixo nos dois temas (verde bem escuro) */
-  --color-ink-accent: #26330a;
+  /* ---- Neutros de superfície ---- */
+  --color-canvas: #f4f6f7;        /* fundo da página */
+  --color-surface: #ffffff;       /* cartão */
+  --color-surface-2: #fafbfc;     /* cartão recuado / cabeçalho de tabela */
+  --color-rail: #0c0f13;          /* barra lateral escura */
+  --color-rail-2: #161a20;        /* item ativo na barra */
+  --color-line: #e5e8eb;          /* hairline padrão */
+  --color-line-strong: #d3d8dd;   /* divisor mais forte */
 
-  /* Sinal político — usado só em gráficos/legendas, nunca como cor de ação */
-  --color-signal-left: #6f8fd6;
-  --color-signal-center: #b9b2a6;
-  --color-signal-right: #d68a6f;
-  --color-positive: #4b5b0a;
-  --color-negative: #8a3b2f;
+  --color-ink: #11151b;           /* texto primário */
+  --color-body: #39424d;          /* texto de corpo */
+  --color-muted: #667180;         /* texto secundário */
+  --color-faint: #97a1ad;         /* rótulos, placeholders */
 
-  /* ---- Escala de urgência / prioridade (mapas, chips, barras) ---- */
-  --color-urg-crit: #c0392b;
-  --color-urg-high: #dd7a1c;
-  --color-urg-med: #caa406;
-  --color-urg-low: #4b8f3a;
-  --color-urg-none: #8b93a1;
+  /* ---- Marca — verde esmeralda ---- */
+  --color-brand: #11b981;
+  --color-brand-strong: #0e9e6e;
+  --color-brand-press: #0b8259;
+  --color-brand-tint: #e7f7f0;
+  --color-brand-tint-2: #d6f0e4;
+  --color-brand-ink: #05563a;     /* texto sobre tint */
+  --color-on-brand: #ffffff;      /* texto sobre brand cheio */
 
-  /* ---- Paleta categórica (partidos, temas, pilares) — distinta no papel ---- */
+  /* ---- Status ---- */
+  --color-ok: #11b981;
+  --color-ok-tint: #e7f7f0;
+  --color-warn: #d98a0b;
+  --color-warn-tint: #fbf0dd;
+  --color-danger: #d84a4a;
+  --color-danger-tint: #fbe9e9;
+  --color-info: #3b7de4;
+  --color-info-tint: #e7effc;
+
+  /* ---- Escala de risco / prioridade (donut, chips, mapas) ---- */
+  --color-q-priority: #11b981;    /* prioridade */
+  --color-q-expansion: #e0912f;   /* expansão */
+  --color-q-stronghold: #5b6bd6;  /* reduto */
+  --color-q-out: #c7ced6;         /* fora */
+
+  --color-risk-veryhigh: #4f46e5;
+  --color-risk-high: #11b981;
+  --color-risk-medium: #9aa4b0;
+  --color-risk-low: #d3d8dd;
+
+  /* ---- Sinal político (só gráficos, nunca ação) ---- */
+  --color-signal-left: #5f8bd6;
+  --color-signal-center: #a9b0ba;
+  --color-signal-right: #d67d63;
+  --color-positive: #11b981;
+  --color-negative: #d84a4a;
+
+  /* ---- Escala de urgência (legada, mapas/barras) ---- */
+  --color-urg-crit: #d84a4a;
+  --color-urg-high: #e0912f;
+  --color-urg-med: #d9b310;
+  --color-urg-low: #11b981;
+  --color-urg-none: #9aa4b0;
+
+  /* ---- Paleta categórica (partidos, temas, pilares) ---- */
   --color-cat-1: #2f6fed;
   --color-cat-2: #e5397f;
-  --color-cat-3: #1f9d6b;
-  --color-cat-4: #e07b1a;
+  --color-cat-3: #11b981;
+  --color-cat-4: #e0912f;
   --color-cat-5: #8b5cf6;
   --color-cat-6: #0ea5b5;
   --color-cat-7: #d4b106;
@@ -52,75 +78,114 @@
   --color-cat-9: #c2410c;
   --color-cat-10: #64748b;
 
-  /* ---- Comparação de 2+ entidades (você vs adversário) ---- */
+  /* ---- Comparação de entidades (você vs adversário) ---- */
   --color-cmp-self: #2f6fed;
   --color-cmp-other: #e5397f;
-  --color-cmp-third: #1f9d6b;
+  --color-cmp-third: #11b981;
 
-  /* ---- Tipografia ---- */
-  --font-display: var(--font-fraunces), "GT Sectra Display", Georgia, serif;
-  --font-body: var(--font-newsreader), "Tiempos Text", Georgia, serif;
+  /* ---- Aliases legados (mantêm o restante do produto coerente) ---- */
+  --color-bone: #f4f6f7;
+  --color-paper: #ffffff;
+  --color-charcoal: #0c0f13;
+  --color-fossil: #667180;
+  --color-pebble: #97a1ad;
+  --color-smoke: #39424d;
+  --color-sand: #eef1f3;
+  --color-ash: #e5e8eb;
+  --color-chartreuse: #11b981;
+  --color-olive: #0e9e6e;
+  --color-lavender: #7c6cf0;
+  --color-map-bg: #eef1f3;
+  --color-mark: #b9ecd9;
+  --color-ink-accent: #ffffff;
+
+  /* ---- Tipografia — sans única ---- */
   --font-ui: var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-display: var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-body: var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 
   --text-caption: 12px;
-  --text-body-sm: 14px;
-  --text-body: 17px;
-  --text-heading-sm: 22px;
-  --text-heading: 28px;
-  --text-heading-lg: 46px;
-  --text-display: 58px;
-  --text-display-lg: 90px;
-  --text-hero: 118px;
+  --text-body-sm: 13px;
+  --text-body: 14px;
+  --text-heading-sm: 16px;
+  --text-heading: 20px;
+  --text-heading-lg: 28px;
+  --text-display: 40px;
+  --text-display-lg: 52px;
+  --text-hero: 60px;
 
   /* ---- Espaçamento ---- */
-  --spacing-section: 80px;
+  --spacing-section: 72px;
 
   /* ---- Raios ---- */
-  --radius-badge: 4px;
+  --radius-badge: 6px;
   --radius-input: 8px;
   --radius-button: 8px;
   --radius-card: 12px;
-  --radius-card-lg: 16px;
+  --radius-card-lg: 14px;
+
+  /* ---- Sombra ---- */
+  --shadow-card: 0 1px 2px rgba(12, 17, 23, 0.04), 0 1px 3px rgba(12, 17, 23, 0.05);
+  --shadow-pop: 0 8px 24px rgba(12, 17, 23, 0.12), 0 2px 6px rgba(12, 17, 23, 0.08);
 
   /* ---- Layout ---- */
-  --page-max: 1200px;
+  --page-max: 1280px;
 }
 
 :root {
   color-scheme: light;
 }
 
-/* ---- Tema escuro: inverte os papéis de cor mantendo o contraste ----
-   Ativado por [data-theme="dark"] (escolha explícita) ou prefers-color-scheme.
-   O bloco é repetido porque CSS puro não permite @media dentro de lista de seletor. */
+/* ---- Tema escuro — slate limpo, verde mantém ---- */
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --color-bone: #17150f;
-  --color-paper: #201d16;
-  --color-ink: #f4f2ea;
-  --color-charcoal: #000000;
-  --color-fossil: #a6a196;
-  --color-pebble: #726d61;
-  --color-smoke: #cec9bd;
-  --color-sand: #2c281f;
-  --color-ash: #3a352b;
-  --color-chartreuse: #dbf570;
-  --color-olive: #afc76a;
-  --color-lavender: #c6b4ff;
-  --color-map-bg: #201d16;
-  --color-mark: #3f5410;
-  --color-signal-left: #8aa6e0;
-  --color-signal-right: #e0a488;
-  --color-positive: #afc76a;
-  --color-negative: #d98a72;
-  --color-urg-crit: #e0604f;
-  --color-urg-high: #ed9440;
-  --color-urg-med: #e0bd3a;
-  --color-urg-low: #79c063;
-  --color-urg-none: #9aa1ae;
+  --color-canvas: #0e1216;
+  --color-surface: #161b21;
+  --color-surface-2: #1b2128;
+  --color-rail: #0a0d10;
+  --color-rail-2: #1c222a;
+  --color-line: #262d36;
+  --color-line-strong: #333c47;
+  --color-ink: #eef1f4;
+  --color-body: #c2c9d1;
+  --color-muted: #939ca7;
+  --color-faint: #6b7580;
+  --color-brand: #2ecb8f;
+  --color-brand-strong: #25b981;
+  --color-brand-press: #1fa271;
+  --color-brand-tint: #14312a;
+  --color-brand-tint-2: #1b3f35;
+  --color-brand-ink: #7fe3bf;
+  --color-on-brand: #04211a;
+  --color-ok: #2ecb8f;
+  --color-ok-tint: #14312a;
+  --color-warn: #e0a032;
+  --color-warn-tint: #33280f;
+  --color-danger: #e46a6a;
+  --color-danger-tint: #3a1f1f;
+  --color-info: #5b95ec;
+  --color-info-tint: #17273f;
+  --color-q-priority: #2ecb8f;
+  --color-q-expansion: #e7a24d;
+  --color-q-stronghold: #7f8ce6;
+  --color-q-out: #3a424d;
+  --color-risk-veryhigh: #7a72f0;
+  --color-risk-high: #2ecb8f;
+  --color-risk-medium: #8b95a2;
+  --color-risk-low: #3a424d;
+  --color-signal-left: #7ea6e6;
+  --color-signal-center: #8b93a0;
+  --color-signal-right: #e2957e;
+  --color-positive: #2ecb8f;
+  --color-negative: #e46a6a;
+  --color-urg-crit: #e46a6a;
+  --color-urg-high: #e7a24d;
+  --color-urg-med: #e0c454;
+  --color-urg-low: #2ecb8f;
+  --color-urg-none: #8b95a2;
   --color-cat-1: #5b90f5;
   --color-cat-2: #f05f9a;
-  --color-cat-3: #3cc389;
+  --color-cat-3: #2ecb8f;
   --color-cat-4: #f0973f;
   --color-cat-5: #a985f7;
   --color-cat-6: #33c2d1;
@@ -130,37 +195,74 @@
   --color-cat-10: #8a93a3;
   --color-cmp-self: #5b90f5;
   --color-cmp-other: #f05f9a;
-  --color-cmp-third: #3cc389;
+  --color-cmp-third: #2ecb8f;
+  --color-bone: #0e1216;
+  --color-paper: #161b21;
+  --color-charcoal: #0a0d10;
+  --color-fossil: #939ca7;
+  --color-pebble: #6b7580;
+  --color-smoke: #c2c9d1;
+  --color-sand: #1f262e;
+  --color-ash: #262d36;
+  --color-chartreuse: #2ecb8f;
+  --color-olive: #25b981;
+  --color-lavender: #8b7cf3;
+  --color-map-bg: #1b2128;
+  --color-mark: #1e4a3c;
+  --color-ink-accent: #04211a;
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.3), 0 1px 3px rgba(0, 0, 0, 0.35);
+  --shadow-pop: 0 10px 28px rgba(0, 0, 0, 0.5);
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     color-scheme: dark;
-    --color-bone: #17150f;
-    --color-paper: #201d16;
-    --color-ink: #f4f2ea;
-    --color-charcoal: #000000;
-    --color-fossil: #a6a196;
-    --color-pebble: #726d61;
-    --color-smoke: #cec9bd;
-    --color-sand: #2c281f;
-    --color-ash: #3a352b;
-    --color-chartreuse: #dbf570;
-    --color-olive: #afc76a;
-    --color-lavender: #c6b4ff;
-    --color-map-bg: #201d16;
-  --color-mark: #3f5410;
-    --color-signal-left: #8aa6e0;
-    --color-signal-right: #e0a488;
-    --color-positive: #afc76a;
-    --color-negative: #d98a72;
-    --color-urg-crit: #e0604f;
-    --color-urg-high: #ed9440;
-    --color-urg-med: #e0bd3a;
-    --color-urg-low: #79c063;
-    --color-urg-none: #9aa1ae;
+    --color-canvas: #0e1216;
+    --color-surface: #161b21;
+    --color-surface-2: #1b2128;
+    --color-rail: #0a0d10;
+    --color-rail-2: #1c222a;
+    --color-line: #262d36;
+    --color-line-strong: #333c47;
+    --color-ink: #eef1f4;
+    --color-body: #c2c9d1;
+    --color-muted: #939ca7;
+    --color-faint: #6b7580;
+    --color-brand: #2ecb8f;
+    --color-brand-strong: #25b981;
+    --color-brand-press: #1fa271;
+    --color-brand-tint: #14312a;
+    --color-brand-tint-2: #1b3f35;
+    --color-brand-ink: #7fe3bf;
+    --color-on-brand: #04211a;
+    --color-ok: #2ecb8f;
+    --color-ok-tint: #14312a;
+    --color-warn: #e0a032;
+    --color-warn-tint: #33280f;
+    --color-danger: #e46a6a;
+    --color-danger-tint: #3a1f1f;
+    --color-info: #5b95ec;
+    --color-info-tint: #17273f;
+    --color-q-priority: #2ecb8f;
+    --color-q-expansion: #e7a24d;
+    --color-q-stronghold: #7f8ce6;
+    --color-q-out: #3a424d;
+    --color-risk-veryhigh: #7a72f0;
+    --color-risk-high: #2ecb8f;
+    --color-risk-medium: #8b95a2;
+    --color-risk-low: #3a424d;
+    --color-signal-left: #7ea6e6;
+    --color-signal-center: #8b93a0;
+    --color-signal-right: #e2957e;
+    --color-positive: #2ecb8f;
+    --color-negative: #e46a6a;
+    --color-urg-crit: #e46a6a;
+    --color-urg-high: #e7a24d;
+    --color-urg-med: #e0c454;
+    --color-urg-low: #2ecb8f;
+    --color-urg-none: #8b95a2;
     --color-cat-1: #5b90f5;
     --color-cat-2: #f05f9a;
-    --color-cat-3: #3cc389;
+    --color-cat-3: #2ecb8f;
     --color-cat-4: #f0973f;
     --color-cat-5: #a985f7;
     --color-cat-6: #33c2d1;
@@ -170,7 +272,23 @@
     --color-cat-10: #8a93a3;
     --color-cmp-self: #5b90f5;
     --color-cmp-other: #f05f9a;
-    --color-cmp-third: #3cc389;
+    --color-cmp-third: #2ecb8f;
+    --color-bone: #0e1216;
+    --color-paper: #161b21;
+    --color-charcoal: #0a0d10;
+    --color-fossil: #939ca7;
+    --color-pebble: #6b7580;
+    --color-smoke: #c2c9d1;
+    --color-sand: #1f262e;
+    --color-ash: #262d36;
+    --color-chartreuse: #2ecb8f;
+    --color-olive: #25b981;
+    --color-lavender: #8b7cf3;
+    --color-map-bg: #1b2128;
+    --color-mark: #1e4a3c;
+    --color-ink-accent: #04211a;
+    --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.3), 0 1px 3px rgba(0, 0, 0, 0.35);
+    --shadow-pop: 0 10px 28px rgba(0, 0, 0, 0.5);
   }
 }
 
@@ -203,7 +321,7 @@
 }
 
 * {
-  border-color: var(--color-ash);
+  border-color: var(--color-line);
 }
 
 html {
@@ -212,20 +330,22 @@ html {
 }
 
 body {
-  background: var(--color-bone);
+  background: var(--color-canvas);
   color: var(--color-ink);
-  font-family: var(--font-body);
+  font-family: var(--font-ui);
   font-size: var(--text-body);
   line-height: 1.5;
-  font-feature-settings: "kern" 1, "liga" 1, "calt" 1, "onum" 1;
+  font-feature-settings: "kern" 1, "liga" 1, "calt" 1, "cv05" 1;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 h1, h2, h3, h4 {
   font-family: var(--font-display);
-  font-weight: 300;
+  font-weight: 600;
   color: var(--color-ink);
-  line-height: 1.05;
+  line-height: 1.2;
+  letter-spacing: -0.011em;
   text-wrap: balance;
 }
 
@@ -233,143 +353,189 @@ h1, h2, h3, h4 {
   font-family: var(--font-ui);
 }
 
-/* Escala de display com tracking apertado (assinatura Maze) */
+/* Escala de display — sans apertada, sem drama */
 .t-hero {
   font-family: var(--font-display);
-  font-weight: 300;
-  font-size: clamp(3rem, 9vw, var(--text-hero));
-  line-height: 0.98;
-  letter-spacing: -0.055em;
+  font-weight: 700;
+  font-size: clamp(2.4rem, 6vw, var(--text-hero));
+  line-height: 1.04;
+  letter-spacing: -0.03em;
 }
 .t-display {
   font-family: var(--font-display);
-  font-weight: 300;
-  font-size: clamp(2.4rem, 6vw, var(--text-display-lg));
-  line-height: 1;
-  letter-spacing: -0.05em;
+  font-weight: 700;
+  font-size: clamp(2rem, 4.5vw, var(--text-display-lg));
+  line-height: 1.08;
+  letter-spacing: -0.025em;
 }
 .t-heading-lg {
   font-family: var(--font-display);
-  font-weight: 300;
-  font-size: clamp(2rem, 4vw, var(--text-heading-lg));
-  line-height: 1.1;
-  letter-spacing: -0.03em;
+  font-weight: 600;
+  font-size: clamp(1.5rem, 3vw, var(--text-heading-lg));
+  line-height: 1.15;
+  letter-spacing: -0.02em;
 }
 .t-heading {
   font-family: var(--font-display);
-  font-weight: 400;
+  font-weight: 600;
   font-size: var(--text-heading);
-  line-height: 1.1;
-  letter-spacing: -0.02em;
+  line-height: 1.25;
+  letter-spacing: -0.015em;
 }
 .t-eyebrow {
   font-family: var(--font-ui);
-  font-weight: 400;
+  font-weight: 600;
   font-size: var(--text-caption);
-  letter-spacing: 0.14em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--color-fossil);
+  color: var(--color-faint);
 }
 
-/* Marca-texto — chartreuse no claro; verde escuro no dark (contraste com texto claro) */
+/* Marca-texto — realce esmeralda discreto */
 .mark {
-  background: linear-gradient(transparent 62%, var(--color-mark) 62%);
-  padding: 0 0.06em;
+  background: linear-gradient(transparent 60%, var(--color-mark) 60%);
+  padding: 0 0.05em;
 }
 
-/* Ilha sempre-clara: painéis decorativos (previews de produto, colagens) que ficam
-   sobre fundo fixo (chartreuse/lavanda) e não devem inverter no tema escuro. */
+/* Ilha sempre-clara (previews sobre fundo fixo) */
 .on-light {
+  --color-canvas: #f4f6f7;
+  --color-surface: #ffffff;
+  --color-surface-2: #fafbfc;
+  --color-line: #e5e8eb;
+  --color-ink: #11151b;
+  --color-body: #39424d;
+  --color-muted: #667180;
+  --color-faint: #97a1ad;
   --color-paper: #ffffff;
-  --color-bone: #f5f4f0;
-  --color-ink: #1c1c1c;
-  --color-charcoal: #000000;
-  --color-fossil: #706f6c;
-  --color-pebble: #9e9b94;
-  --color-smoke: #3c3c3c;
-  --color-sand: #eae6e1;
-  --color-ash: #d2cec6;
-  --color-olive: #4b5b0a;
-  --color-map-bg: #efece5;
-  --color-negative: #8a3b2f;
+  --color-bone: #f4f6f7;
+  --color-charcoal: #0c0f13;
+  --color-fossil: #667180;
+  --color-pebble: #97a1ad;
+  --color-smoke: #39424d;
+  --color-sand: #eef1f3;
+  --color-ash: #e5e8eb;
+  --color-map-bg: #eef1f3;
   color: var(--color-ink);
 }
 
-/* Botões — silenciosos, sem sombra, sem gradiente */
+/* ---------- Botões ---------- */
 .btn {
   font-family: var(--font-ui);
   font-size: var(--text-body-sm);
+  font-weight: 500;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 12px 20px;
+  justify-content: center;
+  gap: 7px;
+  padding: 9px 16px;
   border-radius: var(--radius-button);
-  transition: background 150ms ease, color 150ms ease, border-color 150ms ease;
+  border: 1px solid transparent;
+  line-height: 1;
+  white-space: nowrap;
+  transition: background 140ms ease, color 140ms ease, border-color 140ms ease, box-shadow 140ms ease;
 }
 .btn-primary {
-  background: var(--color-ink);
-  color: var(--color-paper);
+  background: var(--color-brand);
+  color: var(--color-on-brand);
 }
 .btn-primary:hover {
-  background: var(--color-smoke);
+  background: var(--color-brand-strong);
+}
+.btn-primary:active {
+  background: var(--color-brand-press);
 }
 .btn-ghost {
-  border: 1px solid var(--color-ink);
+  border-color: var(--color-line-strong);
   color: var(--color-ink);
+  background: var(--color-surface);
 }
 .btn-ghost:hover {
-  background: var(--color-sand);
+  background: var(--color-surface-2);
+  border-color: var(--color-faint);
+}
+.btn-dark {
+  background: var(--color-ink);
+  color: var(--color-surface);
+}
+.btn-dark:hover {
+  background: #000;
 }
 
-/* Cartões — planos, definidos por cor e hairline de 1px */
+/* ---------- Cartões ---------- */
 .card {
-  background: var(--color-paper);
-  border: 1px solid var(--color-ash);
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
   border-radius: var(--radius-card);
-  padding: 24px;
+  box-shadow: var(--shadow-card);
+  padding: 20px;
+}
+.card-flush {
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
 }
 
 .hairline {
   border: 0;
-  border-top: 1px solid var(--color-ash);
+  border-top: 1px solid var(--color-line);
 }
 
-/* Movimento — fade-and-rise ao entrar no viewport */
+/* ---------- Pílulas de status ---------- */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-ui);
+  font-size: 11.5px;
+  font-weight: 600;
+  line-height: 1;
+  padding: 4px 9px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.pill-brand { background: var(--color-brand-tint); color: var(--color-brand-ink); }
+.pill-ok { background: var(--color-ok-tint); color: var(--color-brand-ink); }
+.pill-warn { background: var(--color-warn-tint); color: var(--color-warn); }
+.pill-danger { background: var(--color-danger-tint); color: var(--color-danger); }
+.pill-info { background: var(--color-info-tint); color: var(--color-info); }
+.pill-neutral { background: var(--color-sand); color: var(--color-muted); }
+.pill-dot::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: currentColor;
+}
+
+/* ---------- Animação ---------- */
 @keyframes rise {
-  from { opacity: 0; transform: translateY(10px); }
+  from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
 }
-.rise {
-  animation: rise 220ms ease-out both;
-}
+.rise { animation: rise 200ms ease-out both; }
 
-@keyframes marquee-left {
-  from { transform: translateX(0); }
-  to { transform: translateX(-100%); }
-}
-@keyframes marquee-right {
-  from { transform: translateX(-100%); }
-  to { transform: translateX(0); }
-}
+@keyframes marquee-left { from { transform: translateX(0); } to { transform: translateX(-100%); } }
+@keyframes marquee-right { from { transform: translateX(-100%); } to { transform: translateX(0); } }
 
-/* Gráficos — entrada suave e barras que crescem (one-shot, sem loop) */
 @keyframes chart-fade {
   from { opacity: 0; transform: translateY(6px); }
   to { opacity: 1; transform: translateY(0); }
 }
-.chart-in { animation: chart-fade 320ms ease-out both; }
+.chart-in { animation: chart-fade 300ms ease-out both; }
 
-@keyframes bar-grow {
-  from { transform: scaleX(0); }
-  to { transform: scaleX(1); }
-}
-.bar-grow { transform-origin: left; animation: bar-grow 520ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+@keyframes bar-grow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+.bar-grow { transform-origin: left; animation: bar-grow 500ms cubic-bezier(0.22, 1, 0.36, 1) both; }
 
-@keyframes poly-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
+@keyframes poly-in { from { opacity: 0; } to { opacity: 1; } }
+.poly-in { animation: poly-in 400ms ease-out both; }
+
+@keyframes draw-line {
+  from { stroke-dashoffset: var(--dash, 1000); }
+  to { stroke-dashoffset: 0; }
 }
-.poly-in { animation: poly-in 420ms ease-out both; }
+.draw-line { animation: draw-line 900ms ease-out both; }
 
 /* Tela de preparação pós-onboarding (/preparando) */
 .prep-mark { animation: prep-float 4.2s ease-in-out infinite; }
@@ -383,18 +549,18 @@ h1, h2, h3, h4 {
 
 @media (prefers-reduced-motion: reduce) {
   .prep-mark, .prep-mark-done, .prep-glyph, .prep-step { animation: none; }
-
-  /* Só desativa a animação de entrada (one-shot). O marquee e as partículas
-     são parte da identidade da marca e seguem rodando — decisão de produto. */
-  .rise { animation: none; }
-  .chart-in, .poly-in { animation-duration: 1ms; }
+  .rise, .chart-in, .poly-in, .bar-grow, .draw-line { animation-duration: 1ms; }
 }
 
-/* Sublinhado que cresce da esquerda no hover dos links de navegação */
+/* Link de navegação — sublinhado que cresce da esquerda */
 .nav-link {
   font-family: var(--font-ui);
-  font-size: 15px;
+  font-size: 14px;
   position: relative;
+  color: var(--color-body);
+  transition: color 140ms ease;
+}
+.nav-link:hover {
   color: var(--color-ink);
 }
 .nav-link::after {
@@ -402,11 +568,16 @@ h1, h2, h3, h4 {
   position: absolute;
   left: 0;
   bottom: -4px;
-  height: 1px;
+  height: 1.5px;
   width: 0;
-  background: var(--color-ink);
+  background: var(--color-brand);
   transition: width 150ms ease;
 }
 .nav-link:hover::after {
   width: 100%;
 }
+
+/* Scrollbar discreta nas áreas de app */
+.thin-scroll::-webkit-scrollbar { width: 8px; height: 8px; }
+.thin-scroll::-webkit-scrollbar-thumb { background: var(--color-line-strong); border-radius: 999px; }
+.thin-scroll::-webkit-scrollbar-track { background: transparent; }

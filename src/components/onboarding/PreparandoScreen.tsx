@@ -268,7 +268,7 @@ export function PreparandoScreen({ dict }: { dict: Dict }) {
         <div
           style={{
             marginTop: "1.4rem",
-            fontFamily: "var(--font-fraunces), Georgia, serif",
+            fontFamily: "var(--font-inter), system-ui, sans-serif",
             lineHeight: 1,
           }}
         >
@@ -283,7 +283,7 @@ export function PreparandoScreen({ dict }: { dict: Dict }) {
         <h1
           style={{
             margin: "1.1rem 0 0",
-            fontFamily: "var(--font-fraunces), Georgia, serif",
+            fontFamily: "var(--font-inter), system-ui, sans-serif",
             fontWeight: 300,
             fontSize: "1.5rem",
             letterSpacing: "-0.02em",
